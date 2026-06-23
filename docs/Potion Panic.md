@@ -468,6 +468,17 @@ Range:
 
 ---
 
+## MVP Default Tuning
+
+- All three launch disasters start at `1.5 Panic per second` while active.
+- If a disaster remains unresolved for `20 seconds`, it escalates to `3.0 Panic per second`.
+- Solving a disaster immediately reduces Panic by `10`.
+- Using the wrong potion consumes the potion, leaves the disaster active, and immediately adds `10 Panic`.
+
+These are the default implementation values for the first playable MVP and can be tuned later during the final balancing milestone.
+
+---
+
 ## Lose Condition
 
 Panic reaches 100%.
@@ -484,36 +495,21 @@ The game becomes harder over time.
 
 ---
 
-## Stage 1
+## MVP Stage Rules
 
-One active disaster.
+| Stage   | Run Time | Max Active Disasters | Spawn Interval | Disaster Tuning |
+| ------- | -------- | -------------------- | -------------- | --------------- |
+| Stage 1 | 0:00-0:59 | 1 | 12 seconds | `1.5 Panic/sec`, escalate at `20s`, then `3.0 Panic/sec` |
+| Stage 2 | 1:00-1:59 | 2 | 10 seconds | `1.5 Panic/sec`, escalate at `20s`, then `3.0 Panic/sec` |
+| Stage 3 | 2:00-2:59 | 3 | 8 seconds | `1.5 Panic/sec`, escalate at `20s`, then `3.0 Panic/sec` |
+| Stage 4 | 3:00+ | 3 | 6 seconds | `1.875 Panic/sec`, escalate at `15s`, then `3.75 Panic/sec` |
 
----
+Additional rules:
 
-## Stage 2
-
-Two active disasters.
-
----
-
-## Stage 3
-
-Three active disasters.
-
----
-
-## Stage 4
-
-Higher pressure version of existing disasters.
-
-Examples:
-
-- Faster disaster spawn rate
-- Shorter escalation timers
-- Higher Panic increase rates
-- More frequent overlapping disasters
-
-New disaster variants such as Large Fire, Mutated Slime, and Corrupted Cloud are **<u>stretch features.</u>**
+- The first disaster spawns `3 seconds` after the run starts.
+- Stage progression is based on elapsed run time, not score.
+- If the active-disaster cap is already full, no extra spawn is queued in the background.
+- New disaster variants such as Large Fire, Mutated Slime, and Corrupted Cloud are **<u>stretch features.</u>**
 
 ---
 
@@ -521,13 +517,13 @@ New disaster variants such as Large Fire, Mutated Slime, and Corrupted Cloud are
 
 Points awarded for:
 
-- Solving disasters
-- Fast solutions
-- Long survival
+- `+100` for each resolved disaster
+- `+50` if the correct potion resolves the disaster within `10 seconds` of that disaster spawning
+- `+1` score for each full second survived
 
-Optional <u>**after**</u> MVP:
+MVP rule:
 
-- Combo chains
+- Combo chains are not part of the MVP scoring model
 
 Purpose:
 
@@ -612,6 +608,22 @@ Use this GDD for player-facing design, scope, pacing, and milestone intent.
 
 ---
 
+# Run Structure
+
+The MVP uses one gameplay scene: `Laboratory.unity`.
+
+Run flow:
+
+1. The game opens to the Main Menu UI state inside `Laboratory.unity`.
+2. Selecting Start begins a new run and spawns the first disaster after `3 seconds`.
+3. Pause opens an in-scene pause menu without changing scenes.
+4. Reaching `100 Panic` switches the run to the Game Over UI state in the same scene.
+5. Restart reloads `Laboratory.unity` so the run resets cleanly.
+
+This keeps the MVP flow simple and avoids scene-management complexity before the core game loop is finished.
+
+---
+
 # MVP Checklist
 
 ## Core Gameplay
@@ -680,7 +692,7 @@ Notes:
 
 - Mouse look is not part of the MVP.
 
-- Movement should be camera-relative if needed.
+- Movement should stay world-aligned to the room so input remains screen-consistent with the fixed camera.
 
 - The laboratory does not need final art yet.
 
@@ -784,9 +796,9 @@ Deliverables:
 
 - Cooling Potion resolves the disaster
 
-- Panic decreases when resolved
+- Panic decreases by `10` when resolved
 
-- Wrong potion fails clearly or increases Panic
+- Wrong potion consumes the potion, leaves the disaster active, and adds `10 Panic`
 
 Vertical Slice Example:
 
@@ -872,9 +884,11 @@ Deliverables:
 
 - Score awarded for resolving disasters
 
-- Bonus points for fast response
+- `+50` bonus points for resolving a disaster within `10 seconds` of its spawn
 
-- Optional combo bonus for consecutive correct solutions
+- `+1` score for each full second survived
+
+- No combo bonus in MVP
 
 Suggested difficulty stages:
 
@@ -892,6 +906,7 @@ Notes:
 - Avoid sudden unfair spikes.
 
 - Panic should primarily come from active disasters, not passive time.
+- Combo scoring can be considered after MVP if the base loop still needs more replay depth.
 
 ---
 
@@ -919,7 +934,11 @@ Notes:
 
 - The game should be playable without using the Unity editor.
 
-- Restarting should reset the full run state correctly.
+- The MVP uses one scene: `Laboratory.unity`.
+
+- Main menu, pause menu, and game over are in-scene UI states, not separate scenes.
+
+- Restarting reloads `Laboratory.unity` so the full run state resets correctly.
 
 ---
 

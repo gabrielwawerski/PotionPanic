@@ -21,7 +21,7 @@ The goal is to keep gameplay systems understandable, reusable, and easy to balan
 
 This document describes the intended technical structure for the MVP.
 
-It is not a strict low-level implementation plan.
+It is not a line-by-line task list, but it does lock the intended MVP runtime structure and behavior.
 
 The team should use it to:
 
@@ -464,7 +464,7 @@ Responsibilities:
 * add Panic while active
 * check whether applied potion is correct
 * resolve itself when correct potion is used
-* apply wrong-potion penalty if needed
+* apply the MVP wrong-potion penalty
 * notify `DisasterManager` when resolved
 
 Uses:
@@ -477,14 +477,16 @@ Suggested MVP behavior:
 
 * While active, increase Panic over time.
 * After escalation time, increase Panic rate and update visuals.
-* If correct potion is applied, resolve disaster.
-* If wrong potion is applied, increase Panic and show failure feedback.
+* If correct potion is applied, consume the potion, resolve the disaster, reduce Panic by `10`, and award score.
+* If wrong potion is applied, consume the potion, keep the disaster active, add `10 Panic`, and show failure feedback.
 
 Notes:
 
 * MVP escalation should be simple.
 * Escalation can mean stronger VFX, louder sound, warning icon, and higher Panic rate.
 * Actual spreading fire, slime, or cloud behavior should be a stretch feature.
+* All three MVP disasters share the same default tuning for Stages 1-3: `1.5 Panic/sec`, escalation at `20` seconds, then `3.0 Panic/sec`.
+* Stage 4 spawns use `1.875 Panic/sec`, escalation at `15` seconds, then `3.75 Panic/sec`.
 
 ---
 
@@ -567,6 +569,10 @@ Notes:
 
 * `GameManager` should coordinate state transitions.
 * It should not become a dumping ground for unrelated logic.
+* MVP uses one gameplay scene: `Laboratory.unity`.
+* `MainMenu`, `Playing`, `Paused`, and `GameOver` are run states inside that single scene.
+* Starting a run resets Panic, score, inventory, active disasters, and stage timers, then enters `Playing`.
+* Restarting a run reloads `Laboratory.unity` for a clean reset.
 
 ---
 
@@ -604,6 +610,14 @@ Notes:
 
 * `DisasterManager` controls when and where disasters appear.
 * `DisasterInstance` controls what an individual disaster does while active.
+* The first disaster spawns `3 seconds` after the run enters `Playing`.
+* Stage progression is time-based:
+  * Stage 1: `0:00-0:59`, max `1` active disaster, spawn every `12` seconds
+  * Stage 2: `1:00-1:59`, max `2` active disasters, spawn every `10` seconds
+  * Stage 3: `2:00-2:59`, max `3` active disasters, spawn every `8` seconds
+  * Stage 4: `3:00+`, max `3` active disasters, spawn every `6` seconds
+* If the active-disaster cap is full, no queued spawn backlog is stored.
+* Disaster selection uses equal weighting across currently enabled disaster types.
 
 ---
 
@@ -636,8 +650,8 @@ Rules:
 
 * Panic should primarily increase from active disasters.
 * Passive time-based Panic should be avoided in MVP unless the game feels too easy.
-* Wrong potion use may add a Panic penalty.
-* Resolving a disaster may reduce Panic.
+* Wrong potion use adds `10 Panic`.
+* Resolving a disaster reduces Panic by `10`.
 * Panic should never go below 0.
 * Panic should never go above 100.
 
@@ -654,8 +668,8 @@ Responsibilities:
 
 * store current score
 * award points for resolving disasters
+* award survival points in MVP
 * award speed bonuses in MVP
-* track optional combo chains after MVP
 * reset score on new run
 * notify UI when score changes
 
@@ -663,7 +677,8 @@ MVP scoring:
 
 ```text
 +100 points for resolving a disaster
-+bonus points for fast response
++50 points if the disaster is resolved within 10 seconds of spawning
++1 point for each full second survived
 ```
 
 Optional after MVP:
@@ -676,7 +691,7 @@ Notes:
 
 * Keep scoring simple at first.
 * Do not balance the game around complex combos until the core loop feels good.
-* Combo chains should stay optional until the MVP is playable.
+* Combo chains are not part of MVP scoring.
 * Speed and combo behavior affect score, not Panic.
 
 ---
@@ -814,7 +829,6 @@ Assets/
     VFX/
 
   Scenes/
-    MainMenu.unity
     Laboratory.unity
 ```
 
