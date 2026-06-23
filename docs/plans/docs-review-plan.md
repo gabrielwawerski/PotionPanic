@@ -2,55 +2,54 @@
 
 ## Review Findings
 
-### 1. Canonical gameplay data ownership is ambiguous
+### 1. Canonical gameplay data ownership was ambiguous
 
-The technical architecture currently defines overlapping sources of truth for gameplay mappings:
+The technical architecture previously defined overlapping sources of truth for gameplay mappings:
 
 - `IngredientData.resultingPotion`
 - `PotionData.solvesDisasterType`
 - `DisasterData.requiredPotion`
 
-As written, those mappings can drift apart. The docs need one authoritative ownership model.
+This has been resolved by making `IngredientData.resultingPotion` and `DisasterData.requiredPotion` authoritative and treating any potion-to-disaster categorization as derived-only.
 
-### 2. Panic and score rules are inconsistent
+### 2. Panic and score rules were inconsistent
 
-The GDD says Panic decreases from fast response bonuses and consecutive successful solutions, while the technical architecture frames those ideas as scoring behavior. The docs should assign speed and combo logic to one system consistently.
+The GDD previously mixed Panic bonuses and score bonuses, while the technical architecture treated speed and combo ideas as scoring behavior. This has been resolved by keeping speed and combo behavior in score systems and limiting MVP Panic changes to disaster-driven events and successful resolution.
 
-### 3. Mid-game examples conflict with MVP scope
+### 3. Mid-game examples conflicted with MVP scope
 
-The GDD uses examples such as spreading fire and multiplying slime in the normal mid-game description, but later both docs classify those behaviors as stretch or post-MVP escalation. That creates scope confusion for implementation.
+The GDD previously used spreading and multiplying hazards as ordinary mid-game examples while later sections classified them as stretch or post-MVP. This has been resolved by replacing those examples with overlapping-disaster and timer-pressure examples.
 
-### 4. Brewing input wording is inconsistent
+### 4. Brewing input wording was inconsistent
 
-The GDD establishes a single interact key, but the brewing section separately says "Press Brew." The docs should describe brewing as part of the same `Interact` flow used elsewhere.
+The GDD previously established a single interact key but separately said "Press Brew." This has been resolved by documenting brewing as part of the same `Interact` flow used elsewhere.
 
-### 5. Architecture guidance is duplicated across docs
+### 5. Architecture guidance was duplicated across docs
 
-`Potion Panic.md` repeats architecture rules that already belong in the dedicated technical architecture doc. That duplication is already causing drift and should be reduced.
+`Potion Panic.md` previously repeated architecture rules that already belonged in the dedicated technical architecture doc. This has been resolved by trimming the GDD architecture section to a pointer to the dedicated implementation doc.
+
+### 6. Camera terminology was inconsistent
+
+The GDD briefly mixed `top-down` and `isometric` wording. This has been resolved by standardizing on `fixed top-down camera`.
 
 ## Summary
 
-Resolve the spec contradictions, keep one authoritative technical doc, and make the MVP rules implementation-safe without expanding scope.
+The docs now use one authoritative technical doc for runtime structure and one product-facing GDD for design and scope. The remaining job for future reviews is to preserve that separation and prevent drift.
 
 ## Key Changes
 
-- Keep the GDD product-facing. Remove or heavily trim the duplicated architecture section in `Potion Panic.md` and replace it with a short pointer to the technical architecture doc.
-- Declare one canonical gameplay mapping:
-  - `IngredientData.resultingPotion` owns ingredient-to-potion mapping.
-  - `DisasterData.requiredPotion` owns disaster-to-solution mapping.
-  - `PotionData.solvesDisasterType` is removed from the docs or explicitly marked derived and non-authoritative.
-- Normalize Panic rules:
-  - Panic changes only from active disasters, resolution, escalation, and wrong-potion penalties.
-  - Fast response and consecutive success affect score only in MVP.
-- Normalize scope wording:
-  - Replace mid-game examples that imply spreading or multiplying hazards with examples based on simultaneous active disasters and faster timers.
-  - Keep spreading fire, growing slime, and expanding clouds clearly labeled post-MVP or stretch.
-- Normalize input wording so brewing is always performed through the single `Interact` action.
+- Keep the GDD product-facing and use `Potion Panic - Technical Architecture.md` for runtime structure, data ownership, and system responsibilities.
+- Keep `IngredientData.resultingPotion` as the canonical ingredient-to-potion mapping.
+- Keep `DisasterData.requiredPotion` as the canonical disaster-to-solution mapping.
+- Keep speed and combo behavior tied to score, not Panic.
+- Keep spreading or multiplying hazard behavior labeled stretch or post-MVP.
+- Keep brewing documented under the single `Interact` input flow.
+- Keep camera wording standardized as `fixed top-down camera`.
 
 ## Test Plan
 
-- Re-read both docs after edits and confirm each rule appears once or points to one owner.
-- Verify every reference to Panic, score, brewing input, and escalation behavior is consistent across both files.
+- Re-read `Potion Panic.md` and `Potion Panic - Technical Architecture.md` after future edits and confirm each rule either appears once or points to one owner.
+- Verify references to Panic, score, brewing input, camera terminology, and escalation behavior remain consistent across both docs.
 - Verify milestone descriptions still match the declared MVP boundaries.
 
 ## Assumptions
