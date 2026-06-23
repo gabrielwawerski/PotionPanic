@@ -134,8 +134,8 @@ Player begins prioritizing.
 
 Examples:
 
-- Fire spreading
-- Slime multiplying
+- Overheated Cauldron and Slime Leak active at the same time
+- Faster escalation timers forcing quick prioritization
 
 Player must choose which to solve first.
 
@@ -155,7 +155,7 @@ Player survival depends on efficiency.
 
 # Camera
 
-## Fixed top down camera
+## Fixed top-down camera
 
 Advantages:
 
@@ -353,7 +353,7 @@ Collect ingredient.
 
 Approach brewing station.
 
-Press Brew.
+Press Interact.
 
 Receive potion.
 
@@ -465,8 +465,6 @@ Range:
 ## Panic Decreases When
 
 - Disaster solved
-- Fast response bonus
-- Consecutive successful solutions
 
 ---
 
@@ -608,180 +606,9 @@ Warning alarms at high panic.
 
 # Technical Architecture
 
-The game should use a simple, data-driven architecture.
+The detailed runtime structure, data ownership rules, and system responsibilities live in `Potion Panic - Technical Architecture.md`.
 
-The goal is not to create a large framework.
-
-The goal is to keep gameplay systems understandable, reusable, and easy to balance.
-
----
-
-## Core Architecture Principles
-
-### 1. Build One Reusable Gameplay Loop
-
-The same flow should support all disasters:
-
-1. Disaster appears.
-
-2. Disaster increases Panic.
-
-3. Player identifies required potion.
-
-4. Player brews potion.
-
-5. Player applies potion.
-
-6. Disaster resolves.
-
-7. Score and Panic update.
-
-Do not build separate unrelated systems for each disaster.
-
----
-
-### 2. Use ScriptableObjects for Game Data
-
-ScriptableObjects should store static design data.
-
-Recommended for:
-
-- Ingredients
-
-- Potions
-
-- Disasters
-
-Benefits:
-
-- Easier balancing
-
-- Cleaner inspector setup
-
-- Less hardcoded logic
-
-- Easier expansion after MVP
-
-ScriptableObjects should define data.
-
-Runtime MonoBehaviours should handle behavior.
-
----
-
-# Architecture Notes
-
-## Keep Disaster Logic Generic
-
-All disasters should use the same base structure.
-
-Different disasters should mostly differ by data and visuals.
-
-Good:
-
-> Fire, slime, and cloud all use DisasterInstance.
-
-Bad:
-
-> FireDisaster, SlimeDisaster, and CloudDisaster each contain separate unrelated logic.
-
-Custom scripts can be added later if a disaster truly needs unique behavior.
-
----
-
-## Avoid Full Inventory
-
-The MVP inventory should remain intentionally limited.
-
-Allowed:
-
-```text
-One carried ingredient OR one carried potion.
-```
-
-Forbidden before MVP:
-
-- item stacks
-
-- inventory grid
-
-- hotbar
-
-- crafting menu
-
-- storage chest
-
-- multiple potion slots
-
----
-
-## Keep Brewing Fast OR Instant
-
-Brewing should be fast and readable.
-
-MVP brewing rule:
-
-> Ingredient goes in, matching potion comes out.
-
-Do not add timing minigames, recipe memory, or ingredient combinations until the main loop is fun.
-
----
-
-## Keep Escalation Simple
-
-Escalation should increase pressure without multiplying implementation complexity.
-
-MVP escalation can include:
-
-- increased Panic rate
-
-- bigger VFX
-
-- louder sound
-
-- warning icon
-
-- stronger screen/UI warning
-
-Avoid before MVP:
-
-- spreading fire
-
-- dynamic slime growth
-
-- moving gas clouds
-
-- chain reactions
-
-- physics-based hazards
-
----
-
-## Build Order Rule
-
-At every stage, prefer a playable game over a larger unfinished system.
-
-Recommended build order:
-
-```text
-One room
-One ingredient
-One potion
-One disaster
-One Panic Meter
-One complete playable loop
-```
-
-Then expand to:
-
-```text
-Three ingredients
-Three potions
-Three disasters
-Scoring
-Difficulty scaling
-Menus
-Polish
-```
+Use this GDD for player-facing design, scope, pacing, and milestone intent.
 
 ---
 
@@ -839,7 +666,7 @@ Create the basic player control foundation.
 
 Deliverables:
 
-- Fixed isometric camera
+- Fixed top-down camera
 
 - WASD player movement
 

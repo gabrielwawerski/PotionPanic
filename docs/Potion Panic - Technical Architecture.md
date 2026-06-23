@@ -185,6 +185,10 @@ Purpose:
 * defines what potion it creates
 * provides UI, icon, and color data
 
+Authority:
+
+* `IngredientData.resultingPotion` is the canonical ingredient-to-potion mapping.
+
 Example assets:
 
 ```text
@@ -205,14 +209,18 @@ Possible MVP fields:
 string potionName;
 Sprite icon;
 Color themeColor;
-DisasterType solvesDisasterType;
 ```
 
 Purpose:
 
-* defines what disaster type this potion solves
 * provides UI, icon, and color data
-* allows disasters to check whether the correct potion was used
+* represents the brewed item the player carries and applies
+* can be compared directly against `DisasterData.requiredPotion`
+
+Notes:
+
+* `PotionData` is not the source of truth for disaster matching in MVP.
+* If a derived `solvesDisasterType` field is added later for UI or filtering, it should mirror `DisasterData.requiredPotion` rather than define gameplay rules.
 
 Example assets:
 
@@ -249,6 +257,10 @@ Purpose:
 * defines escalation values
 * defines presentation data
 
+Authority:
+
+* `DisasterData.requiredPotion` is the canonical disaster-to-solution mapping.
+
 Example assets:
 
 ```text
@@ -276,7 +288,6 @@ public enum DisasterType
 
 Purpose:
 
-* lets potions declare what they solve
 * lets disasters declare what type they are
 * avoids comparing strings during gameplay
 
@@ -312,6 +323,7 @@ Notes:
 * The player should use WASD movement.
 * Movement should be tuned for responsiveness before visual polish.
 * Mouse look is not part of the MVP.
+* The intended camera for MVP is fixed top-down.
 
 ---
 
@@ -400,7 +412,7 @@ Notes:
 
 * Ingredient stations are permanent sources.
 * They do not need limited stock in MVP.
-* Each station should be visually readable from the fixed camera.
+* Each station should be visually readable from the fixed top-down camera.
 
 Example stations:
 
@@ -439,6 +451,7 @@ Notes:
 
 * Brewing should be fast or instant.
 * The challenge should come from crisis management, not recipe memorization.
+* Brewing uses the same `Interact` action as other world objects.
 
 ---
 
@@ -624,6 +637,7 @@ Rules:
 * Panic should primarily increase from active disasters.
 * Passive time-based Panic should be avoided in MVP unless the game feels too easy.
 * Wrong potion use may add a Panic penalty.
+* Resolving a disaster may reduce Panic.
 * Panic should never go below 0.
 * Panic should never go above 100.
 
@@ -640,8 +654,8 @@ Responsibilities:
 
 * store current score
 * award points for resolving disasters
-* award optional speed bonuses
-* track optional combo chains
+* award speed bonuses in MVP
+* track optional combo chains after MVP
 * reset score on new run
 * notify UI when score changes
 
@@ -663,6 +677,7 @@ Notes:
 * Keep scoring simple at first.
 * Do not balance the game around complex combos until the core loop feels good.
 * Combo chains should stay optional until the MVP is playable.
+* Speed and combo behavior affect score, not Panic.
 
 ---
 
