@@ -1,77 +1,72 @@
-# Potion Panic Implementation Readiness Review
+# Potion Panic Implementation Readiness
 
 ## Verdict
 
-The current docs are ready enough to start a guided vertical-slice implementation, but they are not yet decision-complete enough for a blind handoff to another engineer.
+The docs are now decision-complete enough to implement the MVP without additional product decisions.
 
-The main indicator is that `Potion Panic - Technical Architecture.md` explicitly says it is not a strict low-level implementation plan.
+The authoritative docs are:
 
-## Blocking Gaps
+- `Potion Panic.md` for player-facing design, scope, milestones, and locked tuning targets
+- `Potion Panic - Technical Architecture.md` for runtime structure, ownership, and system behavior
 
-### 1. Core gameplay numbers are still unspecified
+## Locked MVP Decisions
 
-The docs define the systems, but not the actual values or thresholds for:
+### 1. Run structure
 
-- Panic rates
-- Escalation timing
-- Stage transition timing
-- Disaster spawn cadence
-- Fast-response scoring values
+- MVP uses one gameplay scene: `Laboratory.unity`
+- `MainMenu`, `Playing`, `Paused`, and `GameOver` are in-scene run states
+- Starting a run resets gameplay systems and spawns the first disaster after `3 seconds`
+- Restart reloads `Laboratory.unity` for a clean reset
 
-Relevant references:
+### 2. Wrong-potion behavior
 
-- `Potion Panic - Technical Architecture.md` sections covering `DisasterData`, `PanicSystem`, and `ScoreSystem`
-- `Potion Panic.md` difficulty scaling section
+- The wrong potion is consumed
+- The disaster stays active
+- The player immediately takes `+10 Panic`
+- Wrong-potion use does not award score
 
-### 2. Wrong-potion behavior is still ambiguous
+### 3. Panic and disaster tuning
 
-The docs do not lock one exact rule for wrong-potion handling.
+- Stages 1-3 use the same default disaster tuning for all three MVP disasters:
+  - `1.5 Panic/sec` while active
+  - escalation at `20 seconds`
+  - `3.0 Panic/sec` after escalation
+- Correct resolution immediately reduces Panic by `10`
+- Stage 4 uses:
+  - `1.875 Panic/sec` while active
+  - escalation at `15 seconds`
+  - `3.75 Panic/sec` after escalation
 
-- The GDD says wrong potion use "fails clearly or increases Panic."
-- The architecture doc says a wrong-potion penalty applies "if needed."
-- The architecture doc also says wrong potion use "may add" Panic.
+### 4. Difficulty progression
 
-An implementer still has to decide the exact failure rule and penalty behavior.
+| Stage   | Run Time | Max Active Disasters | Spawn Interval |
+| ------- | -------- | -------------------- | -------------- |
+| Stage 1 | 0:00-0:59 | 1 | 12 seconds |
+| Stage 2 | 1:00-1:59 | 2 | 10 seconds |
+| Stage 3 | 2:00-2:59 | 3 | 8 seconds |
+| Stage 4 | 3:00+ | 3 | 6 seconds |
 
-### 3. Difficulty progression is structurally defined but not behaviorally locked
+Additional rules:
 
-The docs define stages and the `DisasterManager` role, but they do not specify:
+- Stage progression is time-based, not score-based
+- If the active-disaster cap is full, no spawn backlog is queued
+- Disaster selection uses equal weighting across currently enabled disaster types
 
-- when stages advance
-- how spawn delays change
-- how active-disaster limits change
-- whether progression is time-based, score-based, or survival-based
+### 5. Score rules
 
-### 4. Run-flow structure is still open
+- `+100` for each resolved disaster
+- `+50` if the disaster is resolved within `10 seconds` of spawning
+- `+1` score for each full second survived
+- Combo scoring is not part of MVP
 
-The docs suggest game states and also suggest separate scenes, but they do not lock the runtime structure for:
+## Repo Note
 
-- menu flow
-- scene transitions
-- whether main menu and gameplay are separate scenes
-- where restart logic lives
+The current Unity scaffold still contains `Assets/Scenes/SampleScene.unity` as the placeholder gameplay scene, and `ProjectSettings/EditorBuildSettings.asset` currently points to that placeholder.
 
-An implementer would still need to choose that structure.
-
-## What Is Ready
-
-The docs are strong enough to begin Milestones 1-4:
-
-- camera and movement direction are clear
-- one-slot inventory and interaction flow are clear
-- ingredient-to-potion and disaster-to-solution ownership are clear
-- the first vertical slice loop is clear
-
-## Recommendation
-
-Use the current docs to implement the early vertical slice only, or add one more planning pass that locks:
-
-- gameplay tuning values
-- wrong-potion behavior
-- difficulty progression rules
-- run-flow and scene/state structure
+The first gameplay implementation pass should convert that placeholder into `Laboratory.unity` or replace it with a scene of that name and update build settings to match.
 
 ## Readiness Decision
 
 - Ready for guided implementation of the first vertical slice: `Yes`
-- Ready for blind MVP implementation without additional product decisions: `No`
+- Ready for blind MVP implementation without additional product decisions: `Yes`
+- Remaining tuning flexibility belongs to Milestone 10 balancing, not to unresolved product decisions
