@@ -1,6 +1,6 @@
 ﻿<Solution>
-  <Project Path="PotionPanic.EditModeTests.csproj"/>
-  <Project Path="PotionPanic.Gameplay.csproj"/>
-  <Project Path="PotionPanic.PlayModeTests.csproj"/>
-  <Project Path="PotionPanic.Editor.csproj"/>
+  <Project Path="PotionPanic.EditModeTests.csproj" />
+  <Project Path="PotionPanic.Gameplay.csproj" />
+  <Project Path="PotionPanic.PlayModeTests.csproj" />
+  <Project Path="PotionPanic.Editor.csproj" />
 </Solution>
