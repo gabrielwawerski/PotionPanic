@@ -63,7 +63,7 @@ Additional rules:
 
 The current Unity scaffold still contains `Assets/Scenes/SampleScene.unity` as the placeholder gameplay scene, and `ProjectSettings/EditorBuildSettings.asset` currently points to that placeholder.
 
-The first gameplay implementation pass should convert that placeholder into `Laboratory.unity` or replace it with a scene of that name and update build settings to match.
+The first gameplay implementation pass should rename or replace that placeholder scene as `Laboratory.unity` and update build settings to match.
 
 ## Readiness Decision
 

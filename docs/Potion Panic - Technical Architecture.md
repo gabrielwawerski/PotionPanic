@@ -649,7 +649,7 @@ public float CurrentPanic { get; private set; }
 Rules:
 
 * Panic should primarily increase from active disasters.
-* Passive time-based Panic should be avoided in MVP unless the game feels too easy.
+* Passive time-based Panic is not part of the MVP.
 * Wrong potion use adds `10 Panic`.
 * Resolving a disaster reduces Panic by `10`.
 * Panic should never go below 0.
@@ -1019,7 +1019,7 @@ The technical architecture is sufficient for MVP when:
 * disasters spawn at valid spawn points
 * disasters increase Panic while active
 * correct potions resolve disasters
-* wrong potions fail clearly or increase Panic
+* wrong potions consume the potion, leave the disaster active, and add `10 Panic`
 * Panic reaching 100 triggers Game Over
 * score updates when disasters are resolved
 * UI displays Panic, score, carried item, prompts, and Game Over

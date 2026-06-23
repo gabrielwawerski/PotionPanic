@@ -724,7 +724,7 @@ Used for:
 
 - Disaster cleanup
 
-- Restart/menu interactions if needed
+- Restart/menu interactions
 
 Notes:
 
