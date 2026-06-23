@@ -15,7 +15,7 @@ Target Platform: PC
 
 Potion Panic is a stylized 3D laboratory survival game where the player takes the role of an apprentice alchemist trapped inside a magical laboratory that is rapidly descending into chaos.
 
-Disasters continuously appear throughout the laboratory. The player must gather ingredients, brew the correct potions, and resolve emergencies before the laboratory's Panic Meter reaches 100%.
+Disasters continuously appear throughout the laboratory. The player must gather ingredients, brew the correct potions, and resolve emergencies before the laboratory's Panic Meter reaches 100%. The accumulation of unresolved disasters spikes the panic meter until it reaches its limit and the player loses the game.
 
 The entire game takes place inside a single room, allowing the team to focus on gameplay polish, game feel, visual feedback, and completing a finished project rather than producing large amounts of content.
 
@@ -103,8 +103,8 @@ Prefer:
 6. Player applies potion.
 7. Disaster is resolved.
 8. Panic decreases.
-9. New disaster appears.
-10. Difficulty slowly increases.
+9. New disaster appears (sometimes, while fixing an ongoing disaster).
+10. The difficulty slowly increases as more disasters appear.
 
 Repeat until Panic reaches 100%.
 
@@ -121,8 +121,6 @@ Player learns:
 - Ingredient collection
 - Brewing
 - Disaster resolution
-
-Only one disaster exists at a time.
 
 Panic rises slowly.
 
@@ -157,7 +155,7 @@ Player survival depends on efficiency.
 
 # Camera
 
-## Fixed Isometric Camera
+## Fixed top down camera
 
 Advantages:
 
@@ -508,14 +506,14 @@ Three active disasters.
 
 ## Stage 4
 
-Higher pressure version of existing disasters.  
+Higher pressure version of existing disasters.
 
-Examples:  
+Examples:
 
-- Faster disaster spawn rate  
-- Shorter escalation timers  
-- Higher Panic increase rates  
-- More frequent overlapping disasters  
+- Faster disaster spawn rate
+- Shorter escalation timers
+- Higher Panic increase rates
+- More frequent overlapping disasters
 
 New disaster variants such as Large Fire, Mutated Slime, and Corrupted Cloud are **<u>stretch features.</u>**
 
@@ -523,13 +521,13 @@ New disaster variants such as Large Fire, Mutated Slime, and Corrupted Cloud are
 
 # Score System
 
-Points awarded for:  
+Points awarded for:
 
-- Solving disasters  
-- Fast solutions  
-- Long survival  
+- Solving disasters
+- Fast solutions
+- Long survival
 
-Optional <u>**after**</u> MVP:  
+Optional <u>**after**</u> MVP:
 
 - Combo chains
 
