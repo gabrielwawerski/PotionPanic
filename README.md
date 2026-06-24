@@ -51,7 +51,7 @@ Generic MCP configuration:
 
 ### Shared helper scripts
 
-- `.\scripts\backlog-ui.ps1` is the default human command and opens the browser-based Backlog UI.
+- `.\scripts\backlog-ui.ps1` is the default human command, starts the local Backlog browser server if needed, and opens the Backlog URL in the default installed browser.
 - `.\scripts\setup-backlog.ps1` installs `backlog.md` if needed and prints the supported MCP setup commands.
 - `.\scripts\open-backlog-board.ps1` remains as a compatibility wrapper for the canonical browser UI launcher.
 - `.\scripts\install-backlog-autolaunch.ps1` installs a per-user Windows Startup shortcut for the board launcher.
