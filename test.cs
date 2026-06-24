@@ -6,3 +6,5 @@ public class test
   # kurwa tescik
     # tescik kolejny
 }
+
+pierdol sie kurwa! nie bawimy sie tak kurwa!
