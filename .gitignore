@@ -115,3 +115,6 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# Backlog.md lock artifacts are local operational state, not shared project data.
+/backlog/.locks/
