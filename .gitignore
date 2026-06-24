@@ -44,6 +44,13 @@
 
 # JetBrains IDE project metadata
 .idea/
+!.idea/
+.idea/*
+!.idea/.idea.PotionPanic/
+.idea/.idea.PotionPanic/*
+!.idea/.idea.PotionPanic/.idea/
+.idea/.idea.PotionPanic/.idea/*
+!.idea/.idea.PotionPanic/.idea/branch-warner.xml
 
 # Gradle cache directory
 .gradle/
