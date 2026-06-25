@@ -1,6 +1,6 @@
 # Team Workflow Guide
 
-Version: 1.3
+Version: 1.4
 Status: Active workflow guide
 Scope: Two-person beginner/intermediate Unity team
 Primary repo: Potion Panic
@@ -9,9 +9,10 @@ This guide defines how the team works together without blocking each other, brea
 
 Use this guide as the practical day-to-day workflow. Use these project docs as the source of truth for the actual game:
 
-- `docs/Potion Panic.md` for game design, scope, milestones, and tuning targets
-- `docs/Potion Panic - Technical Architecture.md` for implementation structure and system behavior
-- `docs/plans/implementation-readiness-review.md` for locked MVP decisions and readiness notes
+- `Docs/getting-started.md` for first-machine onboarding and first-run checks
+- `Docs/Potion Panic.md` for game design, scope, milestones, and tuning targets
+- `Docs/Potion Panic - Technical Architecture.md` for implementation structure and system behavior
+- `Docs/plans/implementation-readiness-review.md` for locked MVP decisions and readiness notes
 
 ---
 
@@ -59,16 +60,22 @@ If yes, consider it for the current milestone. If no, put it in the backlog.
 
 Before development begins, both developers should confirm the same baseline setup.
 
+Before taking a task on a new machine, complete `Docs/getting-started.md` end to end.
+
 Required setup:
 
 - Unity version matches `ProjectSettings/ProjectVersion.txt`.
 - Current recorded Unity version is `6000.5.1f1`.
+- `PotionPanic.sln` opens in Rider on both machines.
 - The project opens on both machines.
-- The main gameplay scene runs on both machines.
+- The current shared prototype scene enters Play Mode on both machines.
+- The current shared prototype scene is `Assets/Scenes/SampleScene.unity`.
+- `Assets/Scenes/testscene.unity` is not the shared milestone scene unless the task explicitly says so.
 - Visible Meta Files are enabled.
 - Force Text serialization is enabled.
 - `.gitignore` is present at the repo root.
 - `.gitattributes` is present at the repo root.
+- Git LFS is installed locally with `git lfs install`.
 - Both developers can pull the repository and run the project.
 - Both developers understand which generated folders must not be committed.
 
@@ -116,12 +123,12 @@ Do not start future milestone work before the current milestone is playable. A m
 - the other developer can pull and test it
 - the next milestone is not blocked by broken work
 
-For Potion Panic, milestone intent lives in `docs/Potion Panic.md`. Implementation handoff plans live under `docs/plans/`.
+For Potion Panic, milestone intent lives in `Docs/Potion Panic.md`. Implementation handoff plans live under `Docs/plans/`.
 
 Current useful references:
 
-- `docs/plans/implementation-readiness-review.md`
-- `docs/plans/milestone-1-implementation-plan.md`
+- `Docs/plans/implementation-readiness-review.md`
+- `Docs/plans/milestone-1-implementation-plan.md`
 
 If a task does not support the current milestone, put it in the backlog.
 
@@ -199,10 +206,12 @@ Risk/blocker:
 Before editing a shared Unity file, say it directly:
 
 ```text
-I am editing Laboratory.unity for the next hour.
+I am editing SampleScene.unity for the next hour.
 I am changing the Player prefab.
 I am editing the HUD prefab.
 ```
+
+When Milestone 1 renames or replaces the shared gameplay scene as `Laboratory.unity`, use that scene name in the same message format.
 
 After finishing work, post:
 
@@ -230,6 +239,12 @@ Before starting a task:
 git checkout master
 git pull --ff-only
 git checkout -b feature/my-task
+```
+
+Run this once per machine before your first branch if you have not already:
+
+```bash
+git lfs install
 ```
 
 Use short branch names that describe the task:
@@ -289,7 +304,7 @@ Merge only after the branch has been tested. For important changes, the teammate
 
 Important changes include:
 
-- main scene edits
+- shared gameplay scene edits
 - player prefab edits
 - game manager changes
 - input changes
@@ -311,8 +326,10 @@ Avoid two people editing the same scene at the same time.
 Default rule:
 
 ```text
-Only one person owns Laboratory.unity at a time.
+Only one person owns the current shared gameplay scene at a time.
 ```
+
+Right now that means `SampleScene.unity`. After Milestone 1 renames or replaces it, treat `Laboratory.unity` the same way.
 
 Prefer working in:
 
@@ -384,7 +401,7 @@ Minimum test questions:
 
 - Does the project open?
 - Does the project compile?
-- Does the main scene run?
+- Does the shared gameplay scene run?
 - Are there console errors?
 - Does the feature meet the task acceptance criteria?
 - Did this accidentally break something else?
@@ -395,6 +412,19 @@ For gameplay changes, test in Play Mode.
 For UI changes, test at the target resolution if one exists.
 
 For scene changes, check missing references and broken prefabs.
+
+Minimum local verification for most tasks:
+
+1. Open Unity and wait for compilation or package import to finish.
+2. Open the scene affected by the task. For general smoke tests today, use `Assets/Scenes/SampleScene.unity`.
+3. Press Play and let the scene run long enough to confirm Play Mode entered cleanly.
+4. Check the Console for new errors relevant to the task.
+5. Stop Play Mode before reviewing the final scene diff.
+
+When a task adds or changes automated tests, also run the relevant suite in `Window > General > Test Runner`:
+
+- `EditMode` for pure logic or editor-facing tests
+- `PlayMode` for scene, runtime, or integration behavior
 
 A task is done only when:
 
@@ -502,15 +532,16 @@ Update documentation when:
 - setup instructions change
 - build instructions change
 
-Current repo docs live in `docs/`, not `Docs/`.
+Current repo docs live in `Docs/`.
 
 Primary docs:
 
 ```text
-docs/Potion Panic.md
-docs/Potion Panic - Technical Architecture.md
-docs/team-workflow-guide.md
-docs/plans/implementation-readiness-review.md
+Docs/getting-started.md
+Docs/Potion Panic.md
+Docs/Potion Panic - Technical Architecture.md
+Docs/team-workflow-guide.md
+Docs/plans/implementation-readiness-review.md
 ```
 
 Do not create duplicate docs with different names unless the team intentionally replaces the old doc. Stale docs cause bad decisions.
@@ -518,9 +549,9 @@ Do not create duplicate docs with different names unless the team intentionally 
 Useful future docs, if needed:
 
 ```text
-docs/backlog.md
-docs/known-issues.md
-docs/playtest-notes.md
+Docs/backlog.md
+Docs/known-issues.md
+Docs/playtest-notes.md
 ```
 
 ---
@@ -531,7 +562,7 @@ At any point, the project should usually satisfy:
 
 - project opens
 - project compiles
-- main scene runs
+- shared gameplay scene runs
 - latest build is playable
 - `master` is stable
 - tasks are visible
