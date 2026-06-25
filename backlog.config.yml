@@ -1,10 +1,15 @@
 project_name: "PotionPanic"
 default_status: "Backlog"
-statuses: ["Backlog", "To Do", "In Progress", "Done"]
+statuses: [ "Design", "Backlog", "In Progress", "Test / Review ", "Done" ]
 labels: []
-definition_of_done: ["Tests pass", "Documentation updated", "No regressions introduced"]
+definition_of_done:
+  - Acceptance criteria met
+  - Relevant Unity verification completed
+  - No new relevant Console errors
+  - Documentation or Backlog notes updated when needed
+  - Branch committed and ready for review or merge
 date_format: yyyy-mm-dd
-max_column_width: 20
+max_column_width: 32
 default_editor: "rider"
 auto_open_browser: true
 default_port: 6420
@@ -12,7 +17,7 @@ remote_operations: true
 auto_commit: false
 filesystem_only: false
 bypass_git_hooks: true
-check_active_branches: false
+check_active_branches: true
 active_branch_days: 10
 task_prefix: "PP"
 backlog_directory: "backlog"
