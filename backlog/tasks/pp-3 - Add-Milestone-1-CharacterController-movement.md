@@ -1,10 +1,11 @@
 ---
 id: PP-3
 title: Add Milestone 1 CharacterController movement
-status: To Do
-assignee: []
+status: Ready
+assignee:
+  - Gabe
 created_date: '2026-06-25 00:24'
-updated_date: '2026-06-25 00:29'
+updated_date: '2026-06-25 01:32'
 labels: []
 milestone: m-0
 dependencies:
@@ -42,7 +43,9 @@ Created as planning/kanban data only. No implementation started.
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 Tests pass
-- [ ] #2 Documentation updated
-- [ ] #3 No regressions introduced
+- [ ] #1 Acceptance criteria met
+- [ ] #2 Relevant Unity verification completed
+- [ ] #3 No new relevant Console errors
+- [ ] #4 Documentation or Backlog notes updated when needed
+- [ ] #5 Branch committed and ready for review or merge
 <!-- DOD:END -->

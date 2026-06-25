@@ -1,11 +1,11 @@
 ---
 id: PP-2
 title: Replace SampleScene with Laboratory milestone scene
-status: To Do
+status: Ready
 assignee:
-  - '@Codex'
+  - Patro
 created_date: '2026-06-25 00:24'
-updated_date: '2026-06-25 00:29'
+updated_date: '2026-06-25 01:33'
 labels: []
 milestone: m-0
 dependencies: []
@@ -19,8 +19,8 @@ modified_files:
   - Assets/Scenes/Laboratory.unity
   - ProjectSettings/EditorBuildSettings.asset
   - ProjectSettings/ProjectSettings.asset
-priority: medium
-ordinal: 10000
+priority: high
+ordinal: 11500
 ---
 
 ## Description
@@ -56,7 +56,9 @@ Board setup only. No implementation started in code or scene assets. The task pl
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 Tests pass
-- [ ] #2 Documentation updated
-- [ ] #3 No regressions introduced
+- [ ] #1 Acceptance criteria met
+- [ ] #2 Relevant Unity verification completed
+- [ ] #3 No new relevant Console errors
+- [ ] #4 Documentation or Backlog notes updated when needed
+- [ ] #5 Branch committed and ready for review or merge
 <!-- DOD:END -->

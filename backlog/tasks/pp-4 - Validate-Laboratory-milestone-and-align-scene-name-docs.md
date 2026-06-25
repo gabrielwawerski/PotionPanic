@@ -1,10 +1,10 @@
 ---
 id: PP-4
 title: Validate Laboratory milestone and align scene-name docs
-status: To Do
+status: Ready
 assignee: []
 created_date: '2026-06-25 00:24'
-updated_date: '2026-06-25 00:29'
+updated_date: '2026-06-25 01:33'
 labels: []
 milestone: m-0
 dependencies:
@@ -23,7 +23,7 @@ modified_files:
   - Docs/getting-started.md
   - Docs/team-workflow-guide.md
   - Docs/plans/implementation-readiness-review.md
-priority: medium
+priority: low
 ordinal: 12000
 ---
 
@@ -49,7 +49,9 @@ Created as planning/kanban data only. No implementation started.
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 Tests pass
-- [ ] #2 Documentation updated
-- [ ] #3 No regressions introduced
+- [ ] #1 Acceptance criteria met
+- [ ] #2 Relevant Unity verification completed
+- [ ] #3 No new relevant Console errors
+- [ ] #4 Documentation or Backlog notes updated when needed
+- [ ] #5 Branch committed and ready for review or merge
 <!-- DOD:END -->

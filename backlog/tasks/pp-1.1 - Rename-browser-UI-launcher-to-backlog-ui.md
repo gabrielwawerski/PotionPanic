@@ -5,7 +5,7 @@ status: Done
 assignee:
   - Codex
 created_date: '2026-06-24 23:04'
-updated_date: '2026-06-24 23:06'
+updated_date: '2026-06-25 01:35'
 labels: []
 dependencies: []
 references:
@@ -22,7 +22,7 @@ modified_files:
   - backlog/tasks
 parent_task_id: PP-1
 priority: medium
-ordinal: 2000
+ordinal: 1000
 ---
 
 ## Description
