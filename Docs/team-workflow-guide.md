@@ -22,7 +22,7 @@ At the start of a work session:
 
 1. Pull the latest `master`.
 2. Confirm the current milestone.
-3. Pick one small task from `Ready`.
+3. Pick one small task from `To do`.
 4. Say what you are working on and which files, scenes, or prefabs you expect to touch.
 5. Create a short-lived feature branch.
 6. Build and test the change locally.
@@ -140,8 +140,8 @@ Use a simple task board:
 
 ```text
 Backlog
-Ready
-In Progress
+To do
+Doing
 Review / Test
 Done
 ```
@@ -151,8 +151,8 @@ Column meaning:
 | Column | Meaning |
 | --- | --- |
 | Backlog | Ideas and tasks not approved for immediate work |
-| Ready | Tasks clear enough to start |
-| In Progress | Tasks currently being worked on |
+| To do | Tasks clear enough to start |
+| Doing | Tasks currently being worked on |
 | Review / Test | Implemented work that needs review or testing |
 | Done | Complete, tested, committed, and safe for the other person to pull |
 
@@ -621,7 +621,7 @@ Example:
 ## Add Player Movement
 
 Owner: Developer A
-Status: Ready
+Status: To do
 Milestone: Movement
 
 Goal:

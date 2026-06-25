@@ -1,11 +1,11 @@
 ---
 id: PP-2
 title: Replace SampleScene with Laboratory milestone scene
-status: Ready
+status: To do
 assignee:
   - Patro
 created_date: '2026-06-25 00:24'
-updated_date: '2026-06-25 01:33'
+updated_date: '2026-06-25 13:39'
 labels: []
 milestone: m-0
 dependencies: []

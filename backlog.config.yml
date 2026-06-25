@@ -1,6 +1,6 @@
 project_name: "PotionPanic"
 default_status: "Backlog"
-statuses: [ "Design", "Backlog", "In Progress", "Test / Review ", "Done" ]
+statuses: [ "Design", "Backlog", "To do", "Doing", "Test / Review", "Done" ]
 labels: []
 definition_of_done:
   - Acceptance criteria met

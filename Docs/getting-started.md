@@ -122,6 +122,6 @@ The repo still uses `SampleScene.unity` today. `Laboratory.unity` is the planned
 
 1. Read `Docs/team-workflow-guide.md`.
 2. Confirm the current milestone.
-3. Pick a small task from `Ready`.
+3. Pick a small task from `To do`.
 4. Tell the other collaborator which files, scenes, or prefabs you expect to touch.
 5. Create a short-lived feature branch.

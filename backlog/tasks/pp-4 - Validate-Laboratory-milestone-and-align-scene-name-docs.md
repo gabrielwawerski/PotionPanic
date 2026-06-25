@@ -1,10 +1,10 @@
 ---
 id: PP-4
 title: Validate Laboratory milestone and align scene-name docs
-status: Ready
+status: To do
 assignee: []
 created_date: '2026-06-25 00:24'
-updated_date: '2026-06-25 01:33'
+updated_date: '2026-06-25 13:39'
 labels: []
 milestone: m-0
 dependencies:
