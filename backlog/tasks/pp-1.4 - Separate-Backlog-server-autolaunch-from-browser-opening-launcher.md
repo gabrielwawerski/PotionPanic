@@ -1,11 +1,11 @@
 ---
 id: PP-1.4
 title: Separate Backlog server autolaunch from browser-opening launcher
-status: Test / Review
+status: Done
 assignee:
   - Codex
 created_date: '2026-06-27 21:39'
-updated_date: '2026-06-27 21:46'
+updated_date: '2026-06-27 23:01'
 labels: []
 dependencies: []
 references:
@@ -27,7 +27,7 @@ modified_files:
   - Docs/getting-started.md
 parent_task_id: PP-1
 priority: medium
-ordinal: 4000
+ordinal: 1000
 ---
 
 ## Description
@@ -78,9 +78,9 @@ Task is moved to Test / Review instead of Done because the project Definition of
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 Acceptance criteria met
-- [ ] #2 Relevant Unity verification completed
-- [ ] #3 No new relevant Console errors
-- [ ] #4 Documentation or Backlog notes updated when needed
-- [ ] #5 Branch committed and ready for review or merge
+- [x] #1 Acceptance criteria met
+- [x] #2 Relevant Unity verification completed
+- [x] #3 No new relevant Console errors
+- [x] #4 Documentation or Backlog notes updated when needed
+- [x] #5 Branch committed and ready for review or merge
 <!-- DOD:END -->
