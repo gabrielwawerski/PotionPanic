@@ -2,49 +2,65 @@
 id: PP-4
 title: Validate Laboratory milestone and align scene-name docs
 status: To Do
-assignee: []
+assignee:
+  - '@Gabe'
 created_date: '2026-06-25 00:24'
-updated_date: '2026-06-27 21:46'
+updated_date: '2026-06-27 23:47'
 labels: []
 milestone: m-0
 dependencies:
   - PP-2
   - PP-3
 documentation:
-  - Docs/plans/milestone-1-implementation-plan.md
   - README.md
-  - Docs/getting-started.md
-  - Docs/team-workflow-guide.md
-  - Docs/plans/implementation-readiness-review.md
+  - Docs/project/mvp-scope.md
+  - Docs/onboarding/getting-started.md
+  - Docs/collaboration/team-workflow.md
+  - AGENTS.md
+  - CLAUDE.md
+  - GEMINI.md
 modified_files:
-  - Assets/Tests/EditMode
   - Assets/Tests/PlayMode
   - README.md
-  - Docs/getting-started.md
-  - Docs/team-workflow-guide.md
-  - Docs/plans/implementation-readiness-review.md
-priority: low
-ordinal: 14000
+  - Docs/onboarding/getting-started.md
+  - Docs/collaboration/team-workflow.md
+  - Docs/project/mvp-scope.md
+  - AGENTS.md
+  - CLAUDE.md
+  - GEMINI.md
+priority: medium
+ordinal: 13000
 ---
 
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Finish Milestone 1 by adding the scoped automated validation and updating collaborator docs so the renamed shared gameplay scene and smoke-test workflow stay accurate.
+Finish Milestone 1 by adding the final PlayMode validation for `Laboratory.unity`, confirming the manual movement smoke test, and aligning collaborator docs and repo instructions so `Laboratory` becomes the canonical shared gameplay scene after PP-2 and PP-3 land.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 EditMode coverage exists for axis conversion and diagonal normalization.
-- [ ] #2 PlayMode coverage loads Laboratory.unity and verifies the main camera is orthographic and the player has a CharacterController.
-- [ ] #3 Current collaborator docs no longer instruct people to open or smoke-test SampleScene.unity as the shared gameplay scene.
+- [ ] #1 PlayMode coverage loads `Laboratory.unity` and verifies the main camera is orthographic.
+- [ ] #2 PlayMode coverage verifies the Milestone 1 player setup in `Laboratory.unity` includes a `CharacterController`.
+- [ ] #3 Current collaborator docs and repo instruction files no longer tell contributors to open or smoke-test `SampleScene.unity` as the shared milestone scene once Milestone 1 is complete.
 - [ ] #4 Manual smoke verification confirms WASD movement reaches all four walls and the player cannot leave the room.
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Review the final `Laboratory` scene and movement setup from PP-2 and PP-3, plus every current collaborator-facing instruction that still mentions `SampleScene` as the shared gameplay scene.
+2. Add PlayMode coverage that loads `Laboratory.unity` and verifies the orthographic main camera plus the Milestone 1 player `CharacterController` setup.
+3. Update the README, onboarding docs, collaboration workflow, MVP scope notes, and repo instruction files so `Laboratory.unity` is the canonical shared gameplay scene while preserving the `testscene` caveat if it still applies.
+4. Run the manual Milestone 1 smoke test, then record any remaining handoff or follow-up notes before marking the milestone ready for completion.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-Created as planning/kanban data only. No implementation started.
+Created as planning and kanban data only. No implementation started.
+
+2026-06-28 backlog refinement: PP-4 is the Milestone 1 exit-gate task. It owns final PlayMode validation plus the post-rename docs and instruction sweep, not movement math or scene-conversion implementation.
 <!-- SECTION:NOTES:END -->
 
 ## Definition of Done

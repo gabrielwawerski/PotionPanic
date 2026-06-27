@@ -5,53 +5,54 @@ status: To Do
 assignee:
   - Patro
 created_date: '2026-06-25 00:24'
-updated_date: '2026-06-27 14:56'
+updated_date: '2026-06-27 23:46'
 labels: []
 milestone: m-0
 dependencies: []
 documentation:
-  - Docs/plans/milestone-1-implementation-plan.md
-  - Docs/plans/implementation-readiness-review.md
-  - Docs/Potion Panic.md
-  - Docs/Potion Panic - Technical Architecture.md
+  - README.md
+  - Docs/project/mvp-scope.md
+  - Docs/project/technical-architecture.md
+  - Docs/project/game-design.md
+  - Docs/onboarding/getting-started.md
+  - Docs/collaboration/team-workflow.md
 modified_files:
   - Assets/Scenes/SampleScene.unity
   - Assets/Scenes/Laboratory.unity
   - ProjectSettings/EditorBuildSettings.asset
   - ProjectSettings/ProjectSettings.asset
 priority: high
-ordinal: 13000
+ordinal: 11000
 ---
 
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Convert the current shared placeholder scene into the canonical Milestone 1 gameplay scene so later milestones build on Laboratory instead of SampleScene.
+Convert the current shared placeholder scene into the canonical Milestone 1 gameplay scene by renaming or replacing `SampleScene.unity` as `Laboratory.unity`, updating shared scene references, and delivering the fixed top-down lab blockout that later milestones build on.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Assets/Scenes/Laboratory.unity is the shared gameplay scene and project scene defaults no longer point at SampleScene.unity.
-- [ ] #2 The scene contains a static orthographic main camera and a one-room lab blockout with floor, perimeter walls, and center spawn.
-- [ ] #3 No Milestone 2 or later systems are introduced.
+- [ ] #1 `Assets/Scenes/Laboratory.unity` is the shared gameplay scene, and project scene defaults no longer point at `SampleScene.unity`.
+- [ ] #2 The scene contains a static orthographic main camera and a one-room lab blockout with floor, perimeter walls, and a center spawn marker.
+- [ ] #3 No Milestone 2 or later systems are introduced into the scene conversion task.
 <!-- AC:END -->
 
 ## Implementation Plan
 
 <!-- SECTION:PLAN:BEGIN -->
-1. Verify current scene/build-setting/template-default references and capture the current SampleScene baseline.
-2. Create a failing PlayMode test that loads the canonical Laboratory scene name and checks for an orthographic main camera.
-3. Run the targeted PlayMode test to confirm it fails because Laboratory.unity does not exist yet.
-4. Rename or replace SampleScene as Laboratory, then update EditorBuildSettings and templateDefaultScene to the new path.
-5. Rework the scene into the Milestone 1 blockout only: static orthographic camera, centered 16x16 room, perimeter walls, and center spawn placeholder.
-6. Re-run the targeted PlayMode test and inspect the scene asset/config references until it passes.
-7. Append notes with any scene-asset specifics needed by the later movement and docs-validation tasks.
+1. Verify the current shared-scene references in the scene asset, build settings, and project defaults, and capture any baseline details that later tasks need.
+2. Rename or replace `SampleScene.unity` as `Laboratory.unity`, then update `EditorBuildSettings` and the project default-scene reference to the canonical Milestone 1 path.
+3. Rework the shared scene into the Milestone 1 blockout only: static orthographic main camera, centered room, perimeter walls, and a center spawn marker.
+4. Verify the converted scene stays within Milestone 1 scope, then record any scene-specific handoff notes needed by the movement and final-validation tasks.
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-Board setup only. No implementation started in code or scene assets. The task plan is recorded for future execution, but the task remains unstarted pending explicit implementation work.
+Board setup only. No implementation started in code or scene assets.
+
+2026-06-28 backlog refinement: PP-2 remains the single shared-scene task. Automated PlayMode validation was moved out of this card so scene conversion ownership stays separate from final milestone validation.
 <!-- SECTION:NOTES:END -->
 
 ## Definition of Done
