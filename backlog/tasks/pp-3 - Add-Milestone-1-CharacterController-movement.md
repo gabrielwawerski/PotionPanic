@@ -1,11 +1,11 @@
 ---
 id: PP-3
 title: Add Milestone 1 CharacterController movement
-status: To do
+status: To Do
 assignee:
   - Gabe
 created_date: '2026-06-25 00:24'
-updated_date: '2026-06-25 13:39'
+updated_date: '2026-06-25 21:26'
 labels: []
 milestone: m-0
 dependencies:

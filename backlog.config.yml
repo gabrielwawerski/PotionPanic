@@ -1,17 +1,12 @@
 project_name: "PotionPanic"
 default_status: "Backlog"
-statuses: [ "Design", "Backlog", "To do", "Doing", "Test / Review", "Done" ]
+statuses: [ "Backlog", "To Do", "Doing", "Test / Review", "Done" ]
 labels: []
-definition_of_done:
-  - Acceptance criteria met
-  - Relevant Unity verification completed
-  - No new relevant Console errors
-  - Documentation or Backlog notes updated when needed
-  - Branch committed and ready for review or merge
+definition_of_done: [ "Acceptance criteria met", "Relevant Unity verification completed", "No new relevant Console errors", "Documentation or Backlog notes updated when needed", "Branch committed and ready for review or merge" ]
 date_format: yyyy-mm-dd
 max_column_width: 32
 default_editor: "rider"
-auto_open_browser: true
+auto_open_browser: false
 default_port: 6420
 remote_operations: true
 auto_commit: false

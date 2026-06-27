@@ -1,11 +1,11 @@
 ---
 id: PP-2
 title: Replace SampleScene with Laboratory milestone scene
-status: To do
+status: To Do
 assignee:
   - Patro
 created_date: '2026-06-25 00:24'
-updated_date: '2026-06-25 13:39'
+updated_date: '2026-06-27 14:49'
 labels: []
 milestone: m-0
 dependencies: []
@@ -20,7 +20,7 @@ modified_files:
   - ProjectSettings/EditorBuildSettings.asset
   - ProjectSettings/ProjectSettings.asset
 priority: high
-ordinal: 11500
+ordinal: 5500
 ---
 
 ## Description
