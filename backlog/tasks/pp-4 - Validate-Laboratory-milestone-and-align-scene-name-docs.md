@@ -4,7 +4,7 @@ title: Validate Laboratory milestone and align scene-name docs
 status: To Do
 assignee: []
 created_date: '2026-06-25 00:24'
-updated_date: '2026-06-25 13:39'
+updated_date: '2026-06-27 21:46'
 labels: []
 milestone: m-0
 dependencies:
@@ -24,7 +24,7 @@ modified_files:
   - Docs/team-workflow-guide.md
   - Docs/plans/implementation-readiness-review.md
 priority: low
-ordinal: 12000
+ordinal: 14000
 ---
 
 ## Description

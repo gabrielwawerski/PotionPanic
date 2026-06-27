@@ -5,7 +5,7 @@ status: To Do
 assignee:
   - Patro
 created_date: '2026-06-25 00:24'
-updated_date: '2026-06-27 14:49'
+updated_date: '2026-06-27 14:56'
 labels: []
 milestone: m-0
 dependencies: []
@@ -20,7 +20,7 @@ modified_files:
   - ProjectSettings/EditorBuildSettings.asset
   - ProjectSettings/ProjectSettings.asset
 priority: high
-ordinal: 5500
+ordinal: 13000
 ---
 
 ## Description

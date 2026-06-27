@@ -71,6 +71,8 @@ For human use:
 .\scripts\backlog-ui.ps1
 ```
 
+If you install the Windows Startup autolaunch later, sign-in only starts the Backlog browser server in the background. It does not open the board automatically; run `.\scripts\backlog-ui.ps1` when you want the browser UI.
+
 If you need MCP setup details for Codex or Gemini CLI, use the manual setup section in `README.md`.
 
 ## Know which files need coordination

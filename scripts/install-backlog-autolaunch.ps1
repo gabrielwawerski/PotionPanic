@@ -3,9 +3,10 @@ $ErrorActionPreference = 'Stop'
 
 $scriptDirectory = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repositoryRoot = Split-Path -Parent $scriptDirectory
-$launcherScript = Join-Path $scriptDirectory 'backlog-ui.ps1'
+$launcherScript = Join-Path $scriptDirectory 'backlog-autolaunch.ps1'
 $startupDirectory = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Startup'
-$shortcutPath = Join-Path $startupDirectory 'PotionPanic - Open Backlog Board.lnk'
+$legacyShortcutPath = Join-Path $startupDirectory 'PotionPanic - Open Backlog Board.lnk'
+$shortcutPath = Join-Path $startupDirectory 'PotionPanic - Start Backlog Server.lnk'
 $powershellPath = (Get-Command -Name 'powershell.exe' -ErrorAction Stop).Source
 $arguments = '-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "{0}"' -f $launcherScript
 
@@ -17,13 +18,17 @@ if (-not (Test-Path -LiteralPath $startupDirectory)) {
     New-Item -ItemType Directory -Path $startupDirectory | Out-Null
 }
 
+if (Test-Path -LiteralPath $legacyShortcutPath) {
+    Remove-Item -LiteralPath $legacyShortcutPath -Force
+}
+
 $shell = New-Object -ComObject WScript.Shell
 $shortcut = $shell.CreateShortcut($shortcutPath)
 $shortcut.TargetPath = $powershellPath
 $shortcut.Arguments = $arguments
 $shortcut.WorkingDirectory = $repositoryRoot
 $shortcut.WindowStyle = 7
-$shortcut.Description = 'Open the PotionPanic Backlog board at sign-in.'
+$shortcut.Description = 'Start the PotionPanic Backlog server at sign-in.'
 $shortcut.IconLocation = "$powershellPath,0"
 $shortcut.Save()
 
