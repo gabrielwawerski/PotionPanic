@@ -1,0 +1,249 @@
+# MVP Scope
+
+Use this document for locked MVP decisions, milestone sequencing, and hard
+scope boundaries.
+
+## Current Repo Note
+
+The current Unity scaffold still uses `Assets/Scenes/SampleScene.unity` as the
+shared prototype scene.
+
+Milestone 1 is expected to rename or replace that shared gameplay scene as
+`Laboratory.unity`. Until then:
+
+- `SampleScene.unity` is the shared smoke-test scene
+- `testscene.unity` is not the milestone scene unless a task explicitly says so
+
+## Locked MVP Decisions
+
+### Run structure
+
+- The MVP uses one gameplay scene: `Laboratory.unity`.
+- `MainMenu`, `Playing`, `Paused`, and `GameOver` are in-scene run states.
+- Starting a run resets gameplay systems and spawns the first disaster after
+  `3 seconds`.
+- Restart reloads `Laboratory.unity` for a clean reset.
+
+### Milestone 1 camera and movement
+
+- Camera is fixed orthographic top-down.
+- Movement uses a `CharacterController`, not a `Rigidbody`.
+- Movement is world-aligned on the X/Z axes.
+- Milestone 1 does not include mouse look, sprint, jump, or camera follow.
+
+### Wrong-potion behavior
+
+- The wrong potion is consumed.
+- The disaster stays active.
+- The player immediately takes `+10 Panic`.
+- Wrong-potion use does not award score.
+
+### Default disaster tuning
+
+Stages 1-3 use the same default tuning for all three MVP disasters:
+
+- `1.5 Panic/sec` while active
+- escalation at `20 seconds`
+- `3.0 Panic/sec` after escalation
+
+Stage 4 uses:
+
+- `1.875 Panic/sec` while active
+- escalation at `15 seconds`
+- `3.75 Panic/sec` after escalation
+
+Correct resolution immediately reduces Panic by `10`.
+
+### Difficulty progression
+
+| Stage | Run time | Max active disasters | Spawn interval |
+| --- | --- | --- | --- |
+| Stage 1 | 0:00-0:59 | 1 | 12 seconds |
+| Stage 2 | 1:00-1:59 | 2 | 10 seconds |
+| Stage 3 | 2:00-2:59 | 3 | 8 seconds |
+| Stage 4 | 3:00+ | 3 | 6 seconds |
+
+Additional rules:
+
+- stage progression is time-based, not score-based
+- if the active-disaster cap is full, no spawn backlog is queued
+- disaster selection uses equal weighting across enabled disaster types
+
+### Score rules
+
+- `+100` for each resolved disaster
+- `+50` if the disaster is resolved within `10 seconds` of spawning
+- `+1` score for each full second survived
+- combo scoring is not part of MVP
+
+## MVP Checklist
+
+### Core gameplay
+
+- player movement
+- interaction system
+- brewing station
+- ingredient collection
+
+### Content
+
+- 3 ingredients
+- 3 potions
+- 3 disasters
+
+### UI
+
+- main menu
+- Panic meter
+- score display
+- game over screen
+
+### Polish
+
+- basic sounds
+- basic particles
+- basic animations
+
+## Milestones
+
+### Milestone 1: movement and camera
+
+Goal:
+
+- establish the player control foundation
+
+Deliverables:
+
+- fixed top-down camera
+- WASD player movement
+- player collision
+- basic laboratory blockout
+- responsive movement feel
+
+### Milestone 2: interaction system
+
+Goal:
+
+- allow the player to interact with lab objects through one reusable pattern
+
+Deliverables:
+
+- single interact key
+- nearby interactable detection
+- interaction prompt
+- reusable interactable abstraction
+
+### Milestone 3: ingredient to potion loop
+
+Goal:
+
+- create the first complete non-disaster gameplay loop
+
+Deliverables:
+
+- one ingredient station
+- brewing station
+- one carried ingredient or one carried potion
+- carried item UI
+
+### Milestone 4: first disaster
+
+Goal:
+
+- make the game technically playable with one disaster
+
+Deliverables:
+
+- Overheated Cauldron
+- Panic increase while active
+- Cooling Potion resolution
+- wrong-potion penalty
+
+### Milestone 5: core game loop
+
+Goal:
+
+- make the vertical slice repeatable from start to fail state
+
+Deliverables:
+
+- recurring disaster spawning
+- Game Over
+- restart flow
+- basic score display
+
+### Milestone 6: full MVP content
+
+Goal:
+
+- add the remaining ingredients, potions, and disasters using the same systems
+
+### Milestone 7: difficulty and scoring
+
+Goal:
+
+- add replay pressure and scoring
+
+### Milestone 8: menus and run flow
+
+Goal:
+
+- wrap the game in a complete start-to-finish structure
+
+### Milestone 9: audio and visual feedback
+
+Goal:
+
+- improve readability and satisfaction
+
+### Milestone 10: polish, balancing, and bug fixing
+
+Goal:
+
+- turn the prototype into a finished small game
+
+## Hard Scope Boundaries
+
+The following are out of scope until MVP is complete:
+
+- multiplayer
+- quest systems
+- dialogue systems
+- story campaign
+- crafting trees
+- skill trees
+- large inventories
+- multiple rooms
+- open-world areas
+- procedural generation
+- combat systems
+
+If a new idea does not help the current milestone become playable, move it to
+Backlog instead of implementing it now.
+
+## Post-MVP Candidates
+
+Possible expansion ideas after the MVP ships:
+
+- additional laboratories
+- new ingredient types
+- new disaster families
+- endless mode
+- daily challenge mode
+- laboratory upgrades
+- cosmetic unlocks
+- boss disasters
+- achievements
+
+## Definition of Done
+
+Potion Panic is complete when a player can:
+
+- launch the game
+- play from start to finish
+- resolve disasters
+- lose by reaching 100 Panic
+- earn a score
+- restart and play again
+
+without gameplay-breaking bugs.

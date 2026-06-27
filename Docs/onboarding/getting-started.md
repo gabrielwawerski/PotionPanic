@@ -1,6 +1,7 @@
 # Getting Started
 
-This guide is for a first-time collaborator who is new to Unity, Rider, or both.
+This guide is for a first-time collaborator who is new to Unity, Rider, or
+both.
 
 ## Install the tools
 
@@ -25,7 +26,8 @@ git status
 Expected result:
 
 - `git status` is clean after the clone.
-- Generated folders such as `Library/`, `Temp/`, and `Logs/` are absent or ignored.
+- Generated folders such as `Library/`, `Temp/`, and `Logs/` are absent or
+  ignored.
 
 ## Open the project in Unity
 
@@ -38,14 +40,18 @@ Expected result:
 Repo truth today:
 
 - The current shared prototype scene is `Assets/Scenes/SampleScene.unity`.
-- `Assets/Scenes/testscene.unity` exists, but do not treat it as the shared milestone scene unless the task says so.
-- The docs describe `Laboratory.unity` as the intended canonical gameplay scene after Milestone 1.
+- `Assets/Scenes/testscene.unity` exists, but do not treat it as the shared
+  milestone scene unless the task says so.
+- `Laboratory.unity` is the planned canonical gameplay scene after
+  Milestone 1.
 
 ## Open the code in Rider
 
 1. Open `PotionPanic.sln` in Rider.
-2. If Rider does not pick up Unity context, set Rider as the External Script Editor in Unity.
-3. If the solution looks stale, use Unity's Open C# Project action to regenerate project files.
+2. If Rider does not pick up Unity context, set Rider as the External Script
+   Editor in Unity.
+3. If the solution looks stale, use Unity's `Open C# Project` action to
+   regenerate project files.
 
 Good first checks:
 
@@ -62,7 +68,7 @@ Good first checks:
 
 If this fails, do not start feature work yet.
 
-## Open the backlog board
+## Open the Backlog board
 
 For human use:
 
@@ -71,9 +77,12 @@ For human use:
 .\scripts\backlog-ui.ps1
 ```
 
-If you install the Windows Startup autolaunch later, sign-in only starts the Backlog browser server in the background. It does not open the board automatically; run `.\scripts\backlog-ui.ps1` when you want the browser UI.
+If you install the Windows Startup autolaunch later, sign-in only starts the
+Backlog browser server in the background. It does not open the board
+automatically; run `.\scripts\backlog-ui.ps1` when you want the browser UI.
 
-If you need MCP setup details for Codex or Gemini CLI, use the manual setup section in `README.md`.
+If you need MCP setup details for Codex or Gemini CLI, use the manual setup
+section in `README.md`.
 
 ## Know which files need coordination
 
@@ -95,14 +104,17 @@ Use this minimum verification loop before handing work off:
 2. Open the scene affected by the task.
 3. Press Play.
 4. Check the Console.
-5. If the task changes tests or gameplay code, open `Window > General > Test Runner` and run the relevant `EditMode` or `PlayMode` suite.
+5. If the task changes tests or gameplay code, open
+   `Window > General > Test Runner` and run the relevant `EditMode` or
+   `PlayMode` suite.
 6. In Git, review `git status` before committing.
 
 ## Common first-day problems
 
 ### Wrong Unity version
 
-If Unity Hub opens the project with a different editor version, install and use `6000.5.1f1`.
+If Unity Hub opens the project with a different editor version, install and use
+`6000.5.1f1`.
 
 ### Rider project looks broken or stale
 
@@ -110,20 +122,25 @@ Open the project from Unity again after setting Rider as the external editor.
 
 ### `backlog` command is missing
 
-Run `.\scripts\setup-backlog.ps1` first. It installs `backlog.md` if needed and prints the MCP commands.
+Run `.\scripts\setup-backlog.ps1` first. It installs `backlog.md` if needed
+and prints the MCP commands.
 
 ### Generated folders appear in Git
 
-Do not add them. Check `.gitignore` and confirm the path is one of `Library/`, `Temp/`, `obj/`, `Logs/`, or `UserSettings/`.
+Do not add them. Check `.gitignore` and confirm the path is one of
+`Library/`, `Temp/`, `obj/`, `Logs/`, or `UserSettings/`.
 
 ### Scene names do not match every doc yet
 
-The repo still uses `SampleScene.unity` today. `Laboratory.unity` is the planned canonical scene name after Milestone 1.
+The repo still uses `SampleScene.unity` today. `Laboratory.unity` is the
+planned canonical scene name after Milestone 1.
 
 ## Before you pick a task
 
-1. Read `Docs/team-workflow-guide.md`.
-2. Confirm the current milestone.
+1. Read [`../collaboration/team-workflow.md`](../collaboration/team-workflow.md).
+2. Confirm the current milestone in
+   [`../project/mvp-scope.md`](../project/mvp-scope.md).
 3. Pick a small task from `To do`.
-4. Tell the other collaborator which files, scenes, or prefabs you expect to touch.
+4. Tell the other collaborator which files, scenes, or prefabs you expect to
+   touch.
 5. Create a short-lived feature branch.

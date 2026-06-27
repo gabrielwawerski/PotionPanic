@@ -11,10 +11,12 @@ each clone starts from the same board, tasks, and workflow instructions.
 
 If this is your first day in the repo, read these in order:
 
-1. `Docs/getting-started.md`
-2. `Docs/team-workflow-guide.md`
-3. `Docs/Potion Panic.md`
-4. `Docs/Potion Panic - Technical Architecture.md`
+1. `Docs/README.md`
+2. `Docs/onboarding/getting-started.md`
+3. `Docs/collaboration/team-workflow.md`
+4. `Docs/project/game-design.md`
+5. `Docs/project/mvp-scope.md`
+6. `Docs/project/technical-architecture.md`
 
 ## First Day Setup
 
@@ -47,13 +49,12 @@ Current repo note:
 
 ## Collaboration Docs
 
-- `Docs/getting-started.md` is the step-by-step onboarding guide.
-- `Docs/team-workflow-guide.md` is the day-to-day collaboration guide.
-- `Docs/Potion Panic.md` is the game design source of truth.
-- `Docs/Potion Panic - Technical Architecture.md` is the runtime structure source of
-  truth.
-- `Docs/plans/implementation-readiness-review.md` records locked MVP decisions and current
-  repo notes.
+- `Docs/README.md` is the docs index and source-of-truth map.
+- `Docs/onboarding/getting-started.md` is the step-by-step onboarding guide.
+- `Docs/collaboration/team-workflow.md` is the day-to-day collaboration guide.
+- `Docs/project/game-design.md` is the player-facing design source of truth.
+- `Docs/project/mvp-scope.md` is the MVP scope, milestone, and tuning source of truth.
+- `Docs/project/technical-architecture.md` is the runtime structure source of truth.
 
 ## Backlog.md Setup
 
