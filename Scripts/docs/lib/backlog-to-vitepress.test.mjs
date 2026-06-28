@@ -24,7 +24,7 @@ test("mapBacklogStatus converts board labels into vitepress-friendly keys",
   });
 
 test(
-  "convertBacklogTask reduces frontmatter and moves unsupported metadata into legacy notes",
+  "convertBacklogTask promotes workflow metadata into structured frontmatter",
   () => {
     const raw = `---
 id: PP-3
@@ -49,19 +49,18 @@ Keep the current milestone movement work scoped.
     const converted = convertBacklogTask(raw);
 
     assert.deepEqual(converted.frontmatter, {
+      affectedFiles: ["Assets/Scripts/Runtime"],
+      dependencies: ["PP-2"],
+      documentation: ["README.md"],
       id: 3,
+      milestone: "m-0",
       priority: "medium",
       status: "todo",
       tags: [],
       title: "Add Milestone 1 CharacterController movement",
     });
     assert.match(converted.body, /## Description/);
-    assert.match(converted.body, /## Legacy Notes/);
-    assert.match(converted.body, /Milestone: `m-0`/);
-    assert.match(converted.body, /Dependencies: `PP-2`/);
-    assert.match(converted.body, /Documentation: `README\.md`/);
-    assert.match(converted.body,
-      /Likely affected files: `Assets\/Scripts\/Runtime`/);
+    assert.doesNotMatch(converted.body, /## Legacy Notes/);
   });
 
 test(

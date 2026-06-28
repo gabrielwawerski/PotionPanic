@@ -9,6 +9,10 @@ import {
   findMissingTicketSections,
   normalizeTicketSections,
 } from "./ticket-sections.mjs";
+import {
+  normalizeTicketList,
+  normalizeTicketMetadata
+} from "./ticket-metadata.mjs";
 
 export function scanTickets(ticketsDir, dirRelative) {
   if (!fs.existsSync(ticketsDir)) {
@@ -21,10 +25,15 @@ export function scanTickets(ticketsDir, dirRelative) {
   return files.map((file) => {
     const raw = fs.readFileSync(path.join(ticketsDir, file), "utf8");
     const parsed = matter(raw);
+    const metadata = normalizeTicketMetadata(parsed.data);
 
     return {
+      affectedFiles: metadata.affectedFiles,
       assignee: `${parsed.data.assignee ?? ""}`.trim(),
+      dependencies: metadata.dependencies,
+      documentation: metadata.documentation,
       id: Number(parsed.data.id) || 0,
+      milestone: metadata.milestone,
       title: parsed.data.title || path.basename(file, ".md"),
       status: parsed.data.status || "backlog",
       priority: parsed.data.priority || "medium",
@@ -223,9 +232,13 @@ export function getMaxTicketId(ticketsDir) {
 export function createTicketFile(
   ticketsDir,
   {
+    affectedFiles = [],
     assignee = "",
     body = "",
+    dependencies = [],
+    documentation = [],
     dirRelative = "tickets",
+    milestone = "",
     prefix = "",
     priority = "medium",
     sections = [],
@@ -243,6 +256,12 @@ export function createTicketFile(
   const contentBody = `${body ?? ""}`.trim() || buildTicketTemplate(sections);
   const frontmatter = { id, title, status, priority };
   const normalizedAssignee = `${assignee ?? ""}`.trim();
+  const metadata = normalizeTicketMetadata({
+    affectedFiles,
+    dependencies,
+    documentation,
+    milestone,
+  });
 
   if (Array.isArray(tags) && tags.length > 0) {
     frontmatter.tags = tags;
@@ -250,14 +269,30 @@ export function createTicketFile(
   if (normalizedAssignee) {
     frontmatter.assignee = normalizedAssignee;
   }
+  if (metadata.milestone) {
+    frontmatter.milestone = metadata.milestone;
+  }
+  if (metadata.dependencies.length > 0) {
+    frontmatter.dependencies = metadata.dependencies;
+  }
+  if (metadata.documentation.length > 0) {
+    frontmatter.documentation = metadata.documentation;
+  }
+  if (metadata.affectedFiles.length > 0) {
+    frontmatter.affectedFiles = metadata.affectedFiles;
+  }
 
   const content = matter.stringify(`\n${contentBody}\n`, frontmatter);
   const filePath = path.join(ticketsDir, `${slug}.md`);
   fs.writeFileSync(filePath, content);
 
   return {
+    affectedFiles: metadata.affectedFiles,
     assignee: normalizedAssignee,
+    dependencies: metadata.dependencies,
+    documentation: metadata.documentation,
     id,
+    milestone: metadata.milestone,
     title,
     status,
     priority,
@@ -368,7 +403,11 @@ export function markdownWriterPlugin() {
               dir,
               prefix,
               priority,
+              affectedFiles,
               assignee,
+              dependencies,
+              documentation,
+              milestone,
               sections,
               status,
               tags,
@@ -380,7 +419,11 @@ export function markdownWriterPlugin() {
               dirRelative: dir || "tickets",
               prefix: prefix || "",
               priority,
+              affectedFiles,
               assignee,
+              dependencies,
+              documentation,
+              milestone,
               sections,
               status,
               tags,
@@ -440,6 +483,28 @@ export function markdownWriterPlugin() {
                 }
                 else {
                   delete parsed.data.assignee;
+                }
+              }
+              else if (key === "milestone") {
+                const normalizedMilestone = `${value ?? ""}`.trim();
+                if (normalizedMilestone) {
+                  parsed.data.milestone = normalizedMilestone;
+                }
+                else {
+                  delete parsed.data.milestone;
+                }
+              }
+              else if (
+                key === "dependencies"
+                || key === "documentation"
+                || key === "affectedFiles"
+              ) {
+                const normalizedList = normalizeTicketList(value);
+                if (normalizedList.length > 0) {
+                  parsed.data[key] = normalizedList;
+                }
+                else {
+                  delete parsed.data[key];
                 }
               }
               else {

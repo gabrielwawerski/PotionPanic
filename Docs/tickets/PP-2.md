@@ -3,6 +3,19 @@ id: 2
 title: Replace SampleScene with Laboratory milestone scene
 status: todo
 priority: high
+milestone: m-0
+documentation:
+  - README.md
+  - project/mvp-scope.md
+  - project/technical-architecture.md
+  - project/game-design.md
+  - onboarding/getting-started.md
+  - collaboration/team-workflow.md
+affectedFiles:
+  - Assets/Scenes/SampleScene.unity
+  - Assets/Scenes/Laboratory.unity
+  - ProjectSettings/EditorBuildSettings.asset
+  - ProjectSettings/ProjectSettings.asset
 tags:
   - asd
 ---
@@ -55,12 +68,3 @@ separate from final milestone validation.
 - [ ] #5 Branch committed and ready for review or merge
 
 ## Notes
-- Milestone: `m-0`
-- Documentation: `README.md`, [`../project/mvp-scope.md`](../project/mvp-scope.md),
-  [`../project/technical-architecture.md`](../project/technical-architecture.md),
-  [`../project/game-design.md`](../project/game-design.md),
-  [`../onboarding/getting-started.md`](../onboarding/getting-started.md),
-  [`../collaboration/team-workflow.md`](../collaboration/team-workflow.md)
-- Likely affected files: `Assets/Scenes/SampleScene.unity`,
-  `Assets/Scenes/Laboratory.unity`, `ProjectSettings/EditorBuildSettings.asset`,
-  `ProjectSettings/ProjectSettings.asset`

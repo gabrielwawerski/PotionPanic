@@ -23,6 +23,10 @@ test(
 
     const created = createTicketFile(tempRoot, {
       assignee: "Gabriel",
+      affectedFiles: ["Assets/Scenes/Laboratory.unity"],
+      dependencies: ["PP-2"],
+      documentation: ["README.md", "project/mvp-scope.md"],
+      milestone: "m-0",
       prefix: "PP",
       priority: "medium",
       sections: ["Description", "Acceptance Criteria", "Notes"],
@@ -33,10 +37,19 @@ test(
 
     assert.equal(created.id, 1);
     assert.equal(created.assignee, "Gabriel");
+    assert.deepEqual(created.dependencies, ["PP-2"]);
+    assert.equal(created.milestone, "m-0");
     assert.equal(created.url, "/tickets/PP-1.html");
 
     const saved = fs.readFileSync(path.join(tempRoot, "PP-1.md"), "utf8");
     assert.match(saved, /^assignee: Gabriel$/m);
+    assert.match(saved, /^milestone: m-0$/m);
+    assert.match(saved, /^dependencies:\r?$/m);
+    assert.match(saved, /^  - PP-2$/m);
+    assert.match(saved, /^documentation:\r?$/m);
+    assert.match(saved, /^  - README.md$/m);
+    assert.match(saved, /^affectedFiles:\r?$/m);
+    assert.match(saved, /^  - Assets\/Scenes\/Laboratory\.unity$/m);
     assert.match(saved, /^## Description\s*$/m);
     assert.match(saved, /^## Acceptance Criteria\s*$/m);
     assert.match(saved, /^## Notes\s*$/m);
@@ -55,6 +68,14 @@ test("scanTickets returns assignee metadata from frontmatter", () => {
       "status: doing",
       "priority: high",
       "assignee: Aga",
+      "milestone: m-0",
+      "dependencies:",
+      "  - PP-2",
+      "  - PP-4",
+      "documentation:",
+      "  - README.md",
+      "affectedFiles:",
+      "  - Assets/Scenes/Laboratory.unity",
       "tags:",
       "  - docs-workflow",
       "---",
@@ -68,6 +89,10 @@ test("scanTickets returns assignee metadata from frontmatter", () => {
   const [ticket] = scanTickets(tempRoot, "tickets");
 
   assert.equal(ticket.assignee, "Aga");
+  assert.equal(ticket.milestone, "m-0");
+  assert.deepEqual(ticket.dependencies, ["PP-2", "PP-4"]);
+  assert.deepEqual(ticket.documentation, ["README.md"]);
+  assert.deepEqual(ticket.affectedFiles, ["Assets/Scenes/Laboratory.unity"]);
   assert.equal(ticket.title, "Owned ticket");
 });
 

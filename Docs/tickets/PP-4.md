@@ -3,6 +3,27 @@ id: 4
 title: Validate Laboratory milestone and align scene-name docs
 status: todo
 priority: medium
+milestone: m-0
+dependencies:
+  - PP-2
+  - PP-3
+documentation:
+  - README.md
+  - project/mvp-scope.md
+  - onboarding/getting-started.md
+  - collaboration/team-workflow.md
+  - AGENTS.md
+  - CLAUDE.md
+  - GEMINI.md
+affectedFiles:
+  - Assets/Tests/PlayMode
+  - README.md
+  - onboarding/getting-started.md
+  - collaboration/team-workflow.md
+  - project/mvp-scope.md
+  - AGENTS.md
+  - CLAUDE.md
+  - GEMINI.md
 tags: []
 ---
 
@@ -60,14 +81,3 @@ scene-conversion implementation.
 - [ ] #5 Branch committed and ready for review or merge
 
 ## Notes
-- Milestone: `m-0`
-- Dependencies: `PP-2`, `PP-3`
-- Documentation: `README.md`, [`../project/mvp-scope.md`](../project/mvp-scope.md),
-  [`../onboarding/getting-started.md`](../onboarding/getting-started.md),
-  [`../collaboration/team-workflow.md`](../collaboration/team-workflow.md),
-  `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`
-- Likely affected files: `Assets/Tests/PlayMode`, `README.md`,
-  [`../onboarding/getting-started.md`](../onboarding/getting-started.md),
-  [`../collaboration/team-workflow.md`](../collaboration/team-workflow.md),
-  [`../project/mvp-scope.md`](../project/mvp-scope.md), `AGENTS.md`,
-  `CLAUDE.md`, `GEMINI.md`

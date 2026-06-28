@@ -1,6 +1,10 @@
 export interface Ticket {
+  affectedFiles: string[];
   assignee: string;
+  dependencies: string[];
+  documentation: string[];
   id: number;
+  milestone: string;
   title: string;
   status: string;
   priority: "critical" | "high" | "medium" | "low";

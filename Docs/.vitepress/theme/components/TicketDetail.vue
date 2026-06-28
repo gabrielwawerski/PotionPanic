@@ -5,6 +5,8 @@ import {
   parseTicketSections,
   serializeTicketSections
 } from "../../lib/ticket-sections.mjs";
+import {formatListInput, parseListInput} from "../../lib/ticket-metadata.mjs";
+import {buildDocumentationHref, buildTicketHref} from "../../lib/ticket-links.mjs";
 
 import type {Column, Ticket} from "../types";
 import {countCheckboxes, toggleCheckbox} from "../composables/useMarkdown";
@@ -78,6 +80,35 @@ function updateAssignee(value: string) {
   }
 
   emit("update", props.ticket.id, {assignee: value.trim()});
+}
+
+function updateMilestone(value: string) {
+  if (props.readOnly) {
+    return;
+  }
+
+  emit("update", props.ticket.id, {milestone: value.trim()});
+}
+
+function updateListField(
+    key: "dependencies" | "documentation" | "affectedFiles",
+    value: string
+) {
+  if (props.readOnly) {
+    return;
+  }
+
+  emit("update", props.ticket.id, {
+    [key]: parseListInput(value),
+  } as Partial<Ticket>);
+}
+
+function dependencyHref(value: string) {
+  return buildTicketHref(value);
+}
+
+function documentationHref(value: string) {
+  return buildDocumentationHref(value);
 }
 
 function buildUpdatedBody(heading: string, content: string) {
@@ -340,6 +371,104 @@ onUnmounted(() => document.removeEventListener('keydown', onEscape))
                 v-else
                 style="font-size: 12px; color: #cbd5e0; padding: 7px 10px; background: #0d1117; border: 1px solid #2d3748; border-radius: 6px"
             >{{ ticket.assignee || "Unassigned" }}
+            </div>
+          </div>
+
+          <div style="margin-bottom: 20px">
+            <label style="display: block; font-size: 11px; color: #718096; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 6px">Milestone</label>
+            <input
+                v-if="!readOnly"
+                :value="ticket.milestone"
+                placeholder="e.g. m-0"
+                style="width: 100%; font-size: 12px; padding: 7px 10px; background: #0d1117; border: 1px solid #2d3748; border-radius: 6px; color: #e2e8f0; outline: none; box-sizing: border-box"
+                @change="updateMilestone(($event.target as HTMLInputElement).value)"
+            >
+            <div
+                v-else
+                style="font-size: 12px; color: #cbd5e0; padding: 7px 10px; background: #0d1117; border: 1px solid #2d3748; border-radius: 6px"
+            >{{ ticket.milestone || "No milestone" }}
+            </div>
+          </div>
+
+          <div style="margin-bottom: 20px">
+            <label style="display: block; font-size: 11px; color: #718096; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 6px">Dependencies</label>
+            <textarea
+                v-if="!readOnly"
+                :value="formatListInput(ticket.dependencies)"
+                placeholder="One ticket ID per line..."
+                style="width: 100%; min-height: 74px; padding: 8px 10px; font-size: 12px; background: #0d1117; border: 1px solid #2d3748; border-radius: 6px; color: #e2e8f0; resize: vertical; outline: none; box-sizing: border-box; font-family: 'JetBrains Mono', monospace; line-height: 1.5"
+                @change="updateListField('dependencies', ($event.target as HTMLTextAreaElement).value)"
+            />
+            <div
+                v-if="ticket.dependencies.length > 0"
+                style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px">
+              <a
+                  v-for="dependency in ticket.dependencies"
+                  :key="dependency"
+                  :href="dependencyHref(dependency) || undefined"
+                  style="font-size: 11px; padding: 3px 8px; border-radius: 999px; background: rgba(99, 179, 237, 0.12); border: 1px solid rgba(99, 179, 237, 0.3); color: #90cdf4; text-decoration: none"
+              >{{ dependency }}</a>
+            </div>
+            <div
+                v-else-if="readOnly"
+                style="font-size: 12px; color: #718096"
+            >No dependencies
+            </div>
+          </div>
+
+          <div style="margin-bottom: 20px">
+            <label style="display: block; font-size: 11px; color: #718096; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 6px">Documentation</label>
+            <textarea
+                v-if="!readOnly"
+                :value="formatListInput(ticket.documentation)"
+                placeholder="One doc path per line..."
+                style="width: 100%; min-height: 86px; padding: 8px 10px; font-size: 12px; background: #0d1117; border: 1px solid #2d3748; border-radius: 6px; color: #e2e8f0; resize: vertical; outline: none; box-sizing: border-box; font-family: 'JetBrains Mono', monospace; line-height: 1.5"
+                @change="updateListField('documentation', ($event.target as HTMLTextAreaElement).value)"
+            />
+            <div
+                v-if="ticket.documentation.length > 0"
+                style="display: flex; flex-direction: column; gap: 6px; margin-top: 8px">
+              <component
+                  v-for="entry in ticket.documentation"
+                  :key="entry"
+                  :is="documentationHref(entry) ? 'a' : 'span'"
+                  :href="documentationHref(entry) || undefined"
+                  :style="documentationHref(entry)
+                  ? 'font-size: 12px; color: #90cdf4; text-decoration: none; line-height: 1.4'
+                  : 'font-size: 12px; color: #cbd5e0; line-height: 1.4; font-family: monospace'"
+              >{{ entry }}
+              </component>
+            </div>
+            <div
+                v-else-if="readOnly"
+                style="font-size: 12px; color: #718096"
+            >No documentation links
+            </div>
+          </div>
+
+          <div style="margin-bottom: 20px">
+            <label style="display: block; font-size: 11px; color: #718096; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 6px">Likely
+              Affected Files</label>
+            <textarea
+                v-if="!readOnly"
+                :value="formatListInput(ticket.affectedFiles)"
+                placeholder="One file path per line..."
+                style="width: 100%; min-height: 86px; padding: 8px 10px; font-size: 12px; background: #0d1117; border: 1px solid #2d3748; border-radius: 6px; color: #e2e8f0; resize: vertical; outline: none; box-sizing: border-box; font-family: 'JetBrains Mono', monospace; line-height: 1.5"
+                @change="updateListField('affectedFiles', ($event.target as HTMLTextAreaElement).value)"
+            />
+            <div
+                v-if="ticket.affectedFiles.length > 0"
+                style="display: flex; flex-direction: column; gap: 6px; margin-top: 8px">
+              <span
+                  v-for="entry in ticket.affectedFiles"
+                  :key="entry"
+                  style="font-size: 12px; color: #cbd5e0; line-height: 1.4; font-family: monospace"
+              >{{ entry }}</span>
+            </div>
+            <div
+                v-else-if="readOnly"
+                style="font-size: 12px; color: #718096"
+            >No affected files
             </div>
           </div>
 

@@ -1,8 +1,22 @@
 ---
 id: 3
 title: Add Milestone 1 CharacterController movement
-status: doing
+status: todo
 priority: medium
+milestone: m-0
+dependencies:
+  - PP-2
+documentation:
+  - README.md
+  - project/mvp-scope.md
+  - project/technical-architecture.md
+  - project/game-design.md
+  - onboarding/getting-started.md
+  - collaboration/team-workflow.md
+affectedFiles:
+  - Assets/Scripts/Runtime
+  - Assets/Tests/EditMode
+  - Assets/Scenes/Laboratory.unity
 tags: []
 ---
 
@@ -53,12 +67,3 @@ during implementation: `radius`, `height`, `center`, `slopeLimit`, `stepOffset`,
 - [ ] #5 Branch committed and ready for review or merge
 
 ## Notes
-- Milestone: `m-0`
-- Dependencies: `PP-2`
-- Documentation: `README.md`, [`../project/mvp-scope.md`](../project/mvp-scope.md),
-  [`../project/technical-architecture.md`](../project/technical-architecture.md),
-  [`../project/game-design.md`](../project/game-design.md),
-  [`../onboarding/getting-started.md`](../onboarding/getting-started.md),
-  [`../collaboration/team-workflow.md`](../collaboration/team-workflow.md)
-- Likely affected files: `Assets/Scripts/Runtime`, `Assets/Tests/EditMode`,
-  `Assets/Scenes/Laboratory.unity`

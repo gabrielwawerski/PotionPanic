@@ -1,6 +1,9 @@
 import path from "node:path";
 
 import matter from "gray-matter";
+import {
+  normalizeTicketMetadata
+} from "../../../Docs/.vitepress/lib/ticket-metadata.mjs";
 
 const STATUS_MAP = new Map([
   ["Backlog", "backlog"],
@@ -24,41 +27,6 @@ function normalizeList(value) {
   return value
   .map((entry) => `${entry}`.trim())
   .filter(Boolean);
-}
-
-function renderLegacyNotes(parsed) {
-  const notes = [];
-  const milestone = `${parsed.data.milestone ?? ""}`.trim();
-  const dependencies = normalizeList(parsed.data.dependencies);
-  const documentation = normalizeList(parsed.data.documentation);
-  const modifiedFiles = normalizeList(parsed.data.modified_files);
-
-  if (milestone) {
-    notes.push(`Milestone: \`${milestone}\``);
-  }
-
-  if (dependencies.length > 0) {
-    notes.push(
-      `Dependencies: ${dependencies.map((entry) => `\`${entry}\``)
-      .join(", ")}`);
-  }
-
-  if (documentation.length > 0) {
-    notes.push(`Documentation: ${documentation.map((entry) => `\`${entry}\``)
-    .join(", ")}`);
-  }
-
-  if (modifiedFiles.length > 0) {
-    notes.push(
-      `Likely affected files: ${modifiedFiles.map((entry) => `\`${entry}\``)
-      .join(", ")}`);
-  }
-
-  if (notes.length === 0) {
-    return "";
-  }
-
-  return `## Legacy Notes\n\n${notes.map((note) => `- ${note}`).join("\n")}`;
 }
 
 export function buildTicketFilename(prefix, id) {
@@ -95,10 +63,10 @@ export function normalizePriority(priority) {
 export function convertBacklogTask(rawContent, fallbackPath = "") {
   const parsed = matter(rawContent);
   const body = parsed.content.trim();
-  const legacyNotes = renderLegacyNotes(parsed);
   const tags = normalizeList(parsed.data.labels);
   const title = `${parsed.data.title ??
   path.basename(fallbackPath, path.extname(fallbackPath))}`.trim();
+  const metadata = normalizeTicketMetadata(parsed.data);
 
   return {
     frontmatter: {
@@ -107,8 +75,18 @@ export function convertBacklogTask(rawContent, fallbackPath = "") {
       status: mapBacklogStatus(parsed.data.status),
       priority: normalizePriority(parsed.data.priority),
       tags,
+      ...(metadata.milestone ? { milestone: metadata.milestone } : {}),
+      ...(metadata.dependencies.length > 0
+        ? { dependencies: metadata.dependencies }
+        : {}),
+      ...(metadata.documentation.length > 0
+        ? { documentation: metadata.documentation }
+        : {}),
+      ...(metadata.affectedFiles.length > 0
+        ? { affectedFiles: metadata.affectedFiles }
+        : {}),
     },
-    body: [body, legacyNotes].filter(Boolean).join("\n\n").trim(),
+    body,
   };
 }
 

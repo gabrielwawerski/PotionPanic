@@ -145,8 +145,12 @@ function openNewTicket() {
   }
 
   draftTicket.value = {
+    affectedFiles: [],
     assignee: "",
+    dependencies: [],
+    documentation: [],
     id: 0,
+    milestone: "",
     title: 'New ticket',
     status: defaultColumn.value,
     priority: 'medium',
@@ -171,6 +175,10 @@ async function confirmCreate(draft: Ticket) {
         status: draft.status,
         title: draft.title,
         priority: draft.priority,
+        milestone: draft.milestone,
+        dependencies: draft.dependencies,
+        documentation: draft.documentation,
+        affectedFiles: draft.affectedFiles,
         assignee: draft.assignee,
         tags: draft.tags,
         body: draft.body,
