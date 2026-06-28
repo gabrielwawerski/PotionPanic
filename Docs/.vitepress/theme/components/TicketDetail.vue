@@ -68,6 +68,12 @@ const currentTicketReference = computed(() => (
 const tagSuggestionOptions = computed<SuggestionOption[]>(() => (
   props.suggestions.tags.map((tag) => ({label: tag, value: tag}))
 ))
+const assigneeSuggestionOptions = computed<SuggestionOption[]>(() => (
+  props.suggestions.assignees.map((assignee) => ({
+    label: assignee,
+    value: assignee,
+  }))
+))
 const milestoneSuggestionOptions = computed<SuggestionOption[]>(() => (
   props.suggestions.milestones.map((milestone) => ({
     label: milestone,
@@ -428,13 +434,13 @@ onUnmounted(() => document.removeEventListener('keydown', onEscape))
 
           <div style="margin-bottom: 20px">
             <label style="display: block; font-size: 11px; color: #718096; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 6px">Assignee</label>
-            <input
+            <SuggestionCombobox
                 v-if="!readOnly"
-                :value="ticket.assignee"
+                :model-value="ticket.assignee"
+                :options="assigneeSuggestionOptions"
                 placeholder="Assign one person..."
-                style="width: 100%; font-size: 12px; padding: 7px 10px; background: #0d1117; border: 1px solid #2d3748; border-radius: 6px; color: #e2e8f0; outline: none; box-sizing: border-box"
-                @change="updateAssignee(($event.target as HTMLInputElement).value)"
-            >
+                @update:modelValue="updateAssignee"
+            />
             <div
                 v-else
                 style="font-size: 12px; color: #cbd5e0; padding: 7px 10px; background: #0d1117; border: 1px solid #2d3748; border-radius: 6px"

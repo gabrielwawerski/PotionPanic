@@ -73,6 +73,7 @@ function findMarkdownFiles(dir) {
 
 export function normalizeBoardSuggestionConfig(source = {}) {
   return {
+    assignees: normalizeUniqueList(source.assignees),
     tags: normalizeUniqueList(source.tags),
     milestones: normalizeUniqueList(source.milestones),
     dependencies: normalizeUniqueList(source.dependencies),
@@ -125,6 +126,11 @@ export function buildTicketSuggestionCatalog(
     ...tickets.flatMap((ticket) => ticket.tags || []),
   ]));
 
+  const assignees = sortStrings(normalizeUniqueList([
+    ...normalizedBoardSuggestions.assignees,
+    ...tickets.map((ticket) => ticket.assignee),
+  ]));
+
   const milestones = sortStrings(normalizeUniqueList([
     ...normalizedBoardSuggestions.milestones,
     ...tickets.map((ticket) => ticket.milestone),
@@ -165,6 +171,7 @@ export function buildTicketSuggestionCatalog(
   ));
 
   return {
+    assignees,
     dependencies,
     documentation,
     milestones,

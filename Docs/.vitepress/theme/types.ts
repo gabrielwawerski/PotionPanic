@@ -19,6 +19,7 @@ export interface SuggestionOption {
 }
 
 export interface TicketSuggestionCatalog {
+  assignees: string[];
   dependencies: SuggestionOption[];
   documentation: string[];
   milestones: string[];

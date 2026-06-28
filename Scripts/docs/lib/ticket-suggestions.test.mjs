@@ -12,6 +12,7 @@ import {
 
 test("normalizeBoardSuggestionConfig trims list seeds and drops empty values", () => {
   const config = normalizeBoardSuggestionConfig({
+    assignees: [" Gabriel ", "", null, "Aga"],
     tags: [" combat ", "", null, "boss"],
     milestones: [" m-0 ", "m-1", ""],
     dependencies: [" PP-2 ", "PP-4", ""],
@@ -19,6 +20,7 @@ test("normalizeBoardSuggestionConfig trims list seeds and drops empty values", (
   });
 
   assert.deepEqual(config, {
+    assignees: ["Gabriel", "Aga"],
     tags: ["combat", "boss"],
     milestones: ["m-0", "m-1"],
     dependencies: ["PP-2", "PP-4"],
@@ -52,6 +54,7 @@ test("findDocumentationSuggestionPaths returns known doc paths and excludes tick
 test("buildTicketSuggestionCatalog merges observed and seeded suggestions", () => {
   const catalog = buildTicketSuggestionCatalog({
     boardSuggestions: {
+      assignees: ["Gabriel", "Patro"],
       tags: ["planning", "combat"],
       milestones: ["m-0", "m-2"],
       dependencies: ["PP-9"],
@@ -66,6 +69,7 @@ test("buildTicketSuggestionCatalog merges observed and seeded suggestions", () =
     tickets: [
       {
         id: 2,
+        assignee: "Gabriel",
         title: "Replace SampleScene with Laboratory milestone scene",
         tags: ["planning", "scene"],
         milestone: "m-0",
@@ -74,6 +78,7 @@ test("buildTicketSuggestionCatalog merges observed and seeded suggestions", () =
       },
       {
         id: 4,
+        assignee: "Aga",
         title: "Validate Laboratory milestone and align scene-name docs",
         tags: ["docs", "scene"],
         milestone: "m-1",
@@ -83,6 +88,7 @@ test("buildTicketSuggestionCatalog merges observed and seeded suggestions", () =
     ],
   });
 
+  assert.deepEqual(catalog.assignees, ["Aga", "Gabriel", "Patro"]);
   assert.deepEqual(catalog.tags, ["combat", "docs", "planning", "scene"]);
   assert.deepEqual(catalog.milestones, ["m-0", "m-1", "m-2"]);
   assert.deepEqual(catalog.documentation, [

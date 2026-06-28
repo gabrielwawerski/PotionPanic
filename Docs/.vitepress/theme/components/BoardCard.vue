@@ -66,7 +66,6 @@ const displayId = computed(() => (
         v-if="ticket.assignee"
         style="margin-top: 6px; font-size: 10px; color: #9ae6b4; background: rgba(72, 187, 120, 0.12); border: 1px solid rgba(72, 187, 120, 0.25); border-radius: 999px; padding: 2px 8px; display: inline-flex; align-items: center; gap: 4px"
     >
-      <span>Owner</span>
       <span style="font-weight: 700">{{ ticket.assignee }}</span>
     </div>
     <div v-if="ticket.tags.length" style="display: flex; flex-wrap: wrap; gap: 3px; margin-top: 6px">
