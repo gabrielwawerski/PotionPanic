@@ -167,7 +167,6 @@ body {
   }
 
   .board-shell-layout .VPNavBar.has-sidebar .divider {
-    padding-left: var(--vp-sidebar-width);
   }
 
   .VPNavBar.has-sidebar .container[data-v-cf6e7c5e] {
@@ -258,7 +257,6 @@ body {
   }
 
   .board-shell-layout .VPNavBar.has-sidebar .title {
-    width: var(--vp-sidebar-width);
     /*padding: 0 16px 0 16px;*/
   }
 
