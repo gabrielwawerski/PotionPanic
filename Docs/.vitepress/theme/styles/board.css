@@ -262,10 +262,10 @@ body {
     /*padding: 0 16px 0 16px;*/
   }
 
-  /*.board-shell-layout .VPNavBar.has-sidebar .content {*/
-  /*  padding-left: var(--vp-sidebar-width);*/
-  /*  padding-right: var(--board-shell-gutter);*/
-  /*}*/
+  .board-shell-layout .VPNavBar.has-sidebar .content {
+    padding-left: calc((100vw - var(--vp-layout-max-width)) / 2 + var(--vp-sidebar-width));
+    padding-right: calc((100vw - var(--vp-layout-max-width)) / 2 + 32px);
+  }
 
   /*.board-shell-layout .VPNavBar.has-sidebar .divider {*/
   /*  padding-left: var(--vp-sidebar-width);*/
