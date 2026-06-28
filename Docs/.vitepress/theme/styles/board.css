@@ -251,7 +251,7 @@ body {
 
 @media (min-width: 1440px) {
   .board-shell-layout .VPContent.has-sidebar {
-    padding-left: calc(var(--vp-sidebar-width) + var(--board-shell-gutter));
+    padding-left: calc(var(--vp-sidebar-width));
     padding-right: var(--board-shell-gutter);
   }
 
