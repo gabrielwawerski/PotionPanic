@@ -237,16 +237,18 @@ if (typeof window !== 'undefined') {
 </script>
 
 <template>
-  <div style="display: flex; flex-direction: column; height: calc(100vh - var(--vp-nav-height) - 1px); overflow: hidden">
+  <div class="board-shell">
     <div
       v-if="readOnly"
+      class="board-shell-notice"
       style="padding: 10px 16px; border-bottom: 1px solid rgba(237, 137, 54, 0.35); background: rgba(237, 137, 54, 0.08); color: #fbd38d; font-size: 12px; line-height: 1.4"
     >
       This published board is read-only. Run <code>npm run docs:dev</code> or <code>.\Scripts\docs-ui.ps1</code> to edit tasks from the webpage and write changes back to markdown.
     </div>
 
-    <div style="padding: 8px 16px; border-bottom: 1px solid #2d3748; flex-shrink: 0; display: flex; align-items: center; gap: 8px">
+    <div class="board-toolbar">
       <input
+        class="board-filter-input"
         v-model="filter"
         placeholder="Filter tickets..."
         style="font-size: 12px; padding: 4px 10px; background: #171923; border: 1px solid #2d3748; border-radius: 5px; color: #e2e8f0; outline: none; width: 200px; height: 28px; box-sizing: border-box"
@@ -268,7 +270,7 @@ if (typeof window !== 'undefined') {
       >+ New</button>
     </div>
 
-    <div class="board-columns" style="flex: 1; display: flex; overflow: auto; padding: 12px 8px">
+    <div class="board-columns" style="flex: 1; display: flex; overflow: auto">
       <BoardColumn
         v-for="column in columns"
         :key="column.key"
