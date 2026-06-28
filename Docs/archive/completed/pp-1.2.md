@@ -4,16 +4,13 @@ title: Make backlog-ui open browser URL and ensure server is running
 
 ## Description
 
-<!-- SECTION:DESCRIPTION:BEGIN -->
 Change the canonical Backlog UI launcher so it opens the Backlog browser URL in the system
 default browser instead of running `backlog board`, and make it start the local
 `backlog browser --no-open` server automatically when the UI server is not already
 running.
-<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 
-<!-- AC:BEGIN -->
 
 - [x] #1 `scripts/backlog-ui.ps1` opens the Backlog browser URL in the system default
   browser instead of invoking `backlog board`.
@@ -25,11 +22,9 @@ running.
 - [x] #4 README guidance describes the script as opening the browser URL in the default
   browser and ensuring the local server is running.
 
-<!-- AC:END -->
 
 ## Implementation Plan
 
-<!-- SECTION:PLAN:BEGIN -->
 
 1. Run a failing pre-check to confirm `scripts/backlog-ui.ps1` still shells out to
    `backlog board` and does not contain direct URL launcher behavior.
@@ -45,11 +40,9 @@ running.
    that prove the launcher starts the expected background command and opens the expected
    URL without relying on a real browser session.
 
-<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
-<!-- SECTION:NOTES:BEGIN -->
 Red pre-check confirmed the old implementation still invoked `backlog board`, did not
 contain the direct URL launcher flow, and README wording did not describe the
 ensure-server-then-open-URL behavior.
@@ -66,11 +59,9 @@ a stub scenario where the server was already ready and confirmed it opened the U
 starting a background server; exercised a copied launcher with no config file present and
 confirmed it still opened `http://localhost:6420`; verified README wording reflects the
 new behavior.
-<!-- SECTION:NOTES:END -->
 
 ## Final Summary
 
-<!-- SECTION:FINAL_SUMMARY:BEGIN -->
 Changed the canonical Backlog launcher to open the Backlog browser URL directly in the
 system default browser instead of delegating to `backlog board`. `scripts/backlog-ui.ps1`
 now reads the configured port from `backlog.config.yml`, probes the local URL, starts
@@ -86,14 +77,11 @@ that starts `backlog browser --no-open --port 6420` and then opens
 starting a server; verified a no-config fallback path using a temporary script copy
 outside the repo that still opened `http://localhost:6420`; and confirmed README now
 describes the ensure-server-then-open-default-browser behavior.
-<!-- SECTION:FINAL_SUMMARY:END -->
 
 ## Definition of Done
 
-<!-- DOD:BEGIN -->
 
 - [x] #1 Tests pass
 - [x] #2 Documentation updated
 - [x] #3 No regressions introduced
 
-<!-- DOD:END -->

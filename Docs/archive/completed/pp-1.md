@@ -4,15 +4,12 @@ title: Set up shared Backlog.md collaborator onboarding
 
 ## Description
 
-<!-- SECTION:DESCRIPTION:BEGIN -->
 Make Backlog.md a repo-standard collaborator workflow so a fresh clone can install the
 CLI, wire MCP for Codex or Gemini, open the browser board, and reuse the same committed
 project state and launch helpers.
-<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 
-<!-- AC:BEGIN -->
 
 - [x] #1 The repository tracks shared Backlog.md project state and does not ignore the
   entire `backlog/` tree.
@@ -28,11 +25,9 @@ project state and launch helpers.
 - [x] #6 Documentation and scripts stay aligned with the existing agent instruction files
   and with the committed plan.
 
-<!-- AC:END -->
 
 ## Implementation Plan
 
-<!-- SECTION:PLAN:BEGIN -->
 
 1. Keep the task scoped to the collaborator setup plan and avoid unrelated dirty files
    already present on `master`.
@@ -49,11 +44,9 @@ project state and launch helpers.
 6. Verify the new files with focused command checks and script dry-run style validation
    where practical, then update acceptance criteria and final notes in Backlog.
 
-<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
-<!-- SECTION:NOTES:BEGIN -->
 Implemented repo-standard Backlog onboarding with a new top-level README, repo-local
 PowerShell helpers, a shared Rider `.run` configuration, and tracked `backlog/`
 scaffolding files for empty shared-state directories.
@@ -68,11 +61,9 @@ then remove the shortcut, all PowerShell scripts parsed successfully, `.gitignor
 Did not run a real `backlog board` browser launch or a full Unity test suite because this
 change is limited to onboarding docs/config/scripts and the browser command would open an
 interactive UI.
-<!-- SECTION:NOTES:END -->
 
 ## Final Summary
 
-<!-- SECTION:FINAL_SUMMARY:BEGIN -->
 Added collaborator-facing Backlog.md onboarding to the repository. `README.md` now
 documents the exact bootstrap commands, MCP-first setup for Codex and Gemini CLI, the
 generic `mcpServers.backlog` JSON, and the rule not to run `backlog init` in this repo.
@@ -89,14 +80,11 @@ confirmed it invoked `board`, exercised the autolaunch install/remove scripts ag
 temporary `%APPDATA%` and confirmed the shortcut was created then removed, parsed all
 PowerShell scripts successfully, confirmed the new text files are UTF-8 without BOM, and
 confirmed `backlog/.locks/*` is ignored while the tracked Backlog task file is not.
-<!-- SECTION:FINAL_SUMMARY:END -->
 
 ## Definition of Done
 
-<!-- DOD:BEGIN -->
 
 - [x] #1 Tests pass
 - [x] #2 Documentation updated
 - [x] #3 No regressions introduced
 
-<!-- DOD:END -->

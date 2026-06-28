@@ -8,16 +8,13 @@ tags: []
 
 ## Description
 
-<!-- SECTION:DESCRIPTION:BEGIN -->
 Finish Milestone 1 by adding the final PlayMode validation for `Laboratory.unity`,
 confirming the manual movement smoke test, and aligning collaborator docs and repo
 instructions so `Laboratory` becomes the canonical shared gameplay scene after PP-2 and
 PP-3 land.
-<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 
-<!-- AC:BEGIN -->
 
 - [ ] #1 PlayMode coverage loads `Laboratory.unity` and verifies the main camera is
   orthographic.
@@ -29,11 +26,9 @@ PP-3 land.
 - [ ] #4 Manual smoke verification confirms WASD movement reaches all four walls and the
   player cannot leave the room.
 
-<!-- AC:END -->
 
 ## Implementation Plan
 
-<!-- SECTION:PLAN:BEGIN -->
 
 1. Review the final `Laboratory` scene and movement setup from PP-2 and PP-3, plus every
    current collaborator-facing instruction that still mentions `SampleScene` as the shared
@@ -46,21 +41,17 @@ PP-3 land.
 4. Run the manual Milestone 1 smoke test, then record any remaining handoff or follow-up
    notes before marking the milestone ready for completion.
 
-<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
-<!-- SECTION:NOTES:BEGIN -->
 Created as planning and kanban data only. No implementation started.
 
 2026-06-28 backlog refinement: PP-4 is the Milestone 1 exit-gate task. It owns final
 PlayMode validation plus the post-rename docs and instruction sweep, not movement math or
 scene-conversion implementation.
-<!-- SECTION:NOTES:END -->
 
 ## Definition of Done
 
-<!-- DOD:BEGIN -->
 
 - [ ] #1 Acceptance criteria met
 - [ ] #2 Relevant Unity verification completed
@@ -68,10 +59,7 @@ scene-conversion implementation.
 - [ ] #4 Documentation or task notes updated when needed
 - [ ] #5 Branch committed and ready for review or merge
 
-<!-- DOD:END -->
-
-## Legacy Notes
-
+## Notes
 - Milestone: `m-0`
 - Dependencies: `PP-2`, `PP-3`
 - Documentation: `README.md`, [`../project/mvp-scope.md`](../project/mvp-scope.md),

@@ -4,16 +4,13 @@ title: Fix backlog-ui background server startup on PowerShell shim installs
 
 ## Description
 
-<!-- SECTION:DESCRIPTION:BEGIN -->
 Fix the canonical Backlog UI launcher so it can start the Backlog browser server reliably
 on Windows installations where `Get-Command backlog` resolves to a PowerShell shim script
 such as `backlog.ps1`, which `Start-Process` cannot launch directly with the current
 implementation.
-<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 
-<!-- AC:BEGIN -->
 
 - [x] #1 `scripts/backlog-ui.ps1` starts the Backlog browser server reliably when
   `backlog` resolves to a PowerShell script shim.
@@ -22,11 +19,9 @@ implementation.
 - [x] #3 The fix does not change the user-facing command or Rider run configuration
   contract.
 
-<!-- AC:END -->
 
 ## Implementation Plan
 
-<!-- SECTION:PLAN:BEGIN -->
 
 1. Use the current `powershell.exe -File scripts/backlog-ui.ps1` failure as the red
    reproduction and confirm the root cause: `Get-Command backlog` resolves to an
@@ -41,11 +36,9 @@ implementation.
 4. Verify green with the original failing command, plus targeted harness checks for the
    shim-launch path and the already-ready URL path.
 
-<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
-<!-- SECTION:NOTES:BEGIN -->
 Root cause investigation confirmed the failure was not in the readiness loop. On this
 machine `Get-Command backlog` resolves to `C:\nvm4w\nodejs\backlog.ps1` as an
 `ExternalScript`, and `Start-Process -FilePath <that .ps1>` throws
@@ -63,11 +56,9 @@ and confirmed the launcher starts `powershell.exe` with the expected shim argume
 opening `http://localhost:6420`; exercised a harness where the UI was already ready and
 confirmed it opens the URL without trying to start another server; updated README wording
 to match the launcher behavior.
-<!-- SECTION:NOTES:END -->
 
 ## Final Summary
 
-<!-- SECTION:FINAL_SUMMARY:BEGIN -->
 Fixed `scripts/backlog-ui.ps1` for Windows installs where the `backlog` command resolves
 to a PowerShell shim script instead of a directly executable command. The original failure
 came from trying to run `Start-Process -FilePath C:\nvm4w\nodejs\backlog.ps1 ...`, which
@@ -83,14 +74,11 @@ launch path exits successfully on this machine; verified with a harness that the
 starts the shim-backed server correctly when the UI is not ready and still only opens
 `http://localhost:6420` when the UI is already responding; and updated README wording to
 reflect that the script starts the server if needed before opening the URL.
-<!-- SECTION:FINAL_SUMMARY:END -->
 
 ## Definition of Done
 
-<!-- DOD:BEGIN -->
 
 - [x] #1 Tests pass
 - [x] #2 Documentation updated
 - [x] #3 No regressions introduced
 
-<!-- DOD:END -->

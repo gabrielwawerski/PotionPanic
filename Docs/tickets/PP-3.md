@@ -1,24 +1,18 @@
 ---
 id: 3
 title: Add Milestone 1 CharacterController movement
-status: todo
+status: doing
 priority: medium
-tags: [ ]
+tags: []
 ---
 
 ## Description
-
-<!-- SECTION:DESCRIPTION:BEGIN -->
 Add the Milestone 1 movement foundation in the gameplay assembly using the existing
 `Player/Move` input action through `InputActionReference`, plus the minimal player setup
 inside `Laboratory.unity`. Keep the scope to world-aligned movement only: no look, sprint,
 jump, gravity gameplay, camera-relative movement, interaction, or input-asset redesign.
-<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-<!-- AC:BEGIN -->
-
 - [ ] #1 `PlayerController` in the gameplay assembly reads only `Player/Move` from the
   existing input asset through `InputActionReference`.
 - [ ] #2 Movement is world-aligned on X/Z, keeps diagonal speed normalized, exposes move
@@ -29,12 +23,7 @@ jump, gravity gameplay, camera-relative movement, interaction, or input-asset re
 - [ ] #4 EditMode coverage exists for axis conversion and diagonal normalization.
 - [ ] #5 The player cannot clip through the room bounds during the Milestone 1 smoke test.
 
-<!-- AC:END -->
-
 ## Implementation Plan
-
-<!-- SECTION:PLAN:BEGIN -->
-
 1. Review the `Laboratory` scene handoff notes and confirm the existing input asset
    already exposes the `Player/Move` action needed for Milestone 1.
 2. Add EditMode coverage for axis conversion and diagonal normalization before gameplay
@@ -48,33 +37,22 @@ jump, gravity gameplay, camera-relative movement, interaction, or input-asset re
 5. Run the targeted EditMode verification plus manual Play Mode movement checks against
    the room bounds, then capture any handoff details needed by final milestone validation.
 
-<!-- SECTION:PLAN:END -->
-
 ## Implementation Notes
-
-<!-- SECTION:NOTES:BEGIN -->
 Created as planning and kanban data only. No implementation started.
 
 2026-06-28 backlog refinement: PP-3 now owns movement-specific EditMode coverage and the
 minimal player setup in `Laboratory`. Record the final `CharacterController` values here
 during implementation: `radius`, `height`, `center`, `slopeLimit`, `stepOffset`,
 `skinWidth`, `minMoveDistance`.
-<!-- SECTION:NOTES:END -->
 
 ## Definition of Done
-
-<!-- DOD:BEGIN -->
-
 - [ ] #1 Acceptance criteria met
 - [ ] #2 Relevant Unity verification completed
 - [ ] #3 No new relevant Console errors
 - [ ] #4 Documentation or task notes updated when needed
 - [ ] #5 Branch committed and ready for review or merge
 
-<!-- DOD:END -->
-
-## Legacy Notes
-
+## Notes
 - Milestone: `m-0`
 - Dependencies: `PP-2`
 - Documentation: `README.md`, [`../project/mvp-scope.md`](../project/mvp-scope.md),

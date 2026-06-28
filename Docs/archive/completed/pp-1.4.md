@@ -8,16 +8,13 @@ tags: []
 
 ## Description
 
-<!-- SECTION:DESCRIPTION:BEGIN -->
 Adjust the Windows Startup autolaunch behavior so signing in does not open the Backlog
 browser UI automatically. Human/manual launch should still open the Backlog browser UI on
 demand, while autolaunch should only ensure the local Backlog browser server is running in
 the background.
-<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 
-<!-- AC:BEGIN -->
 
 - [x] #1 The per-user Windows Startup autolaunch no longer opens the Backlog browser UI
   automatically at sign-in.
@@ -28,11 +25,9 @@ the background.
 - [x] #4 README and onboarding guidance describe the difference between background
   autolaunch behavior and manual browser opening.
 
-<!-- AC:END -->
 
 ## Implementation Plan
 
-<!-- SECTION:PLAN:BEGIN -->
 
 1. Add a dedicated PowerShell entrypoint for Windows Startup autolaunch that ensures the
    Backlog browser server is running but never opens a browser window.
@@ -48,11 +43,9 @@ the background.
 6. Verify the split with script parsing plus stubbed PowerShell runs that prove the
    autolaunch path does not call browser open and the manual path still does.
 
-<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
-<!-- SECTION:NOTES:BEGIN -->
 
 1. Add a dedicated PowerShell entrypoint for Windows Startup autolaunch that ensures the
    Backlog browser server is running but never opens a browser window.
@@ -89,11 +82,9 @@ the explicit browser-opening command.
 
 Task is moved to Test / Review instead of Done because the project Definition of Done
 includes a committed branch, and no commit was created in this session.
-<!-- SECTION:NOTES:END -->
 
 ## Definition of Done
 
-<!-- DOD:BEGIN -->
 
 - [x] #1 Acceptance criteria met
 - [x] #2 Relevant Unity verification completed
@@ -101,10 +92,7 @@ includes a committed branch, and no commit was created in this session.
 - [x] #4 Documentation or task notes updated when needed
 - [x] #5 Branch committed and ready for review or merge
 
-<!-- DOD:END -->
-
-## Legacy Notes
-
+## Notes
 - Documentation: `README.md`, `Docs/getting-started.md`
 - Likely affected files: `scripts/backlog-browser-server.ps1`,
   `scripts/backlog-autolaunch.ps1`, `scripts/backlog-ui.ps1`,
