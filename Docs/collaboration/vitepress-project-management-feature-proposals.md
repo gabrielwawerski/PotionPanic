@@ -58,3 +58,46 @@ Start with the smallest set that solves the biggest usability gap:
 This first slice stays close to the existing markdown-first workflow, improves
 active ticket editing immediately, and creates a clean foundation for future
 features such as assignees, dependency links, and richer archive views.
+
+## Recommended Next Slice
+
+The next best slice is **structured workflow metadata and ticket relationships**.
+
+This repo's active tickets already carry useful planning data such as
+milestone, dependencies, documentation links, and likely affected files, but
+those values currently live inside markdown content rather than first-class
+ticket metadata.
+
+### Scope
+
+1. **Structured workflow metadata**
+   Promote `milestone`, `dependencies`, `documentation`, and likely affected
+   files into frontmatter-backed fields that the board understands directly.
+2. **Sidebar editing and display**
+   Show and edit those fields in the ticket modal sidebar alongside status,
+   priority, tags, and assignee.
+3. **Clickable relationships**
+   Render dependency ticket IDs such as `PP-2` and `PP-3` as direct links in
+   the modal so tickets become easier to navigate.
+
+### Why This Next
+
+- It improves the day-to-day planning workflow without changing the core board
+  model again.
+- It builds directly on the new section-aware modal and assignee support.
+- It turns ticket data that already exists in this repo into filterable,
+  scannable, UI-level information.
+- It creates a clean base for later features such as archive-specific views,
+  dependency visualizations, and richer validation.
+
+### Recommended Boundaries
+
+Keep this slice intentionally small:
+
+- `milestone` should stay a single string field.
+- `dependencies`, `documentation`, and likely affected files should be simple
+  string arrays.
+- Freeform section notes should still exist for anything that does not fit the
+  structured fields cleanly.
+- Do not add graph views, calendars, or multi-level planning screens in this
+  slice.
