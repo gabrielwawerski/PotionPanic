@@ -86,6 +86,10 @@ const IGNORED_REPO_DIRS = new Set([
   "UserSettings",
 ]);
 
+const INCLUDED_HIDDEN_REPO_DIRS = new Set([
+  ".vitepress",
+]);
+
 function findRepoFiles(dir) {
   if (!fs.existsSync(dir)) {
     return [];
@@ -97,7 +101,13 @@ function findRepoFiles(dir) {
     const fullPath = path.join(dir, entry.name);
 
     if (entry.isDirectory()) {
-      if (IGNORED_REPO_DIRS.has(entry.name) || entry.name.startsWith(".")) {
+      if (
+        IGNORED_REPO_DIRS.has(entry.name)
+        || (
+          entry.name.startsWith(".")
+          && !INCLUDED_HIDDEN_REPO_DIRS.has(entry.name)
+        )
+      ) {
         continue;
       }
 

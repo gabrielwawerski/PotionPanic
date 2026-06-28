@@ -2,6 +2,11 @@
 import {computed, nextTick, onMounted, onUnmounted, ref, watch} from "vue";
 
 import {
+  COMPACT_TICKET_DETAIL_BREAKPOINT,
+  isTicketDetailCompactViewport,
+  shouldCollapseTicketDetailMetadataByDefault
+} from "../../lib/ticket-detail-layout.mjs";
+import {
   parseTicketSections,
   serializeTicketSections
 } from "../../lib/ticket-sections.mjs";
@@ -41,10 +46,14 @@ const emit = defineEmits<{
 
 const priorityOptions = ['critical', 'high', 'medium', 'low'] as const
 const editTitle = ref(false)
+const isCompactMetadataViewport = ref(false)
+const metadataCollapsed = ref(false)
 const editingSection = ref<string | null>(null);
 const sectionDraft = ref("");
 const titleDraft = ref(props.ticket.title)
 const titleRef = ref<HTMLInputElement | null>(null)
+const metadataPanelId = "ticket-detail-metadata"
+let compactViewportQuery: MediaQueryList | null = null
 
 const column = computed(() => props.columns.find((entry) => entry.key === props.ticket.status))
 const checks = computed(() => countCheckboxes(props.ticket.body))
@@ -96,12 +105,72 @@ const affectedFileSuggestionOptions = computed<SuggestionOption[]>(() => (
     value: entry,
   }))
 ))
+const metadataToggleLabel = computed(() => (
+  metadataCollapsed.value ? "Show details" : "Hide details"
+))
+const showMetadataPanel = computed(() => (
+  !isCompactMetadataViewport.value || !metadataCollapsed.value
+))
+const modalCardStyle = computed(() => ({
+  width: "calc(100vw - 20px)",
+  maxWidth: "1300px",
+  height: "93vh",
+  maxHeight: "1260px",
+  background: "#0d1117",
+  border: "1px solid #2d3748",
+  borderRadius: "12px",
+  display: "flex",
+  flexDirection: "column",
+  overflow: "hidden",
+  boxShadow: "0 24px 48px rgba(0,0,0,0.4)",
+}))
+const modalBodyStyle = computed(() => ({
+  flex: 1,
+  display: "flex",
+  overflow: "hidden",
+  position: "relative",
+}))
+const contentPaneStyle = computed(() => ({
+  flex: 1,
+  overflowY: "auto",
+  padding: "24px",
+  minWidth: "0",
+  scrollbarWidth: "thin",
+}))
+const metadataPaneStyle = computed(() => (
+  isCompactMetadataViewport.value
+    ? {
+      position: "absolute",
+      top: "0",
+      right: "0",
+      bottom: "0",
+      width: "min(400px, calc(100vw - 40px))",
+      maxWidth: "100%",
+      borderLeft: "1px solid #2d3748",
+      overflowY: "auto",
+      padding: "12px",
+      background: "#171923",
+      scrollbarWidth: "thin",
+      zIndex: "2",
+      boxShadow: "-18px 0 30px rgba(0, 0, 0, 0.35)",
+    }
+    : {
+      width: "400px",
+      flexShrink: 0,
+      borderLeft: "1px solid #2d3748",
+      overflowY: "auto",
+      padding: "12px",
+      background: "#171923",
+      scrollbarWidth: "thin",
+    }
+))
 
 watch(() => props.ticket.id, () => {
   titleDraft.value = props.ticket.title
   editTitle.value = false
   editingSection.value = null;
   sectionDraft.value = "";
+  syncMetadataViewportState(true)
 })
 
 watch(editTitle, (value) => {
@@ -142,6 +211,35 @@ function normalizeTagValue(value: string) {
 
 function normalizeFilePathValue(value: string) {
   return `${value ?? ""}`.trim().replace(/\\/g, "/");
+}
+
+function syncMetadataViewportState(forceReset = false) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const compact = isTicketDetailCompactViewport(window.innerWidth);
+
+  if (!forceReset && compact === isCompactMetadataViewport.value) {
+    return;
+  }
+
+  isCompactMetadataViewport.value = compact;
+  metadataCollapsed.value = compact
+    ? shouldCollapseTicketDetailMetadataByDefault(window.innerWidth)
+    : false;
+}
+
+function toggleMetadataCollapsed() {
+  if (!isCompactMetadataViewport.value) {
+    return;
+  }
+
+  metadataCollapsed.value = !metadataCollapsed.value;
+}
+
+function onCompactViewportChange() {
+  syncMetadataViewportState()
 }
 
 function updateMilestone(value: string) {
@@ -190,9 +288,16 @@ function onBackdropClick(event: MouseEvent) {
 }
 
 function onEscape(event: KeyboardEvent) {
-  if (event.key === "Escape" && !editTitle.value && !editingSection.value) {
-    emit('close')
+  if (event.key !== "Escape" || editTitle.value || editingSection.value) {
+    return;
   }
+
+  if (isCompactMetadataViewport.value && showMetadataPanel.value) {
+    metadataCollapsed.value = true;
+    return;
+  }
+
+  emit('close')
 }
 
 function onSectionCheckboxToggle(heading: string, index: number) {
@@ -258,12 +363,22 @@ function startSectionEdit(heading: string, content: string) {
 
 onMounted(() => {
   document.addEventListener('keydown', onEscape)
+  syncMetadataViewportState(true)
+  if (typeof window !== "undefined") {
+    compactViewportQuery = window.matchMedia(
+      `(max-width: ${COMPACT_TICKET_DETAIL_BREAKPOINT}px)`
+    )
+    compactViewportQuery.addEventListener("change", onCompactViewportChange)
+  }
   if (props.createMode) {
     editTitle.value = true
   }
 })
 
-onUnmounted(() => document.removeEventListener('keydown', onEscape))
+onUnmounted(() => {
+  document.removeEventListener('keydown', onEscape)
+  compactViewportQuery?.removeEventListener("change", onCompactViewportChange)
+})
 </script>
 
 <template>
@@ -272,7 +387,7 @@ onUnmounted(() => document.removeEventListener('keydown', onEscape))
     style="position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(2px)"
     @click="onBackdropClick"
   >
-    <div style=" max-width: 1300px; height: 93vh; max-height: 1260px; background: #0d1117; border: 1px solid #2d3748; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 24px 48px rgba(0,0,0,0.4)">
+    <div :style="modalCardStyle">
       <div style="display: flex; align-items: center; padding: 16px 24px; border-bottom: 1px solid #2d3748; flex-shrink: 0; background: #171923; gap: 12px">
         <span v-if="!createMode" style="font-size: 13px; font-weight: 700; color: #718096; font-family: monospace; white-space: nowrap; flex-shrink: 0">{{ displayId }}</span>
         <span v-else style="font-size: 13px; font-weight: 700; color: #6bcb6b; font-family: monospace; white-space: nowrap; flex-shrink: 0">NEW</span>
@@ -298,6 +413,15 @@ onUnmounted(() => document.removeEventListener('keydown', onEscape))
         >Read only</span>
 
         <button
+          v-if="isCompactMetadataViewport"
+          :aria-controls="metadataPanelId"
+          :aria-expanded="showMetadataPanel ? 'true' : 'false'"
+          :title="metadataToggleLabel"
+          style="background: none; border: 1px solid #2d3748; color: #cbd5e0; cursor: pointer; font-size: 12px; padding: 4px 10px; border-radius: 999px; flex-shrink: 0; line-height: 1.2"
+          @click="toggleMetadataCollapsed"
+        >{{ metadataToggleLabel }}</button>
+
+        <button
           v-if="!editTitle && !readOnly"
           title="Edit title"
           style="background: none; border: 1px solid #2d3748; color: #718096; cursor: pointer; font-size: 13px; padding: 4px 8px; border-radius: 4px; flex-shrink: 0; line-height: 1"
@@ -310,8 +434,14 @@ onUnmounted(() => document.removeEventListener('keydown', onEscape))
         >&times;</button>
       </div>
 
-      <div style="flex: 1; display: flex; overflow: hidden">
-        <div style="flex: 1; overflow-y: auto; padding: 24px; min-width: 0;scrollbar-width: thin; width: 40vw">
+      <div :style="modalBodyStyle">
+        <div
+          v-if="isCompactMetadataViewport && showMetadataPanel"
+          style="position: absolute; inset: 0; background: rgba(0, 0, 0, 0.16); z-index: 1"
+          @click="metadataCollapsed = true"
+        />
+
+        <div :style="contentPaneStyle">
           <div v-if="checks.total > 0" style="margin-bottom: 20px">
             <ProgressBar :color="column?.color || '#718096'" :done="checks.done" :total="checks.total" />
           </div>
@@ -367,7 +497,11 @@ onUnmounted(() => document.removeEventListener('keydown', onEscape))
           </div>
         </div>
 
-        <div style="width: 400px; flex-shrink: 0; border-left: 1px solid #2d3748; overflow-y: auto; padding: 12px; background: #171923;scrollbar-width: thin">
+        <div
+          v-show="showMetadataPanel"
+          :id="metadataPanelId"
+          :style="metadataPaneStyle"
+        >
           <p
             v-if="readOnly"
             style="font-size: 12px; color: #a0aec0; line-height: 1.5; margin-top: 0; margin-bottom: 20px"

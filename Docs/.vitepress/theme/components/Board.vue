@@ -6,6 +6,7 @@ import {
   buildTicketTemplate,
   normalizeTicketSections
 } from "../../lib/ticket-sections.mjs";
+import {READ_ONLY_BOARD_NOTICE} from "../../lib/board-notice.mjs";
 
 import type {
   Column,
@@ -279,7 +280,7 @@ if (typeof window !== 'undefined') {
       class="board-shell-notice"
       style="padding: 10px 16px; border-bottom: 1px solid rgba(237, 137, 54, 0.35); background: rgba(237, 137, 54, 0.08); color: #fbd38d; font-size: 12px; line-height: 1.4"
     >
-      This published board is read-only. Run <code>npm run docs:dev</code> or <code>.\Scripts\docs-ui.ps1</code> to edit tasks from the webpage and write changes back to markdown.
+      {{ READ_ONLY_BOARD_NOTICE }}
     </div>
 
     <div class="board-toolbar">

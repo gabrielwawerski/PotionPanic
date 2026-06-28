@@ -57,17 +57,20 @@ test("findDocumentationSuggestionPaths returns known doc paths and excludes tick
 test("findAffectedFileSuggestionPaths returns repo paths and excludes tickets", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "pp-file-suggestions-"));
   const docsDir = path.join(root, "Docs");
+  const vitepressThemeDir = path.join(docsDir, ".vitepress", "theme");
   const ticketsDir = path.join(docsDir, "tickets");
   const sceneDir = path.join(root, "Assets", "Scenes");
   const libraryDir = path.join(root, "Library");
 
   fs.mkdirSync(ticketsDir, {recursive: true});
+  fs.mkdirSync(vitepressThemeDir, {recursive: true});
   fs.mkdirSync(sceneDir, {recursive: true});
   fs.mkdirSync(libraryDir, {recursive: true});
 
   fs.writeFileSync(path.join(root, "README.md"), "# Root readme\n");
   fs.writeFileSync(path.join(root, "package.json"), "{}\n");
   fs.writeFileSync(path.join(docsDir, "board.md"), "# Board\n");
+  fs.writeFileSync(path.join(vitepressThemeDir, "Layout.vue"), "<template />\n");
   fs.writeFileSync(path.join(sceneDir, "Laboratory.unity"), "%YAML\n");
   fs.writeFileSync(path.join(ticketsDir, "PP-2.md"), "# Ticket\n");
   fs.writeFileSync(path.join(libraryDir, "cache.asset"), "ignore\n");
@@ -79,6 +82,7 @@ test("findAffectedFileSuggestionPaths returns repo paths and excludes tickets", 
 
   assert.deepEqual(suggestions, [
     "Assets/Scenes/Laboratory.unity",
+    "Docs/.vitepress/theme/Layout.vue",
     "Docs/board.md",
     "package.json",
     "README.md",
