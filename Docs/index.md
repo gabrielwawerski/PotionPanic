@@ -60,6 +60,8 @@ If you are new to the repo, read these in order:
   - component responsibilities
   - repo-aligned script structure
 
+- [`game-design-and-psychology.md`](project/game-design-and-psychology.md)
+
 ### `guides/unity/`
 
 - [`index.md`](guides/unity/index.md)

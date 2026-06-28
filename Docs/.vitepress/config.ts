@@ -44,6 +44,7 @@ export default defineConfig({
             {text: "Game Design", link: "/project/game-design"},
             {text: "MVP Scope", link: "/project/mvp-scope"},
             {text: "Technical Architecture", link: "/project/technical-architecture"},
+            {text: "Game Design and Psychology", link: "/project/game-design-and-psychology"},
           ],
         },
         {
