@@ -97,6 +97,3 @@ Repository rules:
   for the VitePress docs workflow.
 - `.\Scripts\docs-ui.ps1` starts the local docs server if needed and opens the
   editable task board in the default browser.
-- `.\Scripts\backlog\setup-backlog.ps1` and `.\Scripts\backlog\backlog-ui.ps1`
-  remain as temporary compatibility wrappers that redirect to the new docs
-  flow.

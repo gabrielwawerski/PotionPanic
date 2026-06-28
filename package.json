@@ -5,7 +5,6 @@
   "scripts": {
     "docs:build": "vitepress build Docs",
     "docs:dev": "vitepress dev Docs --host 0.0.0.0 --port 6420",
-    "docs:migrate-backlog": "node Scripts/docs/migrate-backlog.mjs",
     "docs:preview": "vitepress preview Docs --host 0.0.0.0 --port 6421",
     "docs:ticket": "node Scripts/docs/create-ticket.mjs",
     "test": "node --test \"Scripts/docs/**/*.test.mjs\""
@@ -13,7 +12,6 @@
   "devDependencies": {
     "gray-matter": "^4.0.3",
     "vitepress": "^1.6.4",
-    "vitepress-theme-pm": "^0.2.0",
     "vue": "^3.5.39"
   }
 }
