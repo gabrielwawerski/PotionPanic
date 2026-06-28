@@ -272,7 +272,7 @@ onUnmounted(() => document.removeEventListener('keydown', onEscape))
     style="position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(2px)"
     @click="onBackdropClick"
   >
-    <div style="width: 90vw; max-width: 1080px; height: 82vh; max-height: 760px; background: #0d1117; border: 1px solid #2d3748; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 24px 48px rgba(0,0,0,0.4)">
+    <div style=" max-width: 1300px; height: 98vh; max-height: 960px; background: #0d1117; border: 1px solid #2d3748; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 24px 48px rgba(0,0,0,0.4)">
       <div style="display: flex; align-items: center; padding: 16px 24px; border-bottom: 1px solid #2d3748; flex-shrink: 0; background: #171923; gap: 12px">
         <span v-if="!createMode" style="font-size: 13px; font-weight: 700; color: #718096; font-family: monospace; white-space: nowrap; flex-shrink: 0">{{ displayId }}</span>
         <span v-else style="font-size: 13px; font-weight: 700; color: #6bcb6b; font-family: monospace; white-space: nowrap; flex-shrink: 0">NEW</span>
@@ -311,7 +311,7 @@ onUnmounted(() => document.removeEventListener('keydown', onEscape))
       </div>
 
       <div style="flex: 1; display: flex; overflow: hidden">
-        <div style="flex: 1; overflow-y: auto; padding: 24px; min-width: 0;scrollbar-width: thin">
+        <div style="flex: 1; overflow-y: auto; padding: 24px; min-width: 0;scrollbar-width: thin; width: 40vw">
           <div v-if="checks.total > 0" style="margin-bottom: 20px">
             <ProgressBar :color="column?.color || '#718096'" :done="checks.done" :total="checks.total" />
           </div>
@@ -367,7 +367,7 @@ onUnmounted(() => document.removeEventListener('keydown', onEscape))
           </div>
         </div>
 
-        <div style="width: 280px; flex-shrink: 0; border-left: 1px solid #2d3748; overflow-y: auto; padding: 24px; background: #171923;scrollbar-width: thin">
+        <div style="width: 400px; flex-shrink: 0; border-left: 1px solid #2d3748; overflow-y: auto; padding: 12px; background: #171923;scrollbar-width: thin">
           <p
             v-if="readOnly"
             style="font-size: 12px; color: #a0aec0; line-height: 1.5; margin-top: 0; margin-bottom: 20px"
