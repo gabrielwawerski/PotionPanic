@@ -3,7 +3,8 @@ id: 2
 title: Replace SampleScene with Laboratory milestone scene
 status: todo
 priority: high
-tags: []
+tags:
+  - asd
 ---
 
 ## Description

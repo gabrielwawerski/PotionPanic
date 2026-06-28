@@ -145,7 +145,7 @@ Every real task should have:
 - title
 - goal
 - acceptance criteria
-- owner noted in the task body or handoff message until assignee support exists
+- assignee when the task has a clear owner
 - status
 - milestone
 - likely affected files

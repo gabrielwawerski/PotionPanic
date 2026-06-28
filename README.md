@@ -85,9 +85,9 @@ Repository rules:
 - The browser board is the default human task workflow for this repo.
 - Persistent webpage editing happens through the local VitePress server, not the
   static build.
-- `npm run docs:ticket -- "Ticket title"` is available for CLI ticket creation
-  when needed, and it now uses the same multi-section ticket template as the
-  board workflow.
+- `npm run docs:ticket -- "Ticket title" --assignee "Name"` is available for
+  CLI ticket creation when needed, and it now uses the same multi-section
+  ticket template as the board workflow.
 - AI collaborators should follow the committed `AGENTS.md`, `CLAUDE.md`, and
   `GEMINI.md` instructions.
 

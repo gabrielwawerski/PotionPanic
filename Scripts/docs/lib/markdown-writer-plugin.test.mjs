@@ -7,6 +7,7 @@ import test from "node:test";
 import {
   createTicketFile,
   fixTickets,
+  scanTickets,
   validateTickets,
 } from "../../../Docs/.vitepress/lib/markdown-writer-plugin.mjs";
 
@@ -21,6 +22,7 @@ test(
       path.join(os.tmpdir(), "pp-ticket-create-"));
 
     const created = createTicketFile(tempRoot, {
+      assignee: "Gabriel",
       prefix: "PP",
       priority: "medium",
       sections: ["Description", "Acceptance Criteria", "Notes"],
@@ -30,13 +32,44 @@ test(
     });
 
     assert.equal(created.id, 1);
+    assert.equal(created.assignee, "Gabriel");
     assert.equal(created.url, "/tickets/PP-1.html");
 
     const saved = fs.readFileSync(path.join(tempRoot, "PP-1.md"), "utf8");
+    assert.match(saved, /^assignee: Gabriel$/m);
     assert.match(saved, /^## Description\s*$/m);
     assert.match(saved, /^## Acceptance Criteria\s*$/m);
     assert.match(saved, /^## Notes\s*$/m);
   });
+
+test("scanTickets returns assignee metadata from frontmatter", () => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "pp-ticket-scan-"));
+
+  writeTicket(
+    tempRoot,
+    "PP-7.md",
+    [
+      "---",
+      "id: 7",
+      "title: Owned ticket",
+      "status: doing",
+      "priority: high",
+      "assignee: Aga",
+      "tags:",
+      "  - docs-workflow",
+      "---",
+      "",
+      "## Description",
+      "",
+      "Assignee should round-trip.",
+    ].join("\n")
+  );
+
+  const [ticket] = scanTickets(tempRoot, "tickets");
+
+  assert.equal(ticket.assignee, "Aga");
+  assert.equal(ticket.title, "Owned ticket");
+});
 
 test(
   "validateTickets reports both identity issues and missing required sections",

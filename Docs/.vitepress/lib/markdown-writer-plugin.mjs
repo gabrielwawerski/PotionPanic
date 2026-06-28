@@ -23,6 +23,7 @@ export function scanTickets(ticketsDir, dirRelative) {
     const parsed = matter(raw);
 
     return {
+      assignee: `${parsed.data.assignee ?? ""}`.trim(),
       id: Number(parsed.data.id) || 0,
       title: parsed.data.title || path.basename(file, ".md"),
       status: parsed.data.status || "backlog",
@@ -222,6 +223,7 @@ export function getMaxTicketId(ticketsDir) {
 export function createTicketFile(
   ticketsDir,
   {
+    assignee = "",
     body = "",
     dirRelative = "tickets",
     prefix = "",
@@ -240,9 +242,13 @@ export function createTicketFile(
   const slug = prefix ? `${prefix}-${id}` : String(id);
   const contentBody = `${body ?? ""}`.trim() || buildTicketTemplate(sections);
   const frontmatter = { id, title, status, priority };
+  const normalizedAssignee = `${assignee ?? ""}`.trim();
 
   if (Array.isArray(tags) && tags.length > 0) {
     frontmatter.tags = tags;
+  }
+  if (normalizedAssignee) {
+    frontmatter.assignee = normalizedAssignee;
   }
 
   const content = matter.stringify(`\n${contentBody}\n`, frontmatter);
@@ -250,6 +256,7 @@ export function createTicketFile(
   fs.writeFileSync(filePath, content);
 
   return {
+    assignee: normalizedAssignee,
     id,
     title,
     status,
@@ -361,6 +368,7 @@ export function markdownWriterPlugin() {
               dir,
               prefix,
               priority,
+              assignee,
               sections,
               status,
               tags,
@@ -372,6 +380,7 @@ export function markdownWriterPlugin() {
               dirRelative: dir || "tickets",
               prefix: prefix || "",
               priority,
+              assignee,
               sections,
               status,
               tags,
@@ -423,6 +432,15 @@ export function markdownWriterPlugin() {
             for (const [key, value] of Object.entries(updates || {})) {
               if (key === "body") {
                 parsed.content = `\n${String(value)}\n`;
+              }
+              else if (key === "assignee") {
+                const normalizedAssignee = `${value ?? ""}`.trim();
+                if (normalizedAssignee) {
+                  parsed.data.assignee = normalizedAssignee;
+                }
+                else {
+                  delete parsed.data.assignee;
+                }
               }
               else {
                 parsed.data[key] = value;

@@ -1,4 +1,5 @@
 export interface Ticket {
+  assignee: string;
   id: number;
   title: string;
   status: string;

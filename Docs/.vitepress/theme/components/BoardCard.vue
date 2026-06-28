@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import {computed} from "vue";
 
-import type { Ticket } from '../types'
-import { countCheckboxes } from '../composables/useMarkdown'
+import type {Ticket} from "../types";
+import {countCheckboxes} from "../composables/useMarkdown";
 
-import ProgressBar from './ProgressBar.vue'
+import ProgressBar from "./ProgressBar.vue";
 
 const props = defineProps<{
   color: string
@@ -62,6 +62,13 @@ const displayId = computed(() => (
       />
     </div>
     <div style="font-size: 13px; font-weight: 600; color: #e2e8f0; line-height: 1.3">{{ ticket.title }}</div>
+    <div
+        v-if="ticket.assignee"
+        style="margin-top: 6px; font-size: 10px; color: #9ae6b4; background: rgba(72, 187, 120, 0.12); border: 1px solid rgba(72, 187, 120, 0.25); border-radius: 999px; padding: 2px 8px; display: inline-flex; align-items: center; gap: 4px"
+    >
+      <span>Owner</span>
+      <span style="font-weight: 700">{{ ticket.assignee }}</span>
+    </div>
     <div v-if="ticket.tags.length" style="display: flex; flex-wrap: wrap; gap: 3px; margin-top: 6px">
       <span
         v-for="tag in ticket.tags"

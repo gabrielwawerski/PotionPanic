@@ -145,6 +145,7 @@ function openNewTicket() {
   }
 
   draftTicket.value = {
+    assignee: "",
     id: 0,
     title: 'New ticket',
     status: defaultColumn.value,
@@ -170,6 +171,7 @@ async function confirmCreate(draft: Ticket) {
         status: draft.status,
         title: draft.title,
         priority: draft.priority,
+        assignee: draft.assignee,
         tags: draft.tags,
         body: draft.body,
         sections: ticketSections.value,

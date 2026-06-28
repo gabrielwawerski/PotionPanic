@@ -72,6 +72,14 @@ function addTag(tag: string) {
   }
 }
 
+function updateAssignee(value: string) {
+  if (props.readOnly) {
+    return;
+  }
+
+  emit("update", props.ticket.id, {assignee: value.trim()});
+}
+
 function buildUpdatedBody(heading: string, content: string) {
   return serializeTicketSections(
       parsedSections.value.map((section) => (
@@ -317,6 +325,22 @@ onUnmounted(() => document.removeEventListener('keydown', onEscape))
           <div style="margin-bottom: 20px">
             <label style="display: block; font-size: 11px; color: #718096; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 6px">Tags</label>
             <TagEditor :read-only="readOnly" :tags="ticket.tags" @add="addTag" @remove="removeTag" />
+          </div>
+
+          <div style="margin-bottom: 20px">
+            <label style="display: block; font-size: 11px; color: #718096; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 6px">Assignee</label>
+            <input
+                v-if="!readOnly"
+                :value="ticket.assignee"
+                placeholder="Assign one person..."
+                style="width: 100%; font-size: 12px; padding: 7px 10px; background: #0d1117; border: 1px solid #2d3748; border-radius: 6px; color: #e2e8f0; outline: none; box-sizing: border-box"
+                @change="updateAssignee(($event.target as HTMLInputElement).value)"
+            >
+            <div
+                v-else
+                style="font-size: 12px; color: #cbd5e0; padding: 7px 10px; background: #0d1117; border: 1px solid #2d3748; border-radius: 6px"
+            >{{ ticket.assignee || "Unassigned" }}
+            </div>
           </div>
 
           <div v-if="!createMode && filePath" style="margin-bottom: 20px">

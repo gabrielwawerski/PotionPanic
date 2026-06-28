@@ -18,6 +18,7 @@ Options:
   --dir <path>       Tickets directory (default: Docs/tickets)
   --status <status>  Initial status (default: backlog)
   --priority <pri>   Priority: critical, high, medium, low (default: medium)
+  --assignee <name>  Initial ticket assignee
   --tags <tags>      Comma-separated tags
   --body <text>      Ticket body markdown
   --prefix <prefix>  Ticket ID prefix (overrides board.md ticketPrefix)`);
@@ -29,6 +30,7 @@ function parseArgs(args) {
   let dir = "Docs/tickets";
   let status = "backlog";
   let priority = "medium";
+  let assignee = "";
   let tags = [];
   let body = "";
   let prefix = null;
@@ -47,6 +49,11 @@ function parseArgs(args) {
     }
     if (args[index] === "--priority") {
       priority = args[index + 1];
+      index += 2;
+      continue;
+    }
+    if (args[index] === "--assignee") {
+      assignee = args[index + 1];
       index += 2;
       continue;
     }
@@ -74,7 +81,7 @@ function parseArgs(args) {
     index += 1;
   }
 
-  return { body, dir, prefix, priority, status, tags, title };
+  return { assignee, body, dir, prefix, priority, status, tags, title };
 }
 
 function readBoardSettings(siteDir) {
@@ -111,6 +118,7 @@ const ticketsDir = path.resolve(process.cwd(), options.dir);
 const siteDir = path.resolve(ticketsDir, "..");
 const boardSettings = readBoardSettings(siteDir);
 const ticket = createTicketFile(ticketsDir, {
+  assignee: options.assignee,
   body: options.body,
   dirRelative: path.relative(siteDir, ticketsDir).replace(/\\/g, "/"),
   prefix: options.prefix ?? boardSettings.ticketPrefix,
