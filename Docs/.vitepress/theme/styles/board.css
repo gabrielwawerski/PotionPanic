@@ -254,11 +254,11 @@ body {
 @media (min-width: 1440px) {
   .board-shell-layout .VPContent.has-sidebar {
     /*padding-left: var(--vp-sidebar-width);*/
-    padding-right: var(--board-shell-gutter);
+    padding-right: 0;
   }
 
   .board-shell-layout .VPNavBar.has-sidebar .title {
-    /*width: calc(var(--vp-sidebar-width) - 64px);*/
+    width: var(--vp-sidebar-width);
     /*padding: 0 16px 0 16px;*/
   }
 
