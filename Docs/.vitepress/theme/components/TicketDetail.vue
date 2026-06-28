@@ -114,7 +114,7 @@ const showMetadataPanel = computed(() => (
 const modalCardStyle = computed(() => ({
   width: "calc(100vw - 20px)",
   maxWidth: "1300px",
-  height: isCompactMetadataViewport.value ? "100vh" : "93vh",
+  height: isCompactMetadataViewport.value ? "87vh" : "93vh",
   maxHeight: "1260px",
   background: "#0d1117",
   border: "1px solid #2d3748",
@@ -133,7 +133,7 @@ const modalBodyStyle = computed(() => ({
 const contentPaneStyle = computed(() => ({
   flex: 1,
   overflowY: "auto",
-  padding: "24px",
+  padding: isCompactMetadataViewport.value ? "12px" : "24px",
   minWidth: "0",
   scrollbarWidth: "thin",
 }))
@@ -144,7 +144,7 @@ const metadataPaneStyle = computed(() => (
       top: "0",
       right: "0",
       bottom: "0",
-      width: "min(400px, calc(100vw - 40px))",
+      width: isCompactMetadataViewport.value ? "100%" : "min(400px, calc(100vw - 40px))",
       maxWidth: "100%",
       borderLeft: "1px solid #2d3748",
       overflowY: "auto",
