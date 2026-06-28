@@ -114,7 +114,7 @@ const showMetadataPanel = computed(() => (
 const modalCardStyle = computed(() => ({
   width: "calc(100vw - 20px)",
   maxWidth: "1300px",
-  height: "93vh",
+  height: isCompactMetadataViewport.value ? "100vh" : "93vh",
   maxHeight: "1260px",
   background: "#0d1117",
   border: "1px solid #2d3748",
