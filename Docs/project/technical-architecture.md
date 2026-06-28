@@ -5,8 +5,8 @@ Target engine: Unity
 Target platform: PC
 
 Use this document for runtime structure, data ownership, and implementation
-boundaries. Use `game-design.md` for player-facing intent and `mvp-scope.md`
-for milestone order and locked MVP rules.
+boundaries. Use [`game-design.md`](game-design.md) for player-facing intent and
+[`mvp-scope.md`](mvp-scope.md) for milestone order and locked MVP rules.
 
 ## Purpose
 

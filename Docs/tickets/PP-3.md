@@ -77,8 +77,10 @@ during implementation: `radius`, `height`, `center`, `slopeLimit`, `stepOffset`,
 
 - Milestone: `m-0`
 - Dependencies: `PP-2`
-- Documentation: `README.md`, `Docs/project/mvp-scope.md`,
-  `Docs/project/technical-architecture.md`, `Docs/project/game-design.md`,
-  `Docs/onboarding/getting-started.md`, `Docs/collaboration/team-workflow.md`
+- Documentation: `README.md`, [`../project/mvp-scope.md`](../project/mvp-scope.md),
+  [`../project/technical-architecture.md`](../project/technical-architecture.md),
+  [`../project/game-design.md`](../project/game-design.md),
+  [`../onboarding/getting-started.md`](../onboarding/getting-started.md),
+  [`../collaboration/team-workflow.md`](../collaboration/team-workflow.md)
 - Likely affected files: `Assets/Scripts/Runtime`, `Assets/Tests/EditMode`,
   `Assets/Scenes/Laboratory.unity`

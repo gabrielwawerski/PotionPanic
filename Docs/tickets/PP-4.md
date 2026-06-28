@@ -74,9 +74,12 @@ scene-conversion implementation.
 
 - Milestone: `m-0`
 - Dependencies: `PP-2`, `PP-3`
-- Documentation: `README.md`, `Docs/project/mvp-scope.md`,
-  `Docs/onboarding/getting-started.md`, `Docs/collaboration/team-workflow.md`,
+- Documentation: `README.md`, [`../project/mvp-scope.md`](../project/mvp-scope.md),
+  [`../onboarding/getting-started.md`](../onboarding/getting-started.md),
+  [`../collaboration/team-workflow.md`](../collaboration/team-workflow.md),
   `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`
 - Likely affected files: `Assets/Tests/PlayMode`, `README.md`,
-  `Docs/onboarding/getting-started.md`, `Docs/collaboration/team-workflow.md`,
-  `Docs/project/mvp-scope.md`, `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`
+  [`../onboarding/getting-started.md`](../onboarding/getting-started.md),
+  [`../collaboration/team-workflow.md`](../collaboration/team-workflow.md),
+  [`../project/mvp-scope.md`](../project/mvp-scope.md), `AGENTS.md`,
+  `CLAUDE.md`, `GEMINI.md`

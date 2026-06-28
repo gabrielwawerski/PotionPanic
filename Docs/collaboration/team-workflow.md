@@ -13,7 +13,8 @@ truth and the docs board for task execution and planning history.
 At the start of a work session:
 
 1. Pull the latest `master`.
-2. Confirm the current milestone in `Docs/project/mvp-scope.md`.
+2. Confirm the current milestone in
+   [`../project/mvp-scope.md`](../project/mvp-scope.md).
 3. Pick one small task from `To do`.
 4. Say what you are working on and which files, scenes, or prefabs you expect
    to touch.
@@ -49,7 +50,8 @@ If yes, consider it for the current milestone. If no, add a board task for it.
 ## Repository Setup
 
 Before taking a task on a new machine, complete
-`Docs/onboarding/getting-started.md` end to end.
+[`../onboarding/getting-started.md`](../onboarding/getting-started.md) end to
+end.
 
 Required setup:
 
@@ -114,9 +116,12 @@ milestone is complete when:
 - the other developer can pull and test it
 - the next milestone is not blocked by broken work
 
-Milestone intent lives in `Docs/project/mvp-scope.md`. Runtime boundaries live
-in `Docs/project/technical-architecture.md`. Use the board to track the active
-task breakdown, reviews, and execution notes.
+Milestone intent lives in
+[`../project/mvp-scope.md`](../project/mvp-scope.md). Runtime boundaries live
+in
+[`../project/technical-architecture.md`](../project/technical-architecture.md).
+Use the [board](../board.md) to track the active task breakdown, reviews, and
+execution notes.
 
 If a task does not support the current milestone, keep it in the board's
 `Backlog` column until the milestone changes.
@@ -355,18 +360,19 @@ Update evergreen docs when:
 - major stable decisions are made
 - the team changes its review or workflow rules
 
-Current evergreen docs live in `Docs/`.
+Current evergreen docs live in [`../index.md`](../index.md).
 
 Primary docs:
 
-- `Docs/index.md`
-- `Docs/onboarding/getting-started.md`
-- `Docs/project/game-design.md`
-- `Docs/project/mvp-scope.md`
-- `Docs/project/technical-architecture.md`
-- `Docs/collaboration/team-workflow.md`
+- [`../index.md`](../index.md)
+- [`../onboarding/getting-started.md`](../onboarding/getting-started.md)
+- [`../project/game-design.md`](../project/game-design.md)
+- [`../project/mvp-scope.md`](../project/mvp-scope.md)
+- [`../project/technical-architecture.md`](../project/technical-architecture.md)
+- [`team-workflow.md`](team-workflow.md)
 
-Unity craft guides live under `Docs/guides/unity/`.
+Unity craft guides live under
+[`../guides/unity/index.md`](../guides/unity/index.md).
 
 Do not create duplicate docs with different names unless the team intentionally
 replaces the old doc.

@@ -21,7 +21,7 @@ If you are new to the repo, read these in order:
 
 ### `onboarding/`
 
-- `getting-started.md`
+- [`getting-started.md`](onboarding/getting-started.md)
   - first-machine setup
   - first smoke test
   - docs board bootstrap
@@ -29,7 +29,7 @@ If you are new to the repo, read these in order:
 
 ### `collaboration/`
 
-- `team-workflow.md`
+- [`team-workflow.md`](collaboration/team-workflow.md)
   - day-to-day team process
   - git and review workflow
   - shared Unity file rules
@@ -37,20 +37,20 @@ If you are new to the repo, read these in order:
 
 ### `project/`
 
-- `game-design.md`
+- [`game-design.md`](project/game-design.md)
   - player-facing design
   - gameplay loop
   - ingredients, potions, and disasters
   - art and audio direction
 
-- `mvp-scope.md`
+- [`mvp-scope.md`](project/mvp-scope.md)
   - locked MVP decisions
   - run structure
   - milestone sequence
   - out-of-scope rules
   - definition of done
 
-- `technical-architecture.md`
+- [`technical-architecture.md`](project/technical-architecture.md)
   - runtime system boundaries
   - data ownership
   - component responsibilities
@@ -58,54 +58,54 @@ If you are new to the repo, read these in order:
 
 ### `guides/unity/`
 
-- `index.md`
+- [`index.md`](guides/unity/index.md)
   - guide selection help
 
-- `runtime-architecture.md`
+- [`runtime-architecture.md`](guides/unity/runtime-architecture.md)
   - Unity mental models
   - composition and state ownership
   - scene and system boundaries
 
-- `coding-and-implementation.md`
+- [`coding-and-implementation.md`](guides/unity/coding-and-implementation.md)
   - implementation habits
   - smallest-playable-loop thinking
   - failure checks and debugging
 
-- `editor-safety.md`
+- [`editor-safety.md`](guides/unity/editor-safety.md)
   - scene, prefab, and inspector safety
   - coordination rules for Unity-side edits
 
-- `presentation-workflows.md`
+- [`presentation-workflows.md`](guides/unity/presentation-workflows.md)
   - UI, animation, model, material, and feedback workflow
 
 ### Task And Planning Areas
 
-- `board.md`
+- [`board.md`](board.md)
   - shared kanban board
   - editable from the local docs server
 
 - `tickets/`
   - one markdown file per active task
 
-- `milestones/`
+- [`milestones/`](milestones/index.md)
   - milestone overview pages
 
-- `archive/`
+- [`archive/`](archive/index.md)
   - completed or superseded planning history
 
 ## Source Of Truth
 
 Use one primary doc per topic:
 
-| Topic                         | Canonical doc                                     |
-|-------------------------------|---------------------------------------------------|
-| Local onboarding              | `onboarding/getting-started.md`                   |
-| Team process                  | `collaboration/team-workflow.md`                  |
-| Player-facing design          | `project/game-design.md`                          |
-| MVP scope and milestone order | `project/mvp-scope.md`                            |
-| Runtime architecture          | `project/technical-architecture.md`               |
-| Unity implementation guidance | `guides/unity/*`                                  |
-| Tasks and execution history   | `board.md`, `tickets/`, `milestones/`, `archive/` |
+| Topic                         | Canonical doc                                                                                                            |
+|-------------------------------|--------------------------------------------------------------------------------------------------------------------------|
+| Local onboarding              | [`onboarding/getting-started.md`](onboarding/getting-started.md)                                                         |
+| Team process                  | [`collaboration/team-workflow.md`](collaboration/team-workflow.md)                                                       |
+| Player-facing design          | [`project/game-design.md`](project/game-design.md)                                                                       |
+| MVP scope and milestone order | [`project/mvp-scope.md`](project/mvp-scope.md)                                                                           |
+| Runtime architecture          | [`project/technical-architecture.md`](project/technical-architecture.md)                                                 |
+| Unity implementation guidance | [`guides/unity/index.md`](guides/unity/index.md) and its linked guide pages                                              |
+| Tasks and execution history   | [`board.md`](board.md), `tickets/`, [`milestones/index.md`](milestones/index.md), [`archive/index.md`](archive/index.md) |
 
 ## What Does Not Belong In Evergreen Docs
 

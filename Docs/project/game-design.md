@@ -7,8 +7,9 @@ Target Engine: Unity
 Target Platform: PC
 
 Use this doc for player-facing design, feel, readability, and content intent.
-Use `mvp-scope.md` for locked milestone and tuning decisions. Use
-`technical-architecture.md` for runtime structure.
+Use [`mvp-scope.md`](mvp-scope.md) for locked milestone and tuning decisions.
+Use [`technical-architecture.md`](technical-architecture.md) for runtime
+structure.
 
 ## Elevator Pitch
 
@@ -258,7 +259,7 @@ The design intent is:
 - reward survival time
 - avoid deep combo systems before the base loop is proven
 
-See `mvp-scope.md` for the locked numbers.
+See [`mvp-scope.md`](mvp-scope.md) for the locked numbers.
 
 ## Art Direction
 
@@ -304,5 +305,5 @@ Do not let the design drift into:
 - several-room progression
 - story-heavy systems
 
-If a new idea does not help the current milestone become playable, put it in
-the board instead of expanding the MVP.
+If a new idea does not help the current milestone become playable, put it on
+the [board](../board.md) instead of expanding the MVP.
