@@ -13,6 +13,7 @@ export default defineConfig({
       {text: "Board", link: "/board"},
       {text: "Onboarding", link: "/onboarding/getting-started"},
       {text: "Workflow", link: "/collaboration/team-workflow"},
+      {text: "Plans", link: "/plans/"},
       {text: "Project", link: "/project/game-design"},
       {text: "Archive", link: "/archive/"},
     ],
@@ -43,6 +44,13 @@ export default defineConfig({
             {text: "Game Design", link: "/project/game-design"},
             {text: "MVP Scope", link: "/project/mvp-scope"},
             {text: "Technical Architecture", link: "/project/technical-architecture"},
+          ],
+        },
+        {
+          text: "Plans",
+          items: [
+            {text: "Implementation Plans", link: "/plans/"},
+            {text: "VitePress Board UX Plans", link: "/plans/vitepress-board-ux-plans"},
           ],
         },
         {

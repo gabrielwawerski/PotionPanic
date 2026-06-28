@@ -4,7 +4,9 @@
 VitePress task board.
 
 Use the board for time-bound planning, task execution, milestone notes, and
-project history. Keep evergreen guidance in the rest of `Docs/`.
+project history. Use `plans/` for active implementation plans that should stay
+browsable in the VitePress site. Keep evergreen guidance in the rest of
+`Docs/`.
 
 [VitePress Project Management Feature Proposals](collaboration/vitepress-project-management-feature-proposals.md)
 
@@ -86,6 +88,11 @@ If you are new to the repo, read these in order:
   - shared kanban board
   - editable from the local docs server
 
+- [`plans/`](plans/index.md)
+  - active implementation plans
+  - browsable in VitePress while work is in progress
+  - move finished or superseded plans into the archive flow
+
 - `tickets/`
   - one markdown file per active task
 
@@ -107,7 +114,7 @@ Use one primary doc per topic:
 | MVP scope and milestone order | [`project/mvp-scope.md`](project/mvp-scope.md)                                                                           |
 | Runtime architecture          | [`project/technical-architecture.md`](project/technical-architecture.md)                                                 |
 | Unity implementation guidance | [`guides/unity/index.md`](guides/unity/index.md) and its linked guide pages                                              |
-| Tasks and execution history   | [`board.md`](board.md), `tickets/`, [`milestones/index.md`](milestones/index.md), [`archive/index.md`](archive/index.md) |
+| Tasks and active plan history | [`board.md`](board.md), [`plans/index.md`](plans/index.md), `tickets/`, [`milestones/index.md`](milestones/index.md), [`archive/index.md`](archive/index.md) |
 
 ## What Does Not Belong In Evergreen Docs
 
@@ -115,6 +122,7 @@ Keep these out of the evergreen guidance unless the team intentionally promotes
 them into reusable documentation:
 
 - completed milestone implementation plans
+- superseded active implementation plans
 - one-off readiness reviews
 - stale decision logs
 - superseded onboarding drafts

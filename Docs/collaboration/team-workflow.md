@@ -6,7 +6,8 @@ Scope: Two-person beginner/intermediate Unity team
 Primary repo: Potion Panic
 
 Use this guide for day-to-day collaboration. Use the `project/` docs for game
-truth and the docs board for task execution and planning history.
+truth, the docs board for task execution, and `plans/` for active
+implementation plans that need a browsable long-form home.
 
 ## Daily Flow
 
@@ -121,7 +122,8 @@ Milestone intent lives in
 in
 [`../project/technical-architecture.md`](../project/technical-architecture.md).
 Use the [board](../board.md) to track the active task breakdown, reviews, and
-execution notes.
+execution notes. Use [`../plans/index.md`](../plans/index.md) when a task
+needs a longer implementation plan than a ticket should hold.
 
 If a task does not support the current milestone, keep it in the board's
 `Backlog` column until the milestone changes.
@@ -371,15 +373,18 @@ Primary docs:
 - [`../project/technical-architecture.md`](../project/technical-architecture.md)
 - [`team-workflow.md`](team-workflow.md)
 
+Active implementation plans live under
+[`../plans/index.md`](../plans/index.md).
+
 Unity craft guides live under
 [`../guides/unity/index.md`](../guides/unity/index.md).
 
 Do not create duplicate docs with different names unless the team intentionally
 replaces the old doc.
 
-Keep these in board tickets or archive pages instead of `Docs/`:
+Keep these in board tickets or archive pages instead of evergreen docs:
 
-- milestone implementation plans
+- completed or superseded implementation plans
 - one-off readiness reviews
 - task-specific execution notes
 - temporary decision logs

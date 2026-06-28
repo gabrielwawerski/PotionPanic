@@ -1,7 +1,8 @@
 # Archive
 
 Completed or superseded planning work migrated into the VitePress documentation
-site lives here.
+site lives here. Finished implementation plans from `Docs/plans/` should move
+here once they are no longer active.
 
 ## Completed Tasks
 
