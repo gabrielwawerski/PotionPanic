@@ -18,6 +18,7 @@ affectedFiles:
   - ProjectSettings/ProjectSettings.asset
 tags:
   - asd
+assignee: Patro
 ---
 
 ## Description

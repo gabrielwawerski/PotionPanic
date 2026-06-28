@@ -8,17 +8,25 @@ import {
 import {formatListInput, parseListInput} from "../../lib/ticket-metadata.mjs";
 import {buildDocumentationHref, buildTicketHref} from "../../lib/ticket-links.mjs";
 
-import type {Column, Ticket} from "../types";
+import type {
+  Column,
+  SuggestionOption,
+  Ticket,
+  TicketSuggestionCatalog
+} from "../types";
 import {countCheckboxes, toggleCheckbox} from "../composables/useMarkdown";
 
 import MarkdownBody from "./MarkdownBody.vue";
 import ProgressBar from "./ProgressBar.vue";
+import SuggestionCombobox from "./SuggestionCombobox.vue";
 import TagEditor from "./TagEditor.vue";
+import TokenSuggestionInput from "./TokenSuggestionInput.vue";
 
 const props = withDefaults(defineProps<{
   columns: Column[]
   createMode?: boolean
   readOnly: boolean
+  suggestions: TicketSuggestionCatalog
   ticket: Ticket
   ticketPrefix: string
   ticketSections: string[]
@@ -50,6 +58,33 @@ const filePath = computed(() => (
 const parsedSections = computed(() => (
     parseTicketSections(props.ticket.body, props.ticketSections)
 ));
+const currentTicketReference = computed(() => (
+  props.ticket.id > 0
+    ? (props.ticketPrefix
+      ? `${props.ticketPrefix}-${props.ticket.id}`
+      : String(props.ticket.id))
+    : ""
+))
+const tagSuggestionOptions = computed<SuggestionOption[]>(() => (
+  props.suggestions.tags.map((tag) => ({label: tag, value: tag}))
+))
+const milestoneSuggestionOptions = computed<SuggestionOption[]>(() => (
+  props.suggestions.milestones.map((milestone) => ({
+    label: milestone,
+    value: milestone,
+  }))
+))
+const dependencySuggestionOptions = computed<SuggestionOption[]>(() => (
+  props.suggestions.dependencies.filter((option) => (
+    option.value !== currentTicketReference.value
+  ))
+))
+const documentationSuggestionOptions = computed<SuggestionOption[]>(() => (
+  props.suggestions.documentation.map((entry) => ({
+    label: entry,
+    value: entry,
+  }))
+))
 
 watch(() => props.ticket.id, () => {
   titleDraft.value = props.ticket.title
@@ -74,12 +109,24 @@ function addTag(tag: string) {
   }
 }
 
+function updateTags(tags: string[]) {
+  if (props.readOnly) {
+    return;
+  }
+
+  emit("update", props.ticket.id, {tags});
+}
+
 function updateAssignee(value: string) {
   if (props.readOnly) {
     return;
   }
 
   emit("update", props.ticket.id, {assignee: value.trim()});
+}
+
+function normalizeTagValue(value: string) {
+  return `${value ?? ""}`.trim().toLowerCase();
 }
 
 function updateMilestone(value: string) {
@@ -90,17 +137,24 @@ function updateMilestone(value: string) {
   emit("update", props.ticket.id, {milestone: value.trim()});
 }
 
-function updateListField(
+function updateTicketList(
     key: "dependencies" | "documentation" | "affectedFiles",
-    value: string
+    value: string[]
 ) {
   if (props.readOnly) {
     return;
   }
 
   emit("update", props.ticket.id, {
-    [key]: parseListInput(value),
+    [key]: value,
   } as Partial<Ticket>);
+}
+
+function updateListField(
+    key: "dependencies" | "documentation" | "affectedFiles",
+    value: string
+) {
+  updateTicketList(key, parseListInput(value));
 }
 
 function dependencyHref(value: string) {
@@ -355,7 +409,21 @@ onUnmounted(() => document.removeEventListener('keydown', onEscape))
 
           <div style="margin-bottom: 20px">
             <label style="display: block; font-size: 11px; color: #718096; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 6px">Tags</label>
-            <TagEditor :read-only="readOnly" :tags="ticket.tags" @add="addTag" @remove="removeTag" />
+            <TokenSuggestionInput
+                v-if="!readOnly"
+                :model-value="ticket.tags"
+                :normalize-value="normalizeTagValue"
+                :options="tagSuggestionOptions"
+                placeholder="Add tag..."
+                @update:modelValue="updateTags"
+            />
+            <TagEditor
+                v-else
+                :read-only="readOnly"
+                :tags="ticket.tags"
+                @add="addTag"
+                @remove="removeTag"
+            />
           </div>
 
           <div style="margin-bottom: 20px">
@@ -376,13 +444,13 @@ onUnmounted(() => document.removeEventListener('keydown', onEscape))
 
           <div style="margin-bottom: 20px">
             <label style="display: block; font-size: 11px; color: #718096; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 6px">Milestone</label>
-            <input
+            <SuggestionCombobox
                 v-if="!readOnly"
-                :value="ticket.milestone"
+                :model-value="ticket.milestone"
+                :options="milestoneSuggestionOptions"
                 placeholder="e.g. m-0"
-                style="width: 100%; font-size: 12px; padding: 7px 10px; background: #0d1117; border: 1px solid #2d3748; border-radius: 6px; color: #e2e8f0; outline: none; box-sizing: border-box"
-                @change="updateMilestone(($event.target as HTMLInputElement).value)"
-            >
+                @update:modelValue="updateMilestone"
+            />
             <div
                 v-else
                 style="font-size: 12px; color: #cbd5e0; padding: 7px 10px; background: #0d1117; border: 1px solid #2d3748; border-radius: 6px"
@@ -392,12 +460,12 @@ onUnmounted(() => document.removeEventListener('keydown', onEscape))
 
           <div style="margin-bottom: 20px">
             <label style="display: block; font-size: 11px; color: #718096; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 6px">Dependencies</label>
-            <textarea
+            <TokenSuggestionInput
                 v-if="!readOnly"
-                :value="formatListInput(ticket.dependencies)"
-                placeholder="One ticket ID per line..."
-                style="width: 100%; min-height: 74px; padding: 8px 10px; font-size: 12px; background: #0d1117; border: 1px solid #2d3748; border-radius: 6px; color: #e2e8f0; resize: vertical; outline: none; box-sizing: border-box; font-family: 'JetBrains Mono', monospace; line-height: 1.5"
-                @change="updateListField('dependencies', ($event.target as HTMLTextAreaElement).value)"
+                :model-value="ticket.dependencies"
+                :options="dependencySuggestionOptions"
+                placeholder="Add dependency..."
+                @update:modelValue="updateTicketList('dependencies', $event)"
             />
             <div
                 v-if="ticket.dependencies.length > 0"
@@ -418,12 +486,12 @@ onUnmounted(() => document.removeEventListener('keydown', onEscape))
 
           <div style="margin-bottom: 20px">
             <label style="display: block; font-size: 11px; color: #718096; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 6px">Documentation</label>
-            <textarea
+            <TokenSuggestionInput
                 v-if="!readOnly"
-                :value="formatListInput(ticket.documentation)"
-                placeholder="One doc path per line..."
-                style="width: 100%; min-height: 86px; padding: 8px 10px; font-size: 12px; background: #0d1117; border: 1px solid #2d3748; border-radius: 6px; color: #e2e8f0; resize: vertical; outline: none; box-sizing: border-box; font-family: 'JetBrains Mono', monospace; line-height: 1.5"
-                @change="updateListField('documentation', ($event.target as HTMLTextAreaElement).value)"
+                :model-value="ticket.documentation"
+                :options="documentationSuggestionOptions"
+                placeholder="Add doc path..."
+                @update:modelValue="updateTicketList('documentation', $event)"
             />
             <div
                 v-if="ticket.documentation.length > 0"

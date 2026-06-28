@@ -13,6 +13,11 @@ import {
   normalizeTicketList,
   normalizeTicketMetadata
 } from "./ticket-metadata.mjs";
+import {
+  buildTicketSuggestionCatalog,
+  findDocumentationSuggestionPaths,
+  normalizeBoardSuggestionConfig,
+} from "./ticket-suggestions.mjs";
 
 export function scanTickets(ticketsDir, dirRelative) {
   if (!fs.existsSync(ticketsDir)) {
@@ -323,6 +328,38 @@ function findMarkdownFiles(dir) {
   return results;
 }
 
+function findBoardConfig(srcDir, dirRelative) {
+  for (const file of findMarkdownFiles(srcDir)) {
+    const raw = fs.readFileSync(file, "utf8");
+    const parsed = matter(raw);
+
+    if (!parsed.data.board) {
+      continue;
+    }
+
+    if ((parsed.data.ticketsDir || "tickets") === dirRelative) {
+      return parsed.data;
+    }
+  }
+
+  return {};
+}
+
+function createSuggestionCatalog(srcDir, dirRelative, prefix = "") {
+  const ticketsDir = path.resolve(srcDir, dirRelative);
+  const boardConfig = findBoardConfig(srcDir, dirRelative);
+  const ticketPrefix = prefix || boardConfig.ticketPrefix || "";
+
+  return buildTicketSuggestionCatalog({
+    boardSuggestions: normalizeBoardSuggestionConfig(
+      boardConfig.ticketFieldSuggestions
+    ),
+    documentationPaths: findDocumentationSuggestionPaths(srcDir, dirRelative),
+    prefix: ticketPrefix,
+    tickets: scanTickets(ticketsDir, dirRelative),
+  });
+}
+
 export function markdownWriterPlugin() {
   let srcDir = "";
 
@@ -352,6 +389,16 @@ export function markdownWriterPlugin() {
 
         res.setHeader("Content-Type", "application/json");
         res.end(JSON.stringify(issues));
+      });
+
+      server.middlewares.use("/__vitepress_pm_suggestions", (req, res) => {
+        const url = new URL(req.url || "/", "http://localhost");
+        const dir = url.searchParams.get("dir") || "tickets";
+        const prefix = url.searchParams.get("prefix") || "";
+        const suggestions = createSuggestionCatalog(srcDir, dir, prefix);
+
+        res.setHeader("Content-Type", "application/json");
+        res.end(JSON.stringify(suggestions));
       });
 
       server.middlewares.use("/__vitepress_pm_fix", (req, res) => {
@@ -543,11 +590,22 @@ export function markdownWriterPlugin() {
         seenDirs.add(dir);
         const ticketsDir = path.resolve(srcDir, dir);
         const tickets = scanTickets(ticketsDir, dir);
+        const suggestions = createSuggestionCatalog(
+          srcDir,
+          dir,
+          parsed.data.ticketPrefix || ""
+        );
 
         this.emitFile({
           type: "asset",
           fileName: `__vitepress_pm_tickets/${dir}.json`,
           source: JSON.stringify(tickets),
+        });
+
+        this.emitFile({
+          type: "asset",
+          fileName: `__vitepress_pm_suggestions/${dir}.json`,
+          source: JSON.stringify(suggestions),
         });
       }
     },

@@ -13,6 +13,18 @@ export interface Ticket {
   url: string;
 }
 
+export interface SuggestionOption {
+  label: string;
+  value: string;
+}
+
+export interface TicketSuggestionCatalog {
+  dependencies: SuggestionOption[];
+  documentation: string[];
+  milestones: string[];
+  tags: string[];
+}
+
 export interface Column {
   key: string;
   label: string;

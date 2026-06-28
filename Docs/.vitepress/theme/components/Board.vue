@@ -7,7 +7,12 @@ import {
   normalizeTicketSections
 } from "../../lib/ticket-sections.mjs";
 
-import type {Column, Ticket, TicketValidationIssue} from "../types";
+import type {
+  Column,
+  Ticket,
+  TicketSuggestionCatalog,
+  TicketValidationIssue
+} from "../types";
 import {useDragDrop} from "../composables/useDragDrop";
 import {useTicketWriter} from "../composables/useTicketWriter";
 
@@ -36,6 +41,12 @@ const filter = ref('')
 const selectedId = ref<number | null>(null)
 const selectedTags = ref<string[]>([])
 const showFixModal = ref(false)
+const suggestionCatalog = ref<TicketSuggestionCatalog>({
+  dependencies: [],
+  documentation: [],
+  milestones: [],
+  tags: [],
+})
 const ticketIssues = ref<TicketValidationIssue[]>([]);
 const tickets = ref<Ticket[]>([])
 
@@ -100,23 +111,44 @@ function formatId(id: number): string {
 }
 
 function loadTickets() {
-  const url = import.meta.env.DEV
+  const ticketUrl = import.meta.env.DEV
     ? `/__vitepress_pm_tickets?dir=${encodeURIComponent(ticketsDir.value)}`
     : `${import.meta.env.BASE_URL}__vitepress_pm_tickets/${encodeURIComponent(ticketsDir.value)}.json`
+  const suggestionUrl = import.meta.env.DEV
+    ? `/__vitepress_pm_suggestions?dir=${encodeURIComponent(ticketsDir.value)}&prefix=${encodeURIComponent(ticketPrefix.value)}`
+    : `${import.meta.env.BASE_URL}__vitepress_pm_suggestions/${encodeURIComponent(ticketsDir.value)}.json`
 
-  fetch(url)
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error('Ticket data not available')
-      }
+  const ticketRequest = fetch(ticketUrl)
+  .then((response) => {
+    if (!response.ok) {
+      throw new Error('Ticket data not available')
+    }
 
-      return response.json()
-    })
-    .then((data: Ticket[]) => {
-      tickets.value = data
-      fetchValidation()
-    })
-    .catch(() => {})
+    return response.json()
+  });
+
+  const suggestionRequest = fetch(suggestionUrl)
+  .then((response) => {
+    if (!response.ok) {
+      throw new Error("Suggestion data not available")
+    }
+
+    return response.json()
+  })
+  .catch(() => ({
+    dependencies: [],
+    documentation: [],
+    milestones: [],
+    tags: [],
+  }));
+
+  Promise.all([ticketRequest, suggestionRequest])
+  .then(([ticketData, suggestions]) => {
+    tickets.value = ticketData as Ticket[]
+    suggestionCatalog.value = suggestions as TicketSuggestionCatalog
+    fetchValidation()
+  })
+  .catch(() => {})
 }
 
 function onFixed() {
@@ -293,6 +325,7 @@ if (typeof window !== 'undefined') {
       v-if="draftTicket"
       :columns="columns"
       :read-only="readOnly"
+      :suggestions="suggestionCatalog"
       :ticket="draftTicket"
         :ticket-sections="ticketSections"
       :ticket-prefix="ticketPrefix"
@@ -306,6 +339,7 @@ if (typeof window !== 'undefined') {
       v-else-if="selectedTicket"
       :columns="columns"
       :read-only="readOnly"
+      :suggestions="suggestionCatalog"
       :ticket="selectedTicket"
         :ticket-sections="ticketSections"
       :ticket-prefix="ticketPrefix"
