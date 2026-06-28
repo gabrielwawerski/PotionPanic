@@ -13,6 +13,20 @@
   --board-priority-low: #68d391;
 }
 
+html {
+  scrollbar-width: thin;
+  scrollbar-gutter: stable both-edges;
+}
+
+body {
+  scrollbar-width: thin;
+  scrollbar-gutter: stable both-edges;
+}
+
+.VPSidebar {
+  scrollbar-width: thin;
+}
+
 .board-shell {
   display: flex;
   flex-direction: column;
@@ -111,6 +125,8 @@
 .board-shell-layout {
   --board-shell-gutter: 18px;
   --board-sidebar-collapsed-width: 72px;
+  scrollbar-width: thin;
+  scrollbar-gutter: stable both-edges;
 }
 
 .board-shell-layout .VPLocalNav {
@@ -121,7 +137,7 @@
   box-sizing: border-box;
   margin: 0 auto;
   width: min(100%, 960px);
-  padding: 24px 24px 48px;
+  /*padding: 24px 24px 48px;*/
 }
 
 @media (min-width: 768px) {
@@ -136,13 +152,13 @@
   }
 
   .board-shell-layout .VPContent.has-sidebar {
-    padding-left: calc(var(--vp-sidebar-width) + var(--board-shell-gutter));
-    padding-right: var(--board-shell-gutter);
+    /*padding-left: calc(var(--vp-sidebar-width) + var(--board-shell-gutter));*/
+    /*padding-right: var(--board-shell-gutter);*/
   }
 
   .board-shell-layout .VPNavBar.has-sidebar .title {
-    width: var(--vp-sidebar-width);
-    padding: 0 18px;
+    /*width: var(--vp-sidebar-width);*/
+    padding: 0 16px;
   }
 
   .board-shell-layout .VPNavBar.has-sidebar .content {
@@ -154,11 +170,7 @@
     padding-left: var(--vp-sidebar-width);
   }
 
-  .board-shell-layout .VPSidebar {
-    width: var(--vp-sidebar-width);
-    padding-right: 16px;
-    padding-left: 16px;
-  }
+
 
   .board-shell-layout .VPSidebar .curtain {
     margin-right: -16px;
@@ -221,6 +233,12 @@
 }
 
 @media (min-width: 1280px) {
+  .board-shell-layout .VPSidebar {
+    width: var(--vp-sidebar-width);
+    padding-right: 16px;
+    padding-left: 32px;
+  }
+
   .board-shell-layout {
     --board-shell-gutter: 22px;
   }
@@ -238,8 +256,8 @@
   }
 
   .board-shell-layout .VPNavBar.has-sidebar .title {
-    width: var(--vp-sidebar-width);
-    padding-left: 18px;
+    width: calc(var(--vp-sidebar-width) - 65px);
+    padding: 0 16px;
   }
 
   .board-shell-layout .VPNavBar.has-sidebar .content {

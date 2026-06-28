@@ -19,7 +19,3 @@ columns:
   - { key: done, label: Done, color: '#6bcb6b' }
 ---
 
-# Task Board
-
-Use the local docs server when you want webpage edits to persist back to the repository
-markdown files.

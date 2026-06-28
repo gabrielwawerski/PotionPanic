@@ -311,7 +311,7 @@ onUnmounted(() => document.removeEventListener('keydown', onEscape))
       </div>
 
       <div style="flex: 1; display: flex; overflow: hidden">
-        <div style="flex: 1; overflow-y: auto; padding: 24px; min-width: 0">
+        <div style="flex: 1; overflow-y: auto; padding: 24px; min-width: 0;scrollbar-width: thin">
           <div v-if="checks.total > 0" style="margin-bottom: 20px">
             <ProgressBar :color="column?.color || '#718096'" :done="checks.done" :total="checks.total" />
           </div>
@@ -367,7 +367,7 @@ onUnmounted(() => document.removeEventListener('keydown', onEscape))
           </div>
         </div>
 
-        <div style="width: 280px; flex-shrink: 0; border-left: 1px solid #2d3748; overflow-y: auto; padding: 24px; background: #171923">
+        <div style="width: 280px; flex-shrink: 0; border-left: 1px solid #2d3748; overflow-y: auto; padding: 24px; background: #171923;scrollbar-width: thin">
           <p
             v-if="readOnly"
             style="font-size: 12px; color: #a0aec0; line-height: 1.5; margin-top: 0; margin-bottom: 20px"
