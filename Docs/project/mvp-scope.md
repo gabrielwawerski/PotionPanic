@@ -218,8 +218,8 @@ The following are out of scope until MVP is complete:
 - procedural generation
 - combat systems
 
-If a new idea does not help the current milestone become playable, move it to
-Backlog instead of implementing it now.
+If a new idea does not help the current milestone become playable, add it to
+the board instead of implementing it now.
 
 ## Post-MVP Candidates
 

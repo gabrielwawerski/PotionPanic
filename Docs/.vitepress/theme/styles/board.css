@@ -1,0 +1,40 @@
+:root {
+  --board-bg: #0d1117;
+  --board-surface: #1a202c;
+  --board-surface-hover: #2d3748;
+  --board-border: #2d3748;
+  --board-text: #e2e8f0;
+  --board-text-secondary: #a0aec0;
+  --board-text-muted: #718096;
+  --board-accent: #e6a817;
+  --board-priority-critical: #f56565;
+  --board-priority-high: #ed8936;
+  --board-priority-medium: #ecc94b;
+  --board-priority-low: #68d391;
+}
+
+.board-columns::-webkit-scrollbar {
+  height: 6px;
+}
+
+.board-columns::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.board-columns::-webkit-scrollbar-thumb {
+  background: var(--board-border);
+  border-radius: 3px;
+}
+
+.board-column-cards::-webkit-scrollbar {
+  width: 4px;
+}
+
+.board-column-cards::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.board-column-cards::-webkit-scrollbar-thumb {
+  background: var(--board-border);
+  border-radius: 2px;
+}

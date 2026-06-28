@@ -1,34 +1,3 @@
-
-
-<!-- BACKLOG.MD MCP GUIDELINES START -->
-
-<CRITICAL_INSTRUCTION>
-
-## BACKLOG WORKFLOW INSTRUCTIONS
-
-This project uses Backlog.md MCP for all task and project management activities.
-
-**CRITICAL GUIDANCE**
-
-- If your client supports MCP resources, read `backlog://workflow/overview` to understand when and how to use Backlog for this project.
-- If your client only supports tools or the above request fails, call `backlog.get_backlog_instructions()` to load the tool-oriented overview. Use the `instruction` selector when you need `task-creation`, `task-execution`, or `task-finalization`.
-
-- **First time working here?** Read the overview resource IMMEDIATELY to learn the workflow
-- **Already familiar?** You should have the overview cached ("## Backlog.md Overview (MCP)")
-- **When to read it**: BEFORE creating tasks, or when you're unsure whether to track work
-
-These guides cover:
-- Decision framework for when to create tasks
-- Search-first workflow to avoid duplicates
-- Links to detailed guides for task creation, execution, and finalization
-- MCP tools reference
-
-You MUST read the overview resource to understand the complete workflow. The information is NOT summarized here.
-
-</CRITICAL_INSTRUCTION>
-
-<!-- BACKLOG.MD MCP GUIDELINES END -->
-
 # Repository Guidelines
 
 ## Project Structure & Module Organization
@@ -41,13 +10,15 @@ and `Packages/` as shared configuration. The current shared prototype scene is
 `Assets/Scenes/SampleScene.unity`; docs also reference the planned rename to
 `Laboratory.unity`.
 
-## Build, Test, and Development Commands
+## Build, Test, And Development Commands
 
 Use PowerShell from the repo root.
 
 - `git lfs install` sets up required asset handling on a new machine.
-- `.\scripts\setup-backlog.ps1` installs or verifies Backlog.md tooling.
-- `.\scripts\backlog-ui.ps1` opens the shared backlog board in the browser.
+- `.\Scripts\setup-docs.ps1` installs or verifies the VitePress docs tooling.
+- `.\Scripts\docs-ui.ps1` opens the shared editable board in the browser.
+- `npm run docs:dev` starts the local docs server manually.
+- `npm run docs:build` builds the static docs site for verification.
 - Open the repo in Unity Hub with editor `6000.5.1f1`, then open
   `PotionPanic.sln` in Rider for code work.
 - For a smoke test, open `Assets/Scenes/SampleScene.unity`, press Play, and
@@ -72,11 +43,11 @@ files after the subject under test, such as `PlayerMovementTests.cs`.
 
 ## Commit & Review Guidelines
 
-Recent history uses conventional-style commits such as
-`feat(scripts): ...` and `chore(backlog): ...`; keep that format with an
-imperative summary. Work on short-lived `feature/...` or `fix/...` branches and
-stage specific files instead of `git add .`. In reviews or PRs, list the task
-or milestone, affected scenes/prefabs/settings, local test evidence, and any
-remaining risk. Announce before editing `Assets/Scenes/*.unity`,
-`Assets/**/*.prefab`, `ProjectSettings/*`, or `Packages/*`, and never commit
-generated folders like `Library/`, `Temp/`, `Logs/`, `obj/`, or `UserSettings/`.
+Recent history uses conventional-style commits such as `feat(scripts): ...` and
+`docs(workflow): ...`; keep that format with an imperative summary. Work on
+short-lived `feature/...` or `fix/...` branches and stage specific files
+instead of `git add .`. In reviews or PRs, list the task or milestone, affected
+scenes/prefabs/settings, local test evidence, and any remaining risk. Announce
+before editing `Assets/Scenes/*.unity`, `Assets/**/*.prefab`,
+`ProjectSettings/*`, or `Packages/*`, and never commit generated folders like
+`Library/`, `Temp/`, `Logs/`, `obj/`, or `UserSettings/`.

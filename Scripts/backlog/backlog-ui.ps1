@@ -1,7 +1,8 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-. (Join-Path $PSScriptRoot 'backlog-browser-server.ps1')
+$replacementScript = Join-Path (Split-Path -Parent $PSScriptRoot) 'docs-ui.ps1'
 
-$context = Ensure-BacklogBrowserServer -EntryScriptPath $MyInvocation.MyCommand.Path
-Start-Process -FilePath $context.Url
+Write-Warning 'Backlog.md has been retired for this repository. Redirecting to the VitePress docs board.'
+& $replacementScript
+exit $LASTEXITCODE

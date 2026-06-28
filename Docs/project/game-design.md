@@ -305,4 +305,4 @@ Do not let the design drift into:
 - story-heavy systems
 
 If a new idea does not help the current milestone become playable, put it in
-Backlog instead of expanding the MVP.
+the board instead of expanding the MVP.

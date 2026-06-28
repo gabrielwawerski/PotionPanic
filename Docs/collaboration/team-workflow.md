@@ -6,7 +6,7 @@ Scope: Two-person beginner/intermediate Unity team
 Primary repo: Potion Panic
 
 Use this guide for day-to-day collaboration. Use the `project/` docs for game
-truth and Backlog for task execution and planning history.
+truth and the docs board for task execution and planning history.
 
 ## Daily Flow
 
@@ -35,7 +35,7 @@ and keep both people aware of the project state.
 4. Work in small tasks.
 5. Test before merging.
 6. Write down blockers, known issues, and unfinished work.
-7. Put new ideas in the backlog instead of interrupting the current milestone.
+7. Put new ideas on the board instead of interrupting the current milestone.
 8. Prototype with placeholders before polishing.
 9. Avoid two people editing the same Unity scene at the same time.
 10. Stop feature work when the project is unstable.
@@ -44,7 +44,7 @@ If unsure what to do next, ask:
 
 > Does this bring us closer to a playable game?
 
-If yes, consider it for the current milestone. If no, put it in the backlog.
+If yes, consider it for the current milestone. If no, add a board task for it.
 
 ## Repository Setup
 
@@ -115,14 +115,15 @@ milestone is complete when:
 - the next milestone is not blocked by broken work
 
 Milestone intent lives in `Docs/project/mvp-scope.md`. Runtime boundaries live
-in `Docs/project/technical-architecture.md`. Use Backlog to track the active
+in `Docs/project/technical-architecture.md`. Use the board to track the active
 task breakdown, reviews, and execution notes.
 
-If a task does not support the current milestone, put it in the backlog.
+If a task does not support the current milestone, keep it in the board's
+`Backlog` column until the milestone changes.
 
 ## Task Board
 
-Use the shared Backlog board for real work.
+Use the shared docs board for real work.
 
 Column meaning:
 
@@ -139,7 +140,7 @@ Every real task should have:
 - title
 - goal
 - acceptance criteria
-- owner
+- owner noted in the task body or handoff message until assignee support exists
 - status
 - milestone
 - likely affected files
@@ -358,7 +359,7 @@ Current evergreen docs live in `Docs/`.
 
 Primary docs:
 
-- `Docs/README.md`
+- `Docs/index.md`
 - `Docs/onboarding/getting-started.md`
 - `Docs/project/game-design.md`
 - `Docs/project/mvp-scope.md`
@@ -370,7 +371,7 @@ Unity craft guides live under `Docs/guides/unity/`.
 Do not create duplicate docs with different names unless the team intentionally
 replaces the old doc.
 
-Keep these in Backlog instead of `Docs/`:
+Keep these in board tickets or archive pages instead of `Docs/`:
 
 - milestone implementation plans
 - one-off readiness reviews
@@ -388,7 +389,7 @@ At any point, the project should usually satisfy:
 - `master` is stable
 - tasks are visible
 - current milestone is clear
-- backlog exists
+- board exists
 - known issues are written down
 - both people know what the other is doing
 

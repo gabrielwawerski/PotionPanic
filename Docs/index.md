@@ -1,0 +1,134 @@
+# Docs Index
+
+`Docs/` stores current project truth for Potion Panic and hosts the shared
+VitePress task board.
+
+Use the board for time-bound planning, task execution, milestone notes, and
+project history. Keep evergreen guidance in the rest of `Docs/`.
+
+## Read This First
+
+If you are new to the repo, read these in order:
+
+1. [`onboarding/getting-started.md`](onboarding/getting-started.md)
+2. [`collaboration/team-workflow.md`](collaboration/team-workflow.md)
+3. [`board.md`](board.md)
+4. [`project/game-design.md`](project/game-design.md)
+5. [`project/mvp-scope.md`](project/mvp-scope.md)
+6. [`project/technical-architecture.md`](project/technical-architecture.md)
+
+## Folder Map
+
+### `onboarding/`
+
+- `getting-started.md`
+  - first-machine setup
+  - first smoke test
+  - docs board bootstrap
+  - coordination-sensitive files
+
+### `collaboration/`
+
+- `team-workflow.md`
+  - day-to-day team process
+  - git and review workflow
+  - shared Unity file rules
+  - documentation ownership
+
+### `project/`
+
+- `game-design.md`
+  - player-facing design
+  - gameplay loop
+  - ingredients, potions, and disasters
+  - art and audio direction
+
+- `mvp-scope.md`
+  - locked MVP decisions
+  - run structure
+  - milestone sequence
+  - out-of-scope rules
+  - definition of done
+
+- `technical-architecture.md`
+  - runtime system boundaries
+  - data ownership
+  - component responsibilities
+  - repo-aligned script structure
+
+### `guides/unity/`
+
+- `index.md`
+  - guide selection help
+
+- `runtime-architecture.md`
+  - Unity mental models
+  - composition and state ownership
+  - scene and system boundaries
+
+- `coding-and-implementation.md`
+  - implementation habits
+  - smallest-playable-loop thinking
+  - failure checks and debugging
+
+- `editor-safety.md`
+  - scene, prefab, and inspector safety
+  - coordination rules for Unity-side edits
+
+- `presentation-workflows.md`
+  - UI, animation, model, material, and feedback workflow
+
+### Task And Planning Areas
+
+- `board.md`
+  - shared kanban board
+  - editable from the local docs server
+
+- `tickets/`
+  - one markdown file per active task
+
+- `milestones/`
+  - milestone overview pages
+
+- `archive/`
+  - completed or superseded planning history
+
+## Source Of Truth
+
+Use one primary doc per topic:
+
+| Topic                         | Canonical doc                                     |
+|-------------------------------|---------------------------------------------------|
+| Local onboarding              | `onboarding/getting-started.md`                   |
+| Team process                  | `collaboration/team-workflow.md`                  |
+| Player-facing design          | `project/game-design.md`                          |
+| MVP scope and milestone order | `project/mvp-scope.md`                            |
+| Runtime architecture          | `project/technical-architecture.md`               |
+| Unity implementation guidance | `guides/unity/*`                                  |
+| Tasks and execution history   | `board.md`, `tickets/`, `milestones/`, `archive/` |
+
+## What Does Not Belong In Evergreen Docs
+
+Keep these out of the evergreen guidance unless the team intentionally promotes
+them into reusable documentation:
+
+- completed milestone implementation plans
+- one-off readiness reviews
+- stale decision logs
+- superseded onboarding drafts
+- task-by-task execution history
+
+Those belong in task tickets, milestone pages, or the archive.
+
+## Update Rules
+
+Update the relevant evergreen doc when:
+
+- setup instructions change
+- the current MVP decisions change
+- the runtime architecture changes
+- team workflow or review rules change
+- a Unity working rule becomes stable enough to reuse
+
+If a decision only matters for one task or one milestone execution pass, keep
+it in the board workflow instead of creating a new top-level evergreen doc.

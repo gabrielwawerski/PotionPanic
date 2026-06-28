@@ -68,21 +68,24 @@ Good first checks:
 
 If this fails, do not start feature work yet.
 
-## Open the Backlog board
+## Open the docs board
+
+The board is the default place to pick, update, and track tasks.
 
 For human use:
 
 ```powershell
-.\scripts\setup-backlog.ps1
-.\scripts\backlog-ui.ps1
+.\Scripts\setup-docs.ps1
+.\Scripts\docs-ui.ps1
 ```
 
-If you install the Windows Startup autolaunch later, sign-in only starts the
-Backlog browser server in the background. It does not open the board
-automatically; run `.\scripts\backlog-ui.ps1` when you want the browser UI.
+Equivalent manual command:
 
-If you need MCP setup details for Codex or Gemini CLI, use the manual setup
-section in `README.md`.
+```powershell
+npm run docs:dev
+```
+
+Open `http://127.0.0.1:6420/board` if the browser does not open automatically.
 
 ## Know which files need coordination
 
@@ -120,10 +123,9 @@ If Unity Hub opens the project with a different editor version, install and use
 
 Open the project from Unity again after setting Rider as the external editor.
 
-### `backlog` command is missing
+### `npm` is missing
 
-Run `.\scripts\setup-backlog.ps1` first. It installs `backlog.md` if needed
-and prints the MCP commands.
+Install Node.js and npm, then rerun `.\Scripts\setup-docs.ps1`.
 
 ### Generated folders appear in Git
 
@@ -140,7 +142,7 @@ planned canonical scene name after Milestone 1.
 1. Read [`../collaboration/team-workflow.md`](../collaboration/team-workflow.md).
 2. Confirm the current milestone in
    [`../project/mvp-scope.md`](../project/mvp-scope.md).
-3. Pick a small task from `To do`.
+3. Open the board and pick a small task from `To Do`.
 4. Tell the other collaborator which files, scenes, or prefabs you expect to
    touch.
 5. Create a short-lived feature branch.

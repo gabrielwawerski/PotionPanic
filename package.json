@@ -1,0 +1,19 @@
+{
+  "name": "potion-panic-docs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "docs:build": "vitepress build Docs",
+    "docs:dev": "vitepress dev Docs --host 127.0.0.1 --port 6420",
+    "docs:migrate-backlog": "node Scripts/docs/migrate-backlog.mjs",
+    "docs:preview": "vitepress preview Docs --host 127.0.0.1 --port 6421",
+    "docs:ticket": "vitepress-theme-pm ticket",
+    "test": "node --test \"Scripts/docs/**/*.test.mjs\""
+  },
+  "devDependencies": {
+    "gray-matter": "^4.0.3",
+    "vitepress": "^1.6.4",
+    "vitepress-theme-pm": "^0.2.0",
+    "vue": "^3.5.39"
+  }
+}
