@@ -6,6 +6,7 @@ import test from "node:test";
 
 import {
   buildTicketSuggestionCatalog,
+  findAffectedFileSuggestionPaths,
   findDocumentationSuggestionPaths,
   normalizeBoardSuggestionConfig,
 } from "../../../Docs/.vitepress/lib/ticket-suggestions.mjs";
@@ -17,6 +18,7 @@ test("normalizeBoardSuggestionConfig trims list seeds and drops empty values", (
     milestones: [" m-0 ", "m-1", ""],
     dependencies: [" PP-2 ", "PP-4", ""],
     documentation: [" project/mvp-scope.md ", "", "README.md"],
+    affectedFiles: [" Assets/Scenes/Laboratory.unity ", "", "README.md"],
   });
 
   assert.deepEqual(config, {
@@ -25,6 +27,7 @@ test("normalizeBoardSuggestionConfig trims list seeds and drops empty values", (
     milestones: ["m-0", "m-1"],
     dependencies: ["PP-2", "PP-4"],
     documentation: ["project/mvp-scope.md", "README.md"],
+    affectedFiles: ["Assets/Scenes/Laboratory.unity", "README.md"],
   });
 });
 
@@ -51,6 +54,37 @@ test("findDocumentationSuggestionPaths returns known doc paths and excludes tick
   ]);
 });
 
+test("findAffectedFileSuggestionPaths returns repo paths and excludes tickets", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "pp-file-suggestions-"));
+  const docsDir = path.join(root, "Docs");
+  const ticketsDir = path.join(docsDir, "tickets");
+  const sceneDir = path.join(root, "Assets", "Scenes");
+  const libraryDir = path.join(root, "Library");
+
+  fs.mkdirSync(ticketsDir, {recursive: true});
+  fs.mkdirSync(sceneDir, {recursive: true});
+  fs.mkdirSync(libraryDir, {recursive: true});
+
+  fs.writeFileSync(path.join(root, "README.md"), "# Root readme\n");
+  fs.writeFileSync(path.join(root, "package.json"), "{}\n");
+  fs.writeFileSync(path.join(docsDir, "board.md"), "# Board\n");
+  fs.writeFileSync(path.join(sceneDir, "Laboratory.unity"), "%YAML\n");
+  fs.writeFileSync(path.join(ticketsDir, "PP-2.md"), "# Ticket\n");
+  fs.writeFileSync(path.join(libraryDir, "cache.asset"), "ignore\n");
+
+  const suggestions = findAffectedFileSuggestionPaths(
+    root,
+    path.join("Docs", "tickets")
+  );
+
+  assert.deepEqual(suggestions, [
+    "Assets/Scenes/Laboratory.unity",
+    "Docs/board.md",
+    "package.json",
+    "README.md",
+  ]);
+});
+
 test("buildTicketSuggestionCatalog merges observed and seeded suggestions", () => {
   const catalog = buildTicketSuggestionCatalog({
     boardSuggestions: {
@@ -59,7 +93,12 @@ test("buildTicketSuggestionCatalog merges observed and seeded suggestions", () =
       milestones: ["m-0", "m-2"],
       dependencies: ["PP-9"],
       documentation: ["README.md", "project/mvp-scope.md"],
+      affectedFiles: ["Assets/Scenes/Laboratory.unity", "README.md"],
     },
+    affectedFilePaths: [
+      "Assets/Scenes/Laboratory.unity",
+      "Docs/board.md",
+    ],
     documentationPaths: [
       "README.md",
       "board.md",
@@ -75,6 +114,7 @@ test("buildTicketSuggestionCatalog merges observed and seeded suggestions", () =
         milestone: "m-0",
         dependencies: [],
         documentation: ["project/mvp-scope.md"],
+        affectedFiles: ["ProjectSettings/EditorBuildSettings.asset"],
       },
       {
         id: 4,
@@ -84,6 +124,7 @@ test("buildTicketSuggestionCatalog merges observed and seeded suggestions", () =
         milestone: "m-1",
         dependencies: ["PP-2"],
         documentation: ["guides/workflow.md"],
+        affectedFiles: ["Docs/board.md"],
       },
     ],
   });
@@ -96,6 +137,12 @@ test("buildTicketSuggestionCatalog merges observed and seeded suggestions", () =
     "board.md",
     "guides/workflow.md",
     "project/mvp-scope.md",
+  ]);
+  assert.deepEqual(catalog.affectedFiles, [
+    "Assets/Scenes/Laboratory.unity",
+    "Docs/board.md",
+    "ProjectSettings/EditorBuildSettings.asset",
+    "README.md",
   ]);
   assert.deepEqual(catalog.dependencies, [
     {

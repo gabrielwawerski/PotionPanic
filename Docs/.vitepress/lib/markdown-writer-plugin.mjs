@@ -15,6 +15,7 @@ import {
 } from "./ticket-metadata.mjs";
 import {
   buildTicketSuggestionCatalog,
+  findAffectedFileSuggestionPaths,
   findDocumentationSuggestionPaths,
   normalizeBoardSuggestionConfig,
 } from "./ticket-suggestions.mjs";
@@ -349,8 +350,11 @@ function createSuggestionCatalog(srcDir, dirRelative, prefix = "") {
   const ticketsDir = path.resolve(srcDir, dirRelative);
   const boardConfig = findBoardConfig(srcDir, dirRelative);
   const ticketPrefix = prefix || boardConfig.ticketPrefix || "";
+  const repoRoot = path.resolve(srcDir, "..");
+  const ticketRepoPath = path.relative(repoRoot, ticketsDir);
 
   return buildTicketSuggestionCatalog({
+    affectedFilePaths: findAffectedFileSuggestionPaths(repoRoot, ticketRepoPath),
     boardSuggestions: normalizeBoardSuggestionConfig(
       boardConfig.ticketFieldSuggestions
     ),

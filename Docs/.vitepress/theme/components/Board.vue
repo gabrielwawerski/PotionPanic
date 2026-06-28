@@ -42,6 +42,7 @@ const selectedId = ref<number | null>(null)
 const selectedTags = ref<string[]>([])
 const showFixModal = ref(false)
 const suggestionCatalog = ref<TicketSuggestionCatalog>({
+  affectedFiles: [],
   assignees: [],
   dependencies: [],
   documentation: [],
@@ -137,6 +138,7 @@ function loadTickets() {
     return response.json()
   })
   .catch(() => ({
+    affectedFiles: [],
     assignees: [],
     dependencies: [],
     documentation: [],

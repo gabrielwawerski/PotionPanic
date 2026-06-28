@@ -5,7 +5,6 @@ import {
   parseTicketSections,
   serializeTicketSections
 } from "../../lib/ticket-sections.mjs";
-import {formatListInput, parseListInput} from "../../lib/ticket-metadata.mjs";
 import {buildDocumentationHref, buildTicketHref} from "../../lib/ticket-links.mjs";
 
 import type {
@@ -91,6 +90,12 @@ const documentationSuggestionOptions = computed<SuggestionOption[]>(() => (
     value: entry,
   }))
 ))
+const affectedFileSuggestionOptions = computed<SuggestionOption[]>(() => (
+  props.suggestions.affectedFiles.map((entry) => ({
+    label: entry,
+    value: entry,
+  }))
+))
 
 watch(() => props.ticket.id, () => {
   titleDraft.value = props.ticket.title
@@ -135,6 +140,10 @@ function normalizeTagValue(value: string) {
   return `${value ?? ""}`.trim().toLowerCase();
 }
 
+function normalizeFilePathValue(value: string) {
+  return `${value ?? ""}`.trim().replace(/\\/g, "/");
+}
+
 function updateMilestone(value: string) {
   if (props.readOnly) {
     return;
@@ -154,13 +163,6 @@ function updateTicketList(
   emit("update", props.ticket.id, {
     [key]: value,
   } as Partial<Ticket>);
-}
-
-function updateListField(
-    key: "dependencies" | "documentation" | "affectedFiles",
-    value: string
-) {
-  updateTicketList(key, parseListInput(value));
 }
 
 function dependencyHref(value: string) {
@@ -523,12 +525,13 @@ onUnmounted(() => document.removeEventListener('keydown', onEscape))
           <div style="margin-bottom: 20px">
             <label style="display: block; font-size: 11px; color: #718096; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 6px">Likely
               Affected Files</label>
-            <textarea
+            <TokenSuggestionInput
                 v-if="!readOnly"
-                :value="formatListInput(ticket.affectedFiles)"
-                placeholder="One file path per line..."
-                style="width: 100%; min-height: 86px; padding: 8px 10px; font-size: 12px; background: #0d1117; border: 1px solid #2d3748; border-radius: 6px; color: #e2e8f0; resize: vertical; outline: none; box-sizing: border-box; font-family: 'JetBrains Mono', monospace; line-height: 1.5"
-                @change="updateListField('affectedFiles', ($event.target as HTMLTextAreaElement).value)"
+                :model-value="ticket.affectedFiles"
+                :normalize-value="normalizeFilePathValue"
+                :options="affectedFileSuggestionOptions"
+                placeholder="Add repo path..."
+                @update:modelValue="updateTicketList('affectedFiles', $event)"
             />
             <div
                 v-if="ticket.affectedFiles.length > 0"
