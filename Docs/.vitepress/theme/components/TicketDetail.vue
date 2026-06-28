@@ -272,7 +272,7 @@ onUnmounted(() => document.removeEventListener('keydown', onEscape))
     style="position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(2px)"
     @click="onBackdropClick"
   >
-    <div style=" max-width: 1300px; height: 98vh; max-height: 960px; background: #0d1117; border: 1px solid #2d3748; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 24px 48px rgba(0,0,0,0.4)">
+    <div style=" max-width: 1300px; height: 93vh; max-height: 1260px; background: #0d1117; border: 1px solid #2d3748; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 24px 48px rgba(0,0,0,0.4)">
       <div style="display: flex; align-items: center; padding: 16px 24px; border-bottom: 1px solid #2d3748; flex-shrink: 0; background: #171923; gap: 12px">
         <span v-if="!createMode" style="font-size: 13px; font-weight: 700; color: #718096; font-family: monospace; white-space: nowrap; flex-shrink: 0">{{ displayId }}</span>
         <span v-else style="font-size: 13px; font-weight: 700; color: #6bcb6b; font-family: monospace; white-space: nowrap; flex-shrink: 0">NEW</span>

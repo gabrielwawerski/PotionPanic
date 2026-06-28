@@ -18,7 +18,7 @@ affectedFiles:
   - ProjectSettings/ProjectSettings.asset
 tags:
   - asd
-assignee: Patro
+assignee: Robcio
 ---
 
 ## Description
@@ -29,16 +29,13 @@ references, and delivering the fixed top-down lab blockout that later milestones
 
 ## Acceptance Criteria
 
-
 - [ ] #1 `Assets/Scenes/Laboratory.unity` is the shared gameplay scene, and project scene
   defaults no longer point at `SampleScene.unity`.
 - [ ] #2 The scene contains a static orthographic main camera and a one-room lab blockout
   with floor, perimeter walls, and a center spawn marker.
 - [ ] #3 No Milestone 2 or later systems are introduced into the scene conversion task.
 
-
 ## Implementation Plan
-
 
 1. Verify the current shared-scene references in the scene asset, build settings, and
    project defaults, and capture any baseline details that later tasks need.
@@ -50,7 +47,6 @@ references, and delivering the fixed top-down lab blockout that later milestones
 4. Verify the converted scene stays within Milestone 1 scope, then record any
    scene-specific handoff notes needed by the movement and final-validation tasks.
 
-
 ## Implementation Notes
 
 Board setup only. No implementation started in code or scene assets.
@@ -61,7 +57,6 @@ separate from final milestone validation.
 
 ## Definition of Done
 
-
 - [ ] #1 Acceptance criteria met
 - [ ] #2 Relevant Unity verification completed
 - [ ] #3 No new relevant Console errors
@@ -69,3 +64,4 @@ separate from final milestone validation.
 - [ ] #5 Branch committed and ready for review or merge
 
 ## Notes
+
