@@ -75,8 +75,8 @@ The board is the default place to pick, update, and track tasks.
 For human use:
 
 ```powershell
-.\Scripts\setup-docs.ps1
-.\Scripts\docs-ui.ps1
+npm install
+npm run docs:ui
 ```
 
 Equivalent manual command:
@@ -125,7 +125,7 @@ Open the project from Unity again after setting Rider as the external editor.
 
 ### `npm` is missing
 
-Install Node.js and npm, then rerun `.\Scripts\setup-docs.ps1`.
+Install Node.js and npm, then rerun `npm install`.
 
 ### Generated folders appear in Git
 

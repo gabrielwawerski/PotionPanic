@@ -39,8 +39,8 @@ Then:
 5. Open `PotionPanic.sln` in Rider.
 6. Open `Assets/Scenes/SampleScene.unity`.
 7. Press Play and confirm the project enters Play Mode without new console errors.
-8. Run `.\Scripts\setup-docs.ps1`.
-9. Open the docs board with `.\Scripts\docs-ui.ps1`.
+8. Run `npm install`.
+9. Open the docs board with `npm run docs:ui`.
 
 Current repo note:
 
@@ -68,8 +68,8 @@ Use these bootstrap commands if you need to install or verify the shared docs
 tooling:
 
 ```powershell
-.\Scripts\setup-docs.ps1
-.\Scripts\docs-ui.ps1
+npm install
+npm run docs:ui
 ```
 
 Equivalent npm commands:
@@ -93,7 +93,7 @@ Repository rules:
 
 ### Shared helper scripts
 
-- `.\Scripts\setup-docs.ps1` installs or verifies the Node dependencies needed
-  for the VitePress docs workflow.
-- `.\Scripts\docs-ui.ps1` starts the local docs server if needed and opens the
+- `npm install` installs or verifies the Node dependencies needed for the
+  VitePress docs workflow.
+- `npm run docs:ui` starts the local docs server if needed and opens the
   editable task board in the default browser.

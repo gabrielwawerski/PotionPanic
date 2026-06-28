@@ -15,8 +15,8 @@ and `Packages/` as shared configuration. The current shared prototype scene is
 Use PowerShell from the repo root.
 
 - `git lfs install` sets up required asset handling on a new machine.
-- `.\Scripts\setup-docs.ps1` installs or verifies the VitePress docs tooling.
-- `.\Scripts\docs-ui.ps1` opens the shared editable board in the browser.
+- `npm install` installs or verifies the VitePress docs tooling.
+- `npm run docs:ui` opens the shared editable board in the browser.
 - `npm run docs:dev` starts the local docs server manually.
 - `npm run docs:build` builds the static docs site for verification.
 - Open the repo in Unity Hub with editor `6000.5.1f1`, then open
