@@ -6,6 +6,8 @@ VitePress task board.
 Use the board for time-bound planning, task execution, milestone notes, and
 project history. Keep evergreen guidance in the rest of `Docs/`.
 
+[VitePress Project Management Feature Proposals](collaboration/vitepress-project-management-feature-proposals.md)
+
 ## Read This First
 
 If you are new to the repo, read these in order:

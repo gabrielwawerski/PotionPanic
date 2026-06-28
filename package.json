@@ -7,7 +7,7 @@
     "docs:dev": "vitepress dev Docs --host 127.0.0.1 --port 6420",
     "docs:migrate-backlog": "node Scripts/docs/migrate-backlog.mjs",
     "docs:preview": "vitepress preview Docs --host 127.0.0.1 --port 6421",
-    "docs:ticket": "vitepress-theme-pm ticket",
+    "docs:ticket": "node Scripts/docs/create-ticket.mjs",
     "test": "node --test \"Scripts/docs/**/*.test.mjs\""
   },
   "devDependencies": {

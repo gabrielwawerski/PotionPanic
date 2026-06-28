@@ -1,5 +1,5 @@
 import {defineConfig} from "vitepress";
-import {markdownWriterPlugin} from "vitepress-theme-pm/plugin";
+import {markdownWriterPlugin} from "./lib/markdown-writer-plugin.mjs";
 
 export default defineConfig({
   title: "Potion Panic",

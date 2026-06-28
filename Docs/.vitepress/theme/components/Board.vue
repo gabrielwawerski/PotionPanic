@@ -1,15 +1,20 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { useData } from 'vitepress'
+import {computed, ref} from "vue";
+import {useData} from "vitepress";
 
-import type { Column, Ticket } from '../types'
-import { useDragDrop } from '../composables/useDragDrop'
-import { useTicketWriter } from '../composables/useTicketWriter'
+import {
+  buildTicketTemplate,
+  normalizeTicketSections
+} from "../../lib/ticket-sections.mjs";
 
-import BoardColumn from './BoardColumn.vue'
-import TagFilterDropdown from './TagFilterDropdown.vue'
-import TicketDetail from './TicketDetail.vue'
-import TicketFixModal from './TicketFixModal.vue'
+import type {Column, Ticket, TicketValidationIssue} from "../types";
+import {useDragDrop} from "../composables/useDragDrop";
+import {useTicketWriter} from "../composables/useTicketWriter";
+
+import BoardColumn from "./BoardColumn.vue";
+import TagFilterDropdown from "./TagFilterDropdown.vue";
+import TicketDetail from "./TicketDetail.vue";
+import TicketFixModal from "./TicketFixModal.vue";
 
 const { frontmatter } = useData()
 const { writeTicket } = useTicketWriter()
@@ -21,6 +26,9 @@ const defaultColumn = computed(() => (
 const demo = computed(() => !!frontmatter.value.demo)
 const ticketPrefix = computed(() => frontmatter.value.ticketPrefix || '')
 const ticketsDir = computed(() => frontmatter.value.ticketsDir || 'tickets')
+const ticketSections = computed<string[]>(() => (
+    normalizeTicketSections(frontmatter.value.ticketSections || [])
+));
 const readOnly = computed(() => !import.meta.env.DEV)
 
 const draftTicket = ref<Ticket | null>(null)
@@ -28,7 +36,7 @@ const filter = ref('')
 const selectedId = ref<number | null>(null)
 const selectedTags = ref<string[]>([])
 const showFixModal = ref(false)
-const ticketIssues = ref<any[]>([])
+const ticketIssues = ref<TicketValidationIssue[]>([]);
 const tickets = ref<Ticket[]>([])
 
 const allTags = computed(() => (
@@ -68,9 +76,18 @@ function fetchValidation() {
     return
   }
 
-  fetch(`/__vitepress_pm_validate?dir=${encodeURIComponent(ticketsDir.value)}&prefix=${encodeURIComponent(ticketPrefix.value)}`)
+  const params = new URLSearchParams({
+    dir: ticketsDir.value,
+    prefix: ticketPrefix.value,
+  });
+
+  for (const section of ticketSections.value) {
+    params.append("section", section);
+  }
+
+  fetch(`/__vitepress_pm_validate?${params.toString()}`)
     .then((response) => response.ok ? response.json() : [])
-    .then((data: any[]) => {
+      .then((data: TicketValidationIssue[]) => {
       ticketIssues.value = data
     })
     .catch(() => {
@@ -107,11 +124,12 @@ function onFixed() {
 
   if (demo.value) {
     for (const issue of ticketIssues.value) {
-      const ticket = tickets.value.find((entry) => entry.id === issue.currentId || entry.id === 0)
-      if (ticket) {
-        ticket.id = issue.fixedId
-        const slug = ticketPrefix.value ? `${ticketPrefix.value}-${issue.fixedId}` : String(issue.fixedId)
-        ticket.url = `/${ticketsDir.value}/${slug}.html`
+      if (issue.type === "identity" && issue.fixedId && issue.fixedSlug) {
+        const ticket = tickets.value.find((entry) => entry.id === issue.currentId || entry.id === 0);
+        if (ticket) {
+          ticket.id = issue.fixedId;
+          ticket.url = `/${ticketsDir.value}/${issue.fixedSlug}.html`;
+        }
       }
     }
     ticketIssues.value = []
@@ -132,7 +150,7 @@ function openNewTicket() {
     status: defaultColumn.value,
     priority: 'medium',
     tags: [],
-    body: '',
+    body: buildTicketTemplate(ticketSections.value),
     url: '',
   }
 }
@@ -154,6 +172,7 @@ async function confirmCreate(draft: Ticket) {
         priority: draft.priority,
         tags: draft.tags,
         body: draft.body,
+        sections: ticketSections.value,
       }),
     })
 
@@ -227,7 +246,10 @@ if (typeof window !== 'undefined') {
         v-if="!readOnly && ticketIssues.length > 0"
         style="font-size: 12px; padding: 4px 12px; background: rgba(237, 137, 54, 0.12); border: 1px solid rgba(237, 137, 54, 0.4); border-radius: 5px; color: #ed8936; cursor: pointer; font-weight: 600; line-height: 1.2; height: 28px; box-sizing: border-box"
         @click="showFixModal = true"
-      >&#9888; Fix {{ ticketIssues.length }} ticket{{ ticketIssues.length === 1 ? '' : 's' }}</button>
+      >&#9888; Fix {{ ticketIssues.length }} issue{{
+          ticketIssues.length === 1 ? "" : "s"
+        }}
+      </button>
       <button
         v-if="!readOnly"
         title="New ticket"
@@ -260,6 +282,7 @@ if (typeof window !== 'undefined') {
       :columns="columns"
       :read-only="readOnly"
       :ticket="draftTicket"
+        :ticket-sections="ticketSections"
       :ticket-prefix="ticketPrefix"
       create-mode
       @close="draftTicket = null"
@@ -272,6 +295,7 @@ if (typeof window !== 'undefined') {
       :columns="columns"
       :read-only="readOnly"
       :ticket="selectedTicket"
+        :ticket-sections="ticketSections"
       :ticket-prefix="ticketPrefix"
       @close="selectedId = null"
       @update="updateTicket"
@@ -282,6 +306,7 @@ if (typeof window !== 'undefined') {
       :demo="demo"
       :issues="ticketIssues"
       :ticket-prefix="ticketPrefix"
+        :ticket-sections="ticketSections"
       :tickets-dir="ticketsDir"
       @close="showFixModal = false"
       @fixed="onFixed"

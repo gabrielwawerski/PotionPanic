@@ -13,3 +13,13 @@ export interface Column {
   label: string;
   color: string;
 }
+
+export interface TicketValidationIssue {
+  type: "identity" | "missing-sections";
+  file: string;
+  currentId: number;
+  currentSlug: string;
+  fixedId?: number;
+  fixedSlug?: string;
+  missingSections?: string[];
+}

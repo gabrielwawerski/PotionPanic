@@ -1,18 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import {ref} from "vue";
 
-interface TicketIssue {
-  currentId: number
-  currentSlug: string
-  file: string
-  fixedId: number
-  fixedSlug: string
-}
+import type {TicketValidationIssue} from "../types";
 
 const props = defineProps<{
   demo?: boolean
-  issues: TicketIssue[]
+  issues: TicketValidationIssue[]
   ticketPrefix: string
+  ticketSections: string[]
   ticketsDir: string
 }>()
 
@@ -31,7 +26,11 @@ async function fix() {
       const response = await fetch('/__vitepress_pm_fix', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dir: props.ticketsDir, prefix: props.ticketPrefix }),
+        body: JSON.stringify({
+          dir: props.ticketsDir,
+          prefix: props.ticketPrefix,
+          sections: props.ticketSections,
+        }),
       })
 
       if (!response.ok) {
@@ -58,11 +57,13 @@ function onBackdropClick(event: MouseEvent) {
   <div
     class="fix-modal-backdrop"
     style="position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(2px)"
-    @click="onBackdropClick"
+      @click="onBackdropClick"
   >
     <div style="width: 90vw; max-width: 640px; max-height: 80vh; background: #0d1117; border: 1px solid #2d3748; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 24px 48px rgba(0,0,0,0.4)">
       <div style="display: flex; align-items: center; padding: 16px 24px; border-bottom: 1px solid #2d3748; background: #171923; gap: 12px">
-        <span style="font-size: 16px; font-weight: 700; color: #ed8936; flex: 1">&#9888; Fix {{ issues.length }} ticket{{ issues.length === 1 ? '' : 's' }}</span>
+        <span style="font-size: 16px; font-weight: 700; color: #ed8936; flex: 1">&#9888; Fix {{
+            issues.length
+          }} issue{{ issues.length === 1 ? "" : "s" }}</span>
         <button
           style="background: none; border: none; color: #718096; cursor: pointer; font-size: 20px; padding: 4px 8px; line-height: 1"
           @click="emit('close')"
@@ -72,20 +73,38 @@ function onBackdropClick(event: MouseEvent) {
       <div style="flex: 1; overflow-y: auto; padding: 16px 24px">
         <div
           v-for="issue in issues"
-          :key="issue.file"
-          style="display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #1a202c"
+            :key="`${issue.type}-${issue.file}`"
+            style="padding: 12px 0; border-bottom: 1px solid #1a202c"
         >
-          <div style="flex: 1; min-width: 0">
-            <div style="font-size: 13px; color: #a0aec0; font-family: monospace">
-              {{ issue.currentSlug }} <span style="color: #4a5568">(id: {{ issue.currentId }})</span>
+          <template v-if="issue.type === 'identity'">
+            <div style="display: flex; align-items: center; gap: 12px">
+              <div style="flex: 1; min-width: 0">
+                <div style="font-size: 13px; color: #a0aec0; font-family: monospace">
+                  {{ issue.currentSlug }}
+                  <span style="color: #4a5568">(id: {{ issue.currentId }})</span>
+                </div>
+              </div>
+              <span style="color: #4a5568; font-size: 13px">&rarr;</span>
+              <div style="flex: 1; min-width: 0">
+                <div style="font-size: 13px; color: #6bcb6b; font-family: monospace">
+                  {{ issue.fixedSlug }} <span style="color: #4a5568">(id: {{
+                    issue.fixedId
+                  }})</span>
+                </div>
+              </div>
             </div>
-          </div>
-          <span style="color: #4a5568; font-size: 13px">&rarr;</span>
-          <div style="flex: 1; min-width: 0">
-            <div style="font-size: 13px; color: #6bcb6b; font-family: monospace">
-              {{ issue.fixedSlug }} <span style="color: #4a5568">(id: {{ issue.fixedId }})</span>
+          </template>
+
+          <template v-else>
+            <div style="font-size: 13px; color: #a0aec0; font-family: monospace; margin-bottom: 6px">
+              {{ issue.currentSlug }} <span style="color: #4a5568">(id: {{
+                issue.currentId
+              }})</span>
             </div>
-          </div>
+            <div style="font-size: 12px; color: #e2e8f0; line-height: 1.5">
+              Missing sections: {{ issue.missingSections?.join(", ") }}
+            </div>
+          </template>
         </div>
       </div>
 
