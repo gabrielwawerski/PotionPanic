@@ -18,6 +18,9 @@ Use PowerShell from the repo root.
 - `npm install` installs or verifies the VitePress docs tooling.
 - `npm run docs:ui` opens the shared editable board in the browser.
 - `npm run docs:dev` starts the local docs server manually.
+- `npm run docs:dev:local` starts the local-only docs server on `127.0.0.1:6420`.
+- `npm run docs:startup:install` installs the optional Windows startup shortcut.
+- `npm run docs:startup:uninstall` removes the optional Windows startup shortcut.
 - `npm run docs:build` builds the static docs site for verification.
 - Open the repo in Unity Hub with editor `6000.5.1f1`, then open
   `PotionPanic.sln` in Rider for code work.

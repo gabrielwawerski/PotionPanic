@@ -49,6 +49,20 @@ test("buildDocsDevServerSpec falls back to npm.cmd on Windows", () => {
   });
 });
 
+test("buildDocsDevServerSpec accepts an npm script override", () => {
+  assert.deepEqual(buildDocsDevServerSpec({
+    nodePath: "/node",
+    npmExecPath: "/npm-cli.js",
+    platform: "linux",
+    repoRoot: "/repo",
+    scriptName: "docs:dev:local",
+  }), {
+    command: "/node",
+    args: ["/npm-cli.js", "run", "docs:dev:local"],
+    cwd: "/repo",
+  });
+});
+
 test("ensureDocsBoard reuses an already-running board", async () => {
   const opened = [];
   let startCount = 0;

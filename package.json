@@ -5,7 +5,10 @@
   "scripts": {
     "docs:build": "vitepress build Docs",
     "docs:dev": "vitepress dev Docs --host 0.0.0.0 --port 6420",
+    "docs:dev:local": "vitepress dev Docs --host 127.0.0.1 --port 6420",
     "docs:preview": "vitepress preview Docs --host 0.0.0.0 --port 6421",
+    "docs:startup:install": "node -e \"if (process.platform !== 'win32') { console.error('docs:startup:install is only supported on Windows.'); process.exit(1); }\" && powershell.exe -NoProfile -ExecutionPolicy Bypass -File Scripts/docs/install-windows-startup.ps1",
+    "docs:startup:uninstall": "node -e \"if (process.platform !== 'win32') { console.error('docs:startup:uninstall is only supported on Windows.'); process.exit(1); }\" && powershell.exe -NoProfile -ExecutionPolicy Bypass -File Scripts/docs/install-windows-startup.ps1 -Uninstall",
     "docs:ticket": "node Scripts/docs/create-ticket.mjs",
     "docs:ui": "node Scripts/docs/open-board.mjs",
     "test": "node --test \"Scripts/docs/**/*.test.mjs\""

@@ -31,6 +31,7 @@ export function buildDocsDevServerSpec({
   npmExecPath = process.env.npm_execpath || "",
   platform = process.platform,
   repoRoot,
+  scriptName = "docs:dev",
 }) {
   if (!repoRoot) {
     throw new Error("repoRoot is required");
@@ -39,14 +40,14 @@ export function buildDocsDevServerSpec({
   if (npmExecPath) {
     return {
       command: nodePath,
-      args: [npmExecPath, "run", "docs:dev"],
+      args: [npmExecPath, "run", scriptName],
       cwd: repoRoot,
     };
   }
 
   return {
     command: platform === "win32" ? "npm.cmd" : "npm",
-    args: ["run", "docs:dev"],
+    args: ["run", scriptName],
     cwd: repoRoot,
   };
 }
@@ -81,6 +82,7 @@ export function createDocsDevServerStarter({
   npmExecPath = process.env.npm_execpath || "",
   platform = process.platform,
   repoRoot,
+  scriptName = "docs:dev",
   spawnImpl = spawn,
 } = {}) {
   return () => {
@@ -89,6 +91,7 @@ export function createDocsDevServerStarter({
       npmExecPath,
       platform,
       repoRoot,
+      scriptName,
     });
 
     return spawnImpl(spec.command, spec.args, {

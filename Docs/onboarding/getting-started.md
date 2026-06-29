@@ -87,6 +87,20 @@ npm run docs:dev
 
 Open `http://127.0.0.1:6420/board` if the browser does not open automatically.
 
+If you want Windows sign-in to start the local docs server without opening a
+browser:
+
+```powershell
+npm run docs:startup:install
+```
+
+This installs a per-user Startup shortcut that runs the local-only server with
+`npm run docs:dev:local`. Remove it later with:
+
+```powershell
+npm run docs:startup:uninstall
+```
+
 If you add or rename a Markdown page under the normal docs folders while
 `npm run docs:dev` is running, the auto-generated sidebar should refresh
 without a manual server restart. The top navigation bar is still manually

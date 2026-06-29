@@ -76,7 +76,15 @@ Equivalent npm commands:
 
 ```powershell
 npm run docs:dev
+npm run docs:dev:local
 npm run docs:build
+```
+
+Optional Windows startup management:
+
+```powershell
+npm run docs:startup:install
+npm run docs:startup:uninstall
 ```
 
 Repository rules:
@@ -97,3 +105,10 @@ Repository rules:
   VitePress docs workflow.
 - `npm run docs:ui` starts the local docs server if needed and opens the
   editable task board in the default browser.
+- `npm run docs:dev` starts the LAN-accessible VitePress dev server manually.
+- `npm run docs:dev:local` starts the local-only VitePress dev server on
+  `127.0.0.1:6420`.
+- `npm run docs:startup:install` installs the optional Windows sign-in shortcut
+  that starts `npm run docs:dev:local` in the background without opening a
+  browser.
+- `npm run docs:startup:uninstall` removes that Windows startup shortcut.
