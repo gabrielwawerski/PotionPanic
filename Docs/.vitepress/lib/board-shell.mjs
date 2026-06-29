@@ -24,3 +24,21 @@ export function buildBoardShellClasses({ board, collapsed }) {
     "board-sidebar-collapsed": !!board && !!collapsed,
   };
 }
+
+export function buildBoardPageKey({ board, relativePath, ticketsDir }) {
+  if (!board) {
+    return "page";
+  }
+
+  const normalizedRelativePath = `${relativePath ?? ""}`.trim();
+  if (normalizedRelativePath) {
+    return `board:${normalizedRelativePath}`;
+  }
+
+  const normalizedTicketsDir = `${ticketsDir ?? ""}`.trim();
+  if (normalizedTicketsDir) {
+    return `board:${normalizedTicketsDir}`;
+  }
+
+  return "board:default";
+}

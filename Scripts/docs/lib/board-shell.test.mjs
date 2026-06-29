@@ -5,6 +5,7 @@ import test from "node:test";
 
 import {
   BOARD_SIDEBAR_COLLAPSED_STORAGE_KEY,
+  buildBoardPageKey,
   buildBoardShellClasses,
   readBoardSidebarCollapsed,
   writeBoardSidebarCollapsed,
@@ -87,6 +88,40 @@ test("buildBoardShellClasses only applies shell classes on board pages", () => {
     }
   );
 });
+
+test("buildBoardPageKey distinguishes board pages so board state remounts per page",
+  () => {
+    assert.equal(
+      buildBoardPageKey({
+        board: true,
+        relativePath: "board.md",
+        ticketsDir: "tickets",
+      }),
+      "board:board.md"
+    );
+
+    assert.equal(
+      buildBoardPageKey({
+        board: true,
+        relativePath: "archive/board.md",
+        ticketsDir: "archive/tickets",
+      }),
+      "board:archive/board.md"
+    );
+
+    assert.notEqual(
+      buildBoardPageKey({
+        board: true,
+        relativePath: "board.md",
+        ticketsDir: "tickets",
+      }),
+      buildBoardPageKey({
+        board: true,
+        relativePath: "archive/board.md",
+        ticketsDir: "archive/tickets",
+      })
+    );
+  });
 
 test("board shell large-screen navbar title does not force sidebar width", () => {
   const largeScreenTitleBlock = boardStyles.match(

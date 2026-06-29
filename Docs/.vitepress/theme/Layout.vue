@@ -5,15 +5,21 @@ import DefaultTheme from 'vitepress/theme'
 
 import Board from './components/Board.vue'
 import {
+  buildBoardPageKey,
   buildBoardShellClasses,
   readBoardSidebarCollapsed,
   writeBoardSidebarCollapsed
 } from '../lib/board-shell.mjs'
 
-const { frontmatter } = useData()
+const { frontmatter, page } = useData()
 
 const isBoardPage = computed(() => !!frontmatter.value.board)
 const boardSidebarCollapsed = ref(false)
+const boardComponentKey = computed(() => buildBoardPageKey({
+  board: isBoardPage.value,
+  relativePath: page.value.relativePath,
+  ticketsDir: frontmatter.value.ticketsDir,
+}))
 
 const boardSidebarToggleLabel = computed(() => (
   boardSidebarCollapsed.value ? 'Show board nav' : 'Hide board nav'
@@ -78,7 +84,7 @@ watch(boardSidebarCollapsed, (collapsed) => {
       </template>
 
       <template #page-top>
-        <Board v-if="frontmatter.board" />
+        <Board v-if="frontmatter.board" :key="boardComponentKey" />
       </template>
     </DefaultTheme.Layout>
   </div>
