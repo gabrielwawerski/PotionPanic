@@ -5,12 +5,16 @@ import type {SuggestionOption} from "../types";
 
 const props = withDefaults(defineProps<{
   modelValue: string[]
+  monospaceValues?: boolean
   normalizeValue?: (value: string) => string
   options: SuggestionOption[]
   placeholder?: string
+  resolveHref?: (value: string) => string | null
 }>(), {
+  monospaceValues: false,
   normalizeValue: (value: string) => `${value ?? ""}`.trim(),
   placeholder: "",
+  resolveHref: () => null,
 })
 
 const emit = defineEmits<{
@@ -27,6 +31,11 @@ const optionMap = computed(() => new Map(
   props.options.map((option) => [option.value, option])
 ))
 const selectedSet = computed(() => new Set(props.modelValue))
+const selectedItems = computed(() => props.modelValue.map((value) => ({
+  href: props.resolveHref(value),
+  label: displayLabel(value),
+  value,
+})))
 
 const filteredOptions = computed(() => {
   const normalizedQuery = query.value.trim().toLowerCase()
@@ -184,14 +193,23 @@ function onKeydown(event: KeyboardEvent) {
       @click="focusInput"
     >
       <span
-        v-for="value in modelValue"
-        :key="value"
+        v-for="item in selectedItems"
+        :key="item.value"
         style="display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: rgba(99, 179, 237, 0.12); border: 1px solid rgba(99, 179, 237, 0.28); color: #bee3f8; white-space: nowrap"
       >
-        <span>{{ displayLabel(value) }}</span>
+        <component
+          :is="item.href ? 'a' : 'span'"
+          :href="item.href || undefined"
+          :style="{
+            color: 'inherit',
+            fontFamily: monospaceValues ? '\'JetBrains Mono\', monospace' : 'inherit',
+            lineHeight: '1.2',
+            textDecoration: item.href ? 'none' : 'none',
+          }"
+        >{{ item.label }}</component>
         <button
           style="background: none; border: none; color: #90cdf4; cursor: pointer; font-size: 12px; padding: 0; line-height: 1; display: flex; align-items: center"
-          @click.stop="removeValue(value)"
+          @click.stop="removeValue(item.value)"
         >&times;</button>
       </span>
 

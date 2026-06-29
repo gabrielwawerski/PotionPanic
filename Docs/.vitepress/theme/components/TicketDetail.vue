@@ -659,10 +659,11 @@ onUnmounted(() => {
                 :model-value="ticket.documentation"
                 :options="documentationSuggestionOptions"
                 placeholder="Add doc path..."
+                :resolve-href="documentationHref"
                 @update:modelValue="updateTicketList('documentation', $event)"
             />
             <div
-                v-if="ticket.documentation.length > 0"
+                v-if="readOnly && ticket.documentation.length > 0"
                 style="display: flex; flex-direction: column; gap: 6px; margin-top: 8px">
               <component
                   v-for="entry in ticket.documentation"
@@ -688,13 +689,14 @@ onUnmounted(() => {
             <TokenSuggestionInput
                 v-if="!readOnly"
                 :model-value="ticket.affectedFiles"
+                :monospace-values="true"
                 :normalize-value="normalizeFilePathValue"
                 :options="affectedFileSuggestionOptions"
                 placeholder="Add repo path..."
                 @update:modelValue="updateTicketList('affectedFiles', $event)"
             />
             <div
-                v-if="ticket.affectedFiles.length > 0"
+                v-if="readOnly && ticket.affectedFiles.length > 0"
                 style="display: flex; flex-direction: column; gap: 6px; margin-top: 8px">
               <span
                   v-for="entry in ticket.affectedFiles"
