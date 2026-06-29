@@ -17,7 +17,6 @@ superseded plans into [`../archive/completed/index.md`](../archive/completed/ind
 - [VitePress Live Sidebar Updates During `docs:dev`](./vitepress-live-sidebar-updates-2026-06-29.md)
 - [VitePress Manual Plan Index Sync](./vitepress-manual-plan-index-sync-2026-06-29.md)
 - [VitePress On-Page Plan Authoring](./vitepress-on-page-plan-authoring.md)
-- [VitePress Ticket Archive And Restore](./vitepress-ticket-archive-and-restore.md)
 - [VitePress Ticket Filename With Title Plan](./vitepress-ticket-filename-with-title-plan.md)
 - [Whole-Column Drag Targets For Board Columns](./vitepress-whole-column-drag-targets.md)
 - [Archived Plan Restore](./vitepress-archived-plan-restore.md)
