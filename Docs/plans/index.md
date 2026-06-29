@@ -14,6 +14,7 @@ superseded plans into [`../archive/completed/index.md`](../archive/completed/ind
 - [VitePress Ticket Archive And Restore](vitepress-ticket-archive-and-restore.md)
 - [VitePress Board UX Plans](vitepress-board-ux-plans.md)
 - [VitePress Live Sidebar Updates During docs:dev](vitepress-live-sidebar-updates-2026-06-29.md)
+- [VitePress Manual Plan Index Sync](vitepress-manual-plan-index-sync-2026-06-29.md)
 
 ## Writing Rules
 
