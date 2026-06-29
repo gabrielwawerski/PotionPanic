@@ -157,6 +157,61 @@ test("createTicketFile appends the next order within the starting status column"
     assert.match(saved, /^order: 5$/m);
   });
 
+test("createTicketFile skips IDs already present in the archive directory", () => {
+  const tempRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), "pp-ticket-create-archive-id-"));
+  const activeDir = path.join(tempRoot, "tickets");
+  const archiveDir = path.join(tempRoot, "archive", "tickets");
+
+  fs.mkdirSync(activeDir, {recursive: true});
+  fs.mkdirSync(archiveDir, {recursive: true});
+
+  for (const id of [1, 2, 3, 4, 5]) {
+    writeTicket(
+      activeDir,
+      `PP-${id}.md`,
+      [
+        "---",
+        `id: ${id}`,
+        `title: Active ${id}`,
+        "status: backlog",
+        "priority: medium",
+        "tags: []",
+        "---",
+        "",
+        "## Description",
+      ].join("\n")
+    );
+  }
+
+  writeTicket(
+    archiveDir,
+    "PP-6.md",
+    [
+      "---",
+      "id: 6",
+      "title: Archived 6",
+      "status: done",
+      "priority: medium",
+      "archivedAt: 2026-06-29T00:00:00.000Z",
+      "---",
+      "",
+      "## Description",
+    ].join("\n")
+  );
+
+  const created = createTicketFile(activeDir, {
+    prefix: "PP",
+    relatedTicketDirs: [archiveDir],
+    title: "Avoid archive collision",
+  });
+
+  assert.equal(created.id, 7);
+  assert.equal(created.url, "/tickets/PP-7.html");
+  assert.equal(fs.existsSync(path.join(activeDir, "PP-7.md")), true);
+  assert.equal(fs.existsSync(path.join(activeDir, "PP-6.md")), false);
+});
+
 test(
   "validateTickets reports both identity issues and missing required sections",
   () => {
@@ -241,6 +296,124 @@ test("fixTickets repairs slug and inserts any missing required sections",
     assert.match(repaired, /^id: 4$/m);
     assert.match(repaired, /^## Acceptance Criteria\s*$/m);
     assert.match(repaired, /^## Definition of Done\s*$/m);
+  });
+
+test("validateTickets reports identity issues when an active ticket ID already exists in the archive",
+  () => {
+    const tempRoot = fs.mkdtempSync(
+      path.join(os.tmpdir(), "pp-ticket-validate-archive-id-"));
+    const activeDir = path.join(tempRoot, "tickets");
+    const archiveDir = path.join(tempRoot, "archive", "tickets");
+
+    fs.mkdirSync(activeDir, {recursive: true});
+    fs.mkdirSync(archiveDir, {recursive: true});
+
+    writeTicket(
+      activeDir,
+      "PP-6.md",
+      [
+        "---",
+        "id: 6",
+        "title: Active duplicate",
+        "status: backlog",
+        "priority: medium",
+        "tags: []",
+        "---",
+        "",
+        "## Description",
+      ].join("\n")
+    );
+
+    writeTicket(
+      archiveDir,
+      "PP-6.md",
+      [
+        "---",
+        "id: 6",
+        "title: Archived original",
+        "status: done",
+        "priority: medium",
+        "archivedAt: 2026-06-29T00:00:00.000Z",
+        "---",
+        "",
+        "## Description",
+      ].join("\n")
+    );
+
+    const issues = validateTickets(
+      activeDir,
+      "tickets",
+      "PP",
+      [],
+      [archiveDir]
+    );
+    const identityIssue = issues.find((issue) => issue.type === "identity");
+
+    assert.equal(identityIssue?.currentSlug, "PP-6");
+    assert.equal(identityIssue?.fixedId, 7);
+    assert.equal(identityIssue?.fixedSlug, "PP-7");
+  });
+
+test("fixTickets renumbers an active ticket when its ID collides with an archived ticket",
+  () => {
+    const tempRoot = fs.mkdtempSync(
+      path.join(os.tmpdir(), "pp-ticket-fix-archive-id-"));
+    const activeDir = path.join(tempRoot, "tickets");
+    const archiveDir = path.join(tempRoot, "archive", "tickets");
+
+    fs.mkdirSync(activeDir, {recursive: true});
+    fs.mkdirSync(archiveDir, {recursive: true});
+
+    writeTicket(
+      activeDir,
+      "PP-6.md",
+      [
+        "---",
+        "id: 6",
+        "title: Active duplicate",
+        "status: backlog",
+        "priority: medium",
+        "tags: []",
+        "---",
+        "",
+        "## Description",
+      ].join("\n")
+    );
+
+    writeTicket(
+      archiveDir,
+      "PP-6.md",
+      [
+        "---",
+        "id: 6",
+        "title: Archived original",
+        "status: done",
+        "priority: medium",
+        "archivedAt: 2026-06-29T00:00:00.000Z",
+        "---",
+        "",
+        "## Description",
+      ].join("\n")
+    );
+
+    const fixedIssues = fixTickets(
+      activeDir,
+      "tickets",
+      "PP",
+      [],
+      [archiveDir]
+    );
+
+    assert.equal(fixedIssues.some((issue) => issue.type === "identity"), true);
+    assert.equal(fs.existsSync(path.join(activeDir, "PP-6.md")), false);
+    assert.equal(fs.existsSync(path.join(activeDir, "PP-7.md")), true);
+    assert.equal(fs.existsSync(path.join(archiveDir, "PP-6.md")), true);
+
+    const repaired = fs.readFileSync(path.join(activeDir, "PP-7.md"), "utf8");
+    const archived = fs.readFileSync(path.join(archiveDir, "PP-6.md"), "utf8");
+
+    assert.match(repaired, /^id: 7$/m);
+    assert.match(archived, /^id: 6$/m);
   });
 
 test("archiveTicketFile moves a ticket into the archive directory and stamps archivedAt",

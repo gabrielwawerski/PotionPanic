@@ -69,6 +69,21 @@ export function scanTickets(ticketsDir, dirRelative) {
   }).sort(compareTicketsByOrder);
 }
 
+function listTicketIds(ticketsDir) {
+  if (!fs.existsSync(ticketsDir)) {
+    return [];
+  }
+
+  return fs.readdirSync(ticketsDir)
+  .filter((file) => file.endsWith(".md"))
+  .map((file) => {
+    const raw = fs.readFileSync(path.join(ticketsDir, file), "utf8");
+    const parsed = matter(raw);
+    return Number(parsed.data.id) || 0;
+  })
+  .filter((id) => id > 0);
+}
+
 function listTicketEntries(ticketsDir) {
   if (!fs.existsSync(ticketsDir)) {
     return [];
@@ -105,7 +120,8 @@ export function validateTickets(
   ticketsDir,
   dirRelative,
   prefix,
-  configuredSections = []
+  configuredSections = [],
+  relatedTicketDirs = []
 ) {
   if (!fs.existsSync(ticketsDir)) {
     return [];
@@ -113,32 +129,37 @@ export function validateTickets(
 
   const { entries, idCounts } = listTicketEntries(ticketsDir);
   const normalizedSections = normalizeTicketSections(configuredSections);
+  const relatedIds = new Set(
+    relatedTicketDirs.flatMap((entryDir) => listTicketIds(entryDir))
+  );
   const issues = [];
-  const goodIds = new Set();
+  const goodIds = new Set(relatedIds);
 
   for (const entry of entries) {
     const expectedSlug = prefix ? `${prefix}-${entry.id}` : String(entry.id);
     const isDuplicate = entry.id > 0 && (idCounts.get(entry.id) || 0) > 1;
+    const isRelatedCollision = entry.id > 0 && relatedIds.has(entry.id);
     const isMissing = entry.id <= 0;
     const isMismatch = entry.id > 0 && entry.slug !== expectedSlug;
 
-    if (!isDuplicate && !isMissing) {
+    if (!isDuplicate && !isRelatedCollision && !isMissing && !isMismatch) {
       goodIds.add(entry.id);
     }
   }
 
-  let nextFixId = 1;
+  let nextFixId = getMaxTicketId(ticketsDir, relatedTicketDirs) + 1;
 
   for (const entry of entries) {
     const expectedSlug = prefix ? `${prefix}-${entry.id}` : String(entry.id);
     const isDuplicate = entry.id > 0 && (idCounts.get(entry.id) || 0) > 1;
+    const isRelatedCollision = entry.id > 0 && relatedIds.has(entry.id);
     const isMissing = entry.id <= 0;
     const isMismatch = entry.id > 0 && entry.slug !== expectedSlug;
 
-    if (isDuplicate || isMissing || isMismatch) {
+    if (isDuplicate || isRelatedCollision || isMissing || isMismatch) {
       let fixedId = entry.id;
 
-      if (isDuplicate || isMissing) {
+      if (isDuplicate || isRelatedCollision || isMissing) {
         while (goodIds.has(nextFixId)) {
           nextFixId += 1;
         }
@@ -180,13 +201,15 @@ export function fixTickets(
   ticketsDir,
   dirRelative,
   prefix,
-  configuredSections = []
+  configuredSections = [],
+  relatedTicketDirs = []
 ) {
   const issues = validateTickets(
     ticketsDir,
     dirRelative,
     prefix,
-    configuredSections
+    configuredSections,
+    relatedTicketDirs
   );
 
   if (issues.length === 0) {
@@ -232,26 +255,10 @@ export function fixTickets(
   return issues;
 }
 
-export function getMaxTicketId(ticketsDir) {
-  if (!fs.existsSync(ticketsDir)) {
-    return 0;
-  }
-
-  const files = fs.readdirSync(ticketsDir)
-  .filter((file) => file.endsWith(".md"));
-  let max = 0;
-
-  for (const file of files) {
-    const raw = fs.readFileSync(path.join(ticketsDir, file), "utf8");
-    const parsed = matter(raw);
-    const id = Number(parsed.data.id);
-
-    if (id > max) {
-      max = id;
-    }
-  }
-
-  return max;
+export function getMaxTicketId(ticketsDir, relatedTicketDirs = []) {
+  return [ticketsDir, ...relatedTicketDirs]
+  .flatMap((entryDir) => listTicketIds(entryDir))
+  .reduce((max, id) => (id > max ? id : max), 0);
 }
 
 function normalizeSitePath(value) {
@@ -365,6 +372,7 @@ export function createTicketFile(
     milestone = "",
     prefix = "",
     priority = "medium",
+    relatedTicketDirs = [],
     sections = [],
     status = "backlog",
     tags = [],
@@ -375,7 +383,7 @@ export function createTicketFile(
     fs.mkdirSync(ticketsDir, { recursive: true });
   }
 
-  const id = getMaxTicketId(ticketsDir) + 1;
+  const id = getMaxTicketId(ticketsDir, relatedTicketDirs) + 1;
   const nextOrder = scanTickets(ticketsDir, dirRelative)
   .filter((ticket) => ticket.status === status)
   .reduce((maxOrder, ticket) => (
@@ -556,7 +564,7 @@ function findBoardConfig(srcDir, dirRelative) {
   return {};
 }
 
-function listDependencyTicketDirs(boardConfig, dirRelative) {
+function listRelatedTicketDirs(boardConfig, dirRelative) {
   const dirs = [dirRelative];
   const relatedDir = `${boardConfig.archiveTicketsDir || boardConfig.restoreTicketsDir || ""}`
   .trim();
@@ -568,13 +576,21 @@ function listDependencyTicketDirs(boardConfig, dirRelative) {
   return dirs;
 }
 
+function resolveRelatedTicketDirPaths(srcDir, dirRelative) {
+  const boardConfig = findBoardConfig(srcDir, dirRelative);
+
+  return listRelatedTicketDirs(boardConfig, dirRelative)
+  .filter((entryDir) => entryDir !== dirRelative)
+  .map((entryDir) => path.resolve(srcDir, entryDir));
+}
+
 function createSuggestionCatalog(srcDir, dirRelative, prefix = "") {
   const ticketsDir = path.resolve(srcDir, dirRelative);
   const boardConfig = findBoardConfig(srcDir, dirRelative);
   const ticketPrefix = prefix || boardConfig.ticketPrefix || "";
   const repoRoot = path.resolve(srcDir, "..");
   const ticketRepoPath = path.relative(repoRoot, ticketsDir);
-  const dependencyTickets = listDependencyTicketDirs(boardConfig, dirRelative)
+  const dependencyTickets = listRelatedTicketDirs(boardConfig, dirRelative)
   .flatMap((entryDir) => scanTickets(path.resolve(srcDir, entryDir), entryDir));
 
   return buildTicketSuggestionCatalog({
@@ -614,7 +630,13 @@ export function markdownWriterPlugin() {
         const prefix = url.searchParams.get("prefix") || "";
         const sections = url.searchParams.getAll("section");
         const ticketsDir = path.resolve(srcDir, dir);
-        const issues = validateTickets(ticketsDir, dir, prefix, sections);
+        const issues = validateTickets(
+          ticketsDir,
+          dir,
+          prefix,
+          sections,
+          resolveRelatedTicketDirPaths(srcDir, dir)
+        );
 
         res.setHeader("Content-Type", "application/json");
         res.end(JSON.stringify(issues));
@@ -649,7 +671,8 @@ export function markdownWriterPlugin() {
               ticketsDir,
               dir || "tickets",
               prefix || "",
-              sections || []
+              sections || [],
+              resolveRelatedTicketDirPaths(srcDir, dir || "tickets")
             );
 
             res.setHeader("Content-Type", "application/json");
@@ -695,6 +718,10 @@ export function markdownWriterPlugin() {
               dirRelative: dir || "tickets",
               prefix: prefix || "",
               priority,
+              relatedTicketDirs: resolveRelatedTicketDirPaths(
+                srcDir,
+                dir || "tickets"
+              ),
               affectedFiles,
               assignee,
               dependencies,
