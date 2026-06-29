@@ -133,6 +133,7 @@ watch(boardSidebarCollapsed, (collapsed) => {
       </template>
 
       <template #doc-before>
+        <PlanAuthoringControls />
         <div v-if="showPagePathCopyButton" class="doc-page-actions">
           <button
             class="doc-page-copy-path-button"
@@ -143,10 +144,6 @@ watch(boardSidebarCollapsed, (collapsed) => {
             {{ pagePathCopyLabel }}
           </button>
         </div>
-      </template>
-
-      <template #doc-footer-before>
-        <PlanAuthoringControls />
       </template>
     </DefaultTheme.Layout>
   </div>

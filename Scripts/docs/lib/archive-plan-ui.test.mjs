@@ -14,10 +14,12 @@ const archiveComposablePath = path.resolve(
   "Docs/.vitepress/theme/composables/usePlanArchive.ts"
 );
 
-test("layout renders the plan authoring controls in doc-footer-before", () => {
+test("layout renders the plan authoring controls in doc-before", () => {
   const source = fs.readFileSync(layoutPath, "utf8");
 
   assert.match(source,
+    /<template #doc-before>[\s\S]*?<PlanAuthoringControls \/>[\s\S]*?<\/template>/);
+  assert.doesNotMatch(source,
     /<template #doc-footer-before>\s*<PlanAuthoringControls \/>[\s\S]*?<\/template>/);
 });
 
