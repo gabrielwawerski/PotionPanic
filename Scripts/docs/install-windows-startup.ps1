@@ -43,7 +43,7 @@ function Get-EncodedStartupCommand {
 $ErrorActionPreference = 'Stop'
 Set-Location -LiteralPath '$escapedRepoRoot'
 \$npmCommand = (Get-Command npm.cmd -ErrorAction Stop).Source
-& \$npmCommand 'run' 'docs:dev:local'
+& \$npmCommand 'run' 'docs:dev'
 "@.Trim()
 
   return [Convert]::ToBase64String(
