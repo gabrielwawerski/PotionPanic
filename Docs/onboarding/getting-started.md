@@ -87,9 +87,10 @@ npm run docs:dev
 
 Open `http://127.0.0.1:6420/board` if the browser does not open automatically.
 
-If you add a new Markdown page under the normal docs folders, restart
-`npm run docs:dev` once so the auto-generated sidebar picks it up. The top
-navigation bar is still manually curated.
+If you add or rename a Markdown page under the normal docs folders while
+`npm run docs:dev` is running, the auto-generated sidebar should refresh
+without a manual server restart. The top navigation bar is still manually
+curated.
 
 ## Know which files need coordination
 

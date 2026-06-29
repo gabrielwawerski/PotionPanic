@@ -3,10 +3,78 @@ import path from "node:path";
 
 import matter from "gray-matter";
 
-const DEFAULT_EXCLUDED_DIRS = [
+export const DEFAULT_EXCLUDED_DIRS = [
   ".vitepress",
   "archive/completed",
   "tickets",
+];
+
+export const SIDEBAR_SECTIONS = [
+  {
+    text: "Docs",
+    items: [
+      {text: "Overview", link: "/"},
+      {text: "Board", link: "/board"},
+    ],
+  },
+  {
+    text: "Onboarding",
+    includeDirs: ["onboarding"],
+    items: [
+      {text: "Getting Started", link: "/onboarding/getting-started"},
+    ],
+  },
+  {
+    text: "Collaboration",
+    includeDirs: ["collaboration"],
+    items: [
+      {text: "Team Workflow", link: "/collaboration/team-workflow"},
+    ],
+  },
+  {
+    text: "Project",
+    includeDirs: ["project"],
+    items: [
+      {text: "Game Design", link: "/project/game-design"},
+      {text: "MVP Scope", link: "/project/mvp-scope"},
+      {text: "Technical Architecture", link: "/project/technical-architecture"},
+      {text: "Game Design and Psychology", link: "/project/game-design-and-psychology"},
+    ],
+  },
+  {
+    text: "Plans",
+    includeDirs: ["plans"],
+    items: [
+      {text: "Implementation Plans", link: "/plans/"},
+      {text: "VitePress Board UX Plans", link: "/plans/vitepress-board-ux-plans"},
+    ],
+  },
+  {
+    text: "Guides",
+    includeDirs: ["guides"],
+    items: [
+      {text: "Unity Guides", link: "/guides/unity/"},
+      {text: "Runtime Architecture", link: "/guides/unity/runtime-architecture"},
+      {
+        text: "Coding And Implementation",
+        link: "/guides/unity/coding-and-implementation"
+      },
+      {text: "Editor Safety", link: "/guides/unity/editor-safety"},
+      {
+        text: "Presentation Workflows",
+        link: "/guides/unity/presentation-workflows"
+      },
+    ],
+  },
+  {
+    text: "Planning History",
+    includeDirs: ["archive", "milestones"],
+    items: [
+      {text: "Milestones", link: "/milestones/"},
+      {text: "Archive Board", link: "/archive/board"},
+      {text: "Archive", link: "/archive/"},
+    ],
+  },
 ];
 
 function normalizePath(value) {
@@ -21,9 +89,35 @@ function titleCaseFromSlug(value) {
   .join(" ");
 }
 
-function isExcludedPath(relativePath, excludedDirs) {
+export function isExcludedPath(relativePath, excludedDirs) {
   return excludedDirs.some((dir) => (
     relativePath === dir || relativePath.startsWith(`${dir}/`)
+  ));
+}
+
+function getIncludedDirs(sections) {
+  return sections.flatMap((section) => section.includeDirs || []);
+}
+
+export function isSidebarContentPath(
+  relativePath,
+  {
+    excludedDirs = DEFAULT_EXCLUDED_DIRS,
+    sections = SIDEBAR_SECTIONS,
+  } = {}
+) {
+  const normalizedPath = normalizePath(relativePath);
+  if (!normalizedPath.endsWith(".md")) {
+    return false;
+  }
+
+  if (isExcludedPath(normalizedPath, excludedDirs.map(normalizePath))) {
+    return false;
+  }
+
+  const includedDirs = getIncludedDirs(sections).map(normalizePath);
+  return includedDirs.some((dir) => (
+    normalizedPath === dir || normalizedPath.startsWith(`${dir}/`)
   ));
 }
 
@@ -183,4 +277,20 @@ export function buildSidebar({
       excludedDirs.map(normalizePath)
     ),
   }));
+}
+
+export function buildSidebarThemeConfig(
+  docsDir,
+  {
+    excludedDirs = DEFAULT_EXCLUDED_DIRS,
+    sections = SIDEBAR_SECTIONS,
+  } = {}
+) {
+  return {
+    "/": buildSidebar({
+      docsDir,
+      excludedDirs,
+      sections,
+    }),
+  };
 }
