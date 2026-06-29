@@ -5,24 +5,33 @@ import test from "node:test";
 
 const layoutPath = path.resolve("Docs/.vitepress/theme/Layout.vue");
 const componentPath = path.resolve(
-  "Docs/.vitepress/theme/components/ArchivePlanButton.vue"
+  "Docs/.vitepress/theme/components/PlanAuthoringControls.vue"
 );
 const composablePath = path.resolve(
+  "Docs/.vitepress/theme/composables/usePlanWriter.ts"
+);
+const archiveComposablePath = path.resolve(
   "Docs/.vitepress/theme/composables/usePlanArchive.ts"
 );
 
-test("layout renders the archive plan control in doc-footer-before", () => {
+test("layout renders the plan authoring controls in doc-footer-before", () => {
   const source = fs.readFileSync(layoutPath, "utf8");
 
   assert.match(source,
-    /<template #doc-footer-before>\s*<ArchivePlanButton \/>[\s\S]*?<\/template>/);
+    /<template #doc-footer-before>\s*<PlanAuthoringControls \/>[\s\S]*?<\/template>/);
 });
 
-test("archive plan button posts to the archive plan endpoint", () => {
+test("plan authoring controls wire create, update, and archive endpoints", () => {
   const componentSource = fs.readFileSync(componentPath, "utf8");
   const composableSource = fs.readFileSync(composablePath, "utf8");
+  const archiveComposableSource = fs.readFileSync(archiveComposablePath, "utf8");
 
+  assert.match(componentSource, /New Plan/);
+  assert.match(componentSource, /Edit Plan/);
   assert.match(componentSource, /window\.confirm/);
   assert.match(componentSource, /router\.go/);
-  assert.match(composableSource, /__vitepress_pm_archive_plan/);
+  assert.match(composableSource, /__vitepress_pm_create_plan/);
+  assert.match(composableSource, /__vitepress_pm_update_plan/);
+  assert.match(composableSource, /__vitepress_pm_plan/);
+  assert.match(archiveComposableSource, /__vitepress_pm_archive_plan/);
 });

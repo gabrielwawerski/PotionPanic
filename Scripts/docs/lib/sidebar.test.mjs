@@ -189,3 +189,40 @@ test("buildSidebar respects sidebar false and default ignored paths",
       },
     ]);
   });
+
+test("buildSidebar sorts plan pages by date with index first and newest last",
+  async () => {
+    const {buildSidebar} = await loadSidebarModule();
+    const docsDir = fs.mkdtempSync(path.join(os.tmpdir(), "pp-sidebar-"));
+
+    writeMarkdown(docsDir, "plans/index.md", "# Plans\n");
+    writeMarkdown(docsDir, "plans/undated.md",
+      "---\ndate: 2026-06-28\n---\n# Undated Label\n");
+    writeMarkdown(docsDir, "plans/newer.md",
+      "---\ndate: 2026-06-29\n---\n# Newer Plan\n");
+    writeMarkdown(docsDir, "plans/older.md",
+      "---\ndate: 2026-06-27\n---\n# Older Plan\n");
+
+    const sections = buildSidebar({
+      docsDir,
+      sections: [
+        {
+          text: "Plans",
+          includeDirs: ["plans"],
+          items: [],
+        },
+      ],
+    });
+
+    assert.deepEqual(sections, [
+      {
+        text: "Plans",
+        items: [
+          {text: "Plans", link: "/plans/"},
+          {text: "Older Plan", link: "/plans/older"},
+          {text: "Undated Label", link: "/plans/undated"},
+          {text: "Newer Plan", link: "/plans/newer"},
+        ],
+      },
+    ]);
+  });

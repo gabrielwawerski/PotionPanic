@@ -5,6 +5,12 @@ import matter from "gray-matter";
 import {compareTicketsByOrder} from "./board-ordering.mjs";
 
 import {
+  backfillPlanDates,
+  createPlanFile,
+  readPlanFile,
+  updatePlanFile,
+} from "./plan-writer.mjs";
+import {
   buildTicketTemplate,
   ensureTicketSections,
   findMissingTicketSections,
@@ -23,6 +29,12 @@ import {
 } from "./ticket-suggestions.mjs";
 
 export {archivePlanFile} from "./plan-archive.mjs";
+export {
+  backfillPlanDates,
+  createPlanFile,
+  readPlanFile,
+  updatePlanFile,
+} from "./plan-writer.mjs";
 
 export function scanTickets(ticketsDir, dirRelative) {
   if (!fs.existsSync(ticketsDir)) {
@@ -819,6 +831,78 @@ export function markdownWriterPlugin() {
 
             res.setHeader("Content-Type", "application/json");
             res.end(JSON.stringify(archived));
+          } catch (cause) {
+            res.statusCode = 500;
+            res.end(String(cause));
+          }
+        });
+      });
+
+      server.middlewares.use("/__vitepress_pm_plan", (req, res) => {
+        try {
+          const url = new URL(req.url || "/", "http://localhost");
+          const plan = readPlanFile(srcDir, {
+            url: url.searchParams.get("url"),
+          });
+
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify(plan));
+        } catch (cause) {
+          res.statusCode = 500;
+          res.end(String(cause));
+        }
+      });
+
+      server.middlewares.use("/__vitepress_pm_create_plan", (req, res) => {
+        if (req.method !== "POST") {
+          res.statusCode = 405;
+          res.end("Method not allowed");
+          return;
+        }
+
+        let body = "";
+        req.on("data", (chunk) => {
+          body += chunk;
+        });
+        req.on("end", () => {
+          try {
+            const {body: planBody, title} = JSON.parse(body);
+            const plan = createPlanFile(srcDir, {
+              body: planBody,
+              title,
+            });
+
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify(plan));
+          } catch (cause) {
+            res.statusCode = 500;
+            res.end(String(cause));
+          }
+        });
+      });
+
+      server.middlewares.use("/__vitepress_pm_update_plan", (req, res) => {
+        if (req.method !== "POST") {
+          res.statusCode = 405;
+          res.end("Method not allowed");
+          return;
+        }
+
+        let body = "";
+        req.on("data", (chunk) => {
+          body += chunk;
+        });
+        req.on("end", () => {
+          try {
+            const {body: planBody, title, url} = JSON.parse(body);
+            const plan = updatePlanFile(srcDir, {
+              body: planBody,
+              title,
+              url,
+            });
+
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify(plan));
           } catch (cause) {
             res.statusCode = 500;
             res.end(String(cause));

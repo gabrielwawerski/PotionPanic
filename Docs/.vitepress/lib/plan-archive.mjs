@@ -6,13 +6,10 @@ import {
   buildPlanPageUrl,
   isArchivablePlanPage,
 } from "./plan-archive-page.mjs";
+import {siteUrlToRelativePath, updateActivePlansIndex} from "./plan-writer.mjs";
 
 function normalizePath(value) {
   return `${value ?? ""}`.trim().replace(/\\/g, "/").replace(/^\/+|\/+$/g, "");
-}
-
-function normalizeSiteUrl(value) {
-  return `${value ?? ""}`.trim().replace(/[?#].*$/, "");
 }
 
 function titleCaseFromSlug(value) {
@@ -26,32 +23,6 @@ function titleCaseFromSlug(value) {
 function extractHeading(content) {
   const match = content.match(/^#\s+(.+?)\s*$/m);
   return match?.[1]?.trim() || "";
-}
-
-function siteUrlToRelativePath(url) {
-  const normalizedUrl = normalizeSiteUrl(url);
-  if (!normalizedUrl) {
-    throw new Error("Missing url");
-  }
-
-  const normalizedPath = normalizedUrl.replace(/^\/+/, "");
-  if (!normalizedPath) {
-    throw new Error("Missing url");
-  }
-
-  if (normalizedPath.endsWith(".md")) {
-    return normalizePath(normalizedPath);
-  }
-
-  if (normalizedPath.endsWith(".html")) {
-    return normalizePath(normalizedPath.replace(/\.html$/i, ".md"));
-  }
-
-  if (normalizedPath.endsWith("/")) {
-    return normalizePath(`${normalizedPath}index.md`);
-  }
-
-  return normalizePath(`${normalizedPath}.md`);
 }
 
 function resolveDocsPath(docsDir, relativePath) {
@@ -162,6 +133,11 @@ export function archivePlanFile(docsDir, {url} = {}) {
   fs.mkdirSync(targetDirPath, {recursive: true});
   fs.writeFileSync(targetPath, raw);
   fs.unlinkSync(sourcePath);
+  updateActivePlansIndex(docsDir, {
+    fileName,
+    mode: "remove",
+    title,
+  });
   updateArchivedPlansIndex(docsDir, {fileName, title});
 
   return {

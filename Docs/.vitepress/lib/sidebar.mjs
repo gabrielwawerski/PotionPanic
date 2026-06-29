@@ -47,7 +47,6 @@ export const SIDEBAR_SECTIONS = [
     includeDirs: ["plans"],
     items: [
       {text: "Implementation Plans", link: "/plans/"},
-      {text: "VitePress Board UX Plans", link: "/plans/vitepress-board-ux-plans"},
     ],
   },
   {
@@ -88,7 +87,30 @@ function titleCaseFromSlug(value) {
   .split(/[-_\s]+/)
   .filter(Boolean)
   .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-  .join(" ");
+    .join(" ");
+}
+
+function normalizeDateValue(value) {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value.toISOString().slice(0, 10);
+  }
+
+  const text = `${value ?? ""}`.trim();
+  if (!text) {
+    return "";
+  }
+
+  const isoMatch = text.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (isoMatch) {
+    return isoMatch[1];
+  }
+
+  const parsed = new Date(text);
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed.toISOString().slice(0, 10);
+  }
+
+  return text;
 }
 
 export function isExcludedPath(relativePath, excludedDirs) {
@@ -215,6 +237,8 @@ function readSidebarItem(docsDir, relativePath) {
     || titleCaseFromSlug(baseName);
 
   return {
+    date: normalizeDateValue(parsed.data.date),
+    fileName: baseName,
     text: label,
     link,
     isIndexPage: baseName === "index",
@@ -239,6 +263,30 @@ function compareSidebarItems(left, right) {
   });
 }
 
+function comparePlanSidebarItems(left, right) {
+  if (left.isIndexPage !== right.isIndexPage) {
+    return left.isIndexPage ? -1 : 1;
+  }
+
+  const leftDate = `${left.date ?? ""}`.trim();
+  const rightDate = `${right.date ?? ""}`.trim();
+  if (leftDate && rightDate && leftDate !== rightDate) {
+    return leftDate.localeCompare(rightDate, undefined, {
+      sensitivity: "base",
+    });
+  }
+
+  if (leftDate && !rightDate) {
+    return -1;
+  }
+
+  if (!leftDate && rightDate) {
+    return 1;
+  }
+
+  return compareSidebarItems(left, right);
+}
+
 function buildSectionItems(docsDir, section, excludedDirs) {
   const manualItems = Array.isArray(section.items) ? [...section.items] : [];
   const includeDirs = Array.isArray(section.includeDirs) ? section.includeDirs : [];
@@ -258,7 +306,10 @@ function buildSectionItems(docsDir, section, excludedDirs) {
     }
   }
 
-  autoItems.sort(compareSidebarItems);
+  const sortItems = includeDirs.includes("plans")
+    ? comparePlanSidebarItems
+    : compareSidebarItems;
+  autoItems.sort(sortItems);
 
   return [
     ...manualItems,

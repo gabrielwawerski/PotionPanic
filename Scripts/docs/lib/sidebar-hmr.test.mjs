@@ -72,7 +72,6 @@ test("buildSidebarThemeConfig returns the root sidebar mapping", async () => {
         text: "Plans",
         items: [
           {text: "Implementation Plans", link: "/plans/"},
-          {text: "VitePress Board UX Plans", link: "/plans/vitepress-board-ux-plans"},
           {text: "Live Sidebar", link: "/plans/live-sidebar"},
         ],
       },
@@ -113,7 +112,8 @@ test("sidebar HMR plugin emits updates only for relevant docs markdown paths",
     writeMarkdown(docsDir, "index.md", "# Docs Index\n");
     writeMarkdown(docsDir, "board.md", "---\nboard: true\n---\n");
     writeMarkdown(docsDir, "plans/index.md", "# Plans\n");
-    writeMarkdown(docsDir, "plans/live-sidebar.md", "# Live Sidebar\n");
+    writeMarkdown(docsDir, "plans/live-sidebar.md",
+      "---\ndate: 2026-06-29\n---\n# Live Sidebar\n");
     writeMarkdown(docsDir, "tickets/PP-1.md", "# Ticket\n");
 
     const sent = [];
@@ -147,6 +147,8 @@ test("sidebar HMR plugin emits updates only for relevant docs markdown paths",
       file: path.join(docsDir, "plans", "live-sidebar.md"),
       server,
     });
+    writeMarkdown(docsDir, "plans/new-plan.md",
+      "---\ndate: 2026-06-27\n---\n# New Plan\n");
     await addHandlers[0](path.join(docsDir, "plans", "new-plan.md"));
     await unlinkHandlers[0](path.join(docsDir, "tickets", "PP-1.md"));
 
@@ -157,4 +159,9 @@ test("sidebar HMR plugin emits updates only for relevant docs markdown paths",
     ]);
     assert.equal(sent[0].type, "custom");
     assert.equal(sent[0].data.sidebar["/"][4].items.at(-1).text, "Live Sidebar");
+    assert.deepEqual(sent[1].data.sidebar["/"][4].items, [
+      {text: "Implementation Plans", link: "/plans/"},
+      {text: "New Plan", link: "/plans/new-plan"},
+      {text: "Live Sidebar", link: "/plans/live-sidebar"},
+    ]);
   });

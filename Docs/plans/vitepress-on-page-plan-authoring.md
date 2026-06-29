@@ -1,3 +1,7 @@
+---
+date: 2026-06-29
+---
+
 # VitePress On-Page Plan Authoring
 
 ## Summary

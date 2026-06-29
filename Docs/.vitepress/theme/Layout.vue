@@ -3,8 +3,8 @@ import {computed, onBeforeUnmount, onMounted, ref, watch} from 'vue'
 import { useData } from 'vitepress'
 import DefaultTheme from 'vitepress/theme'
 
-import ArchivePlanButton from './components/ArchivePlanButton.vue'
 import Board from './components/Board.vue'
+import PlanAuthoringControls from './components/PlanAuthoringControls.vue'
 import {
   buildBoardPageKey,
   buildBoardShellClasses,
@@ -146,7 +146,7 @@ watch(boardSidebarCollapsed, (collapsed) => {
       </template>
 
       <template #doc-footer-before>
-        <ArchivePlanButton />
+        <PlanAuthoringControls />
       </template>
     </DefaultTheme.Layout>
   </div>

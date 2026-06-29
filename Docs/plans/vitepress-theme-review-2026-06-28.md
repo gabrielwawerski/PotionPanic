@@ -1,3 +1,7 @@
+---
+date: 2026-06-28
+---
+
 # VitePress Theme Review - 2026-06-28
 
 ## Summary
