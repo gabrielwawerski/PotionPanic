@@ -36,6 +36,7 @@ export function scanTickets(ticketsDir, dirRelative) {
     return {
       affectedFiles: metadata.affectedFiles,
       assignee: `${parsed.data.assignee ?? ""}`.trim(),
+      archivedAt: `${parsed.data.archivedAt ?? ""}`.trim(),
       dependencies: metadata.dependencies,
       documentation: metadata.documentation,
       id: Number(parsed.data.id) || 0,
@@ -235,6 +236,105 @@ export function getMaxTicketId(ticketsDir) {
   return max;
 }
 
+function normalizeSitePath(value) {
+  return `${value ?? ""}`.trim()
+  .replace(/\\/g, "/")
+  .replace(/^\//, "");
+}
+
+function resolveSiteFilePath(srcDir, sitePath) {
+  const normalized = normalizeSitePath(sitePath);
+  if (!normalized) {
+    throw new Error("Missing site path");
+  }
+
+  const resolved = path.resolve(srcDir, normalized);
+  const relative = path.relative(srcDir, resolved);
+  if (relative.startsWith("..") || path.isAbsolute(relative)) {
+    throw new Error(`Path escapes docs root: ${sitePath}`);
+  }
+
+  return {
+    normalized,
+    resolved,
+  };
+}
+
+function resolveSiteDirPath(srcDir, sitePath) {
+  const normalized = normalizeSitePath(sitePath);
+  if (!normalized) {
+    throw new Error("Missing targetDir");
+  }
+
+  const resolved = path.resolve(srcDir, normalized);
+  const relative = path.relative(srcDir, resolved);
+  if (relative.startsWith("..") || path.isAbsolute(relative)) {
+    throw new Error(`Path escapes docs root: ${sitePath}`);
+  }
+
+  return {
+    normalized,
+    resolved,
+  };
+}
+
+function moveTicketFile(srcDir, {targetDir, url}, archived) {
+  if (!url || typeof url !== "string") {
+    throw new Error("Missing url");
+  }
+
+  if (!targetDir || typeof targetDir !== "string") {
+    throw new Error("Missing targetDir");
+  }
+
+  const sourceMdPath = url.replace(/\.html$/i, ".md");
+  const {resolved: sourcePath} = resolveSiteFilePath(srcDir, sourceMdPath);
+  if (!fs.existsSync(sourcePath)) {
+    throw new Error(`File not found: ${sourceMdPath}`);
+  }
+
+  const {
+    normalized: targetRelative,
+    resolved: targetDirPath,
+  } = resolveSiteDirPath(srcDir, targetDir);
+  const targetPath = path.join(targetDirPath, path.basename(sourcePath));
+
+  if (fs.existsSync(targetPath)) {
+    throw new Error(`Target already exists: ${targetRelative}/${path.basename(sourcePath)}`);
+  }
+
+  const raw = fs.readFileSync(sourcePath, "utf8");
+  const parsed = matter(raw);
+
+  if (archived) {
+    parsed.data.archivedAt = new Date().toISOString();
+  }
+  else {
+    delete parsed.data.archivedAt;
+  }
+
+  fs.mkdirSync(targetDirPath, {recursive: true});
+  fs.writeFileSync(targetPath, matter.stringify(parsed.content, parsed.data));
+  fs.unlinkSync(sourcePath);
+
+  const [ticket] = scanTickets(targetDirPath, targetRelative)
+  .filter((entry) => entry.url === `/${targetRelative}/${path.basename(sourcePath, ".md")}.html`);
+
+  if (!ticket) {
+    throw new Error("Moved ticket could not be reloaded");
+  }
+
+  return ticket;
+}
+
+export function archiveTicketFile(srcDir, {targetDir, url}) {
+  return moveTicketFile(srcDir, {targetDir, url}, true);
+}
+
+export function restoreTicketFile(srcDir, {targetDir, url}) {
+  return moveTicketFile(srcDir, {targetDir, url}, false);
+}
+
 export function createTicketFile(
   ticketsDir,
   {
@@ -346,18 +446,33 @@ function findBoardConfig(srcDir, dirRelative) {
   return {};
 }
 
+function listDependencyTicketDirs(boardConfig, dirRelative) {
+  const dirs = [dirRelative];
+  const relatedDir = `${boardConfig.archiveTicketsDir || boardConfig.restoreTicketsDir || ""}`
+  .trim();
+
+  if (relatedDir && !dirs.includes(relatedDir)) {
+    dirs.push(relatedDir);
+  }
+
+  return dirs;
+}
+
 function createSuggestionCatalog(srcDir, dirRelative, prefix = "") {
   const ticketsDir = path.resolve(srcDir, dirRelative);
   const boardConfig = findBoardConfig(srcDir, dirRelative);
   const ticketPrefix = prefix || boardConfig.ticketPrefix || "";
   const repoRoot = path.resolve(srcDir, "..");
   const ticketRepoPath = path.relative(repoRoot, ticketsDir);
+  const dependencyTickets = listDependencyTicketDirs(boardConfig, dirRelative)
+  .flatMap((entryDir) => scanTickets(path.resolve(srcDir, entryDir), entryDir));
 
   return buildTicketSuggestionCatalog({
     affectedFilePaths: findAffectedFileSuggestionPaths(repoRoot, ticketRepoPath),
     boardSuggestions: normalizeBoardSuggestionConfig(
       boardConfig.ticketFieldSuggestions
     ),
+    dependencyTickets,
     documentationPaths: findDocumentationSuggestionPaths(srcDir, dirRelative),
     prefix: ticketPrefix,
     tickets: scanTickets(ticketsDir, dirRelative),
@@ -567,6 +682,56 @@ export function markdownWriterPlugin() {
             fs.writeFileSync(filePath, output);
             res.statusCode = 200;
             res.end("ok");
+          } catch (cause) {
+            res.statusCode = 500;
+            res.end(String(cause));
+          }
+        });
+      });
+
+      server.middlewares.use("/__vitepress_pm_archive", (req, res) => {
+        if (req.method !== "POST") {
+          res.statusCode = 405;
+          res.end("Method not allowed");
+          return;
+        }
+
+        let body = "";
+        req.on("data", (chunk) => {
+          body += chunk;
+        });
+        req.on("end", () => {
+          try {
+            const {targetDir, url} = JSON.parse(body);
+            const ticket = archiveTicketFile(srcDir, {targetDir, url});
+
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify(ticket));
+          } catch (cause) {
+            res.statusCode = 500;
+            res.end(String(cause));
+          }
+        });
+      });
+
+      server.middlewares.use("/__vitepress_pm_restore", (req, res) => {
+        if (req.method !== "POST") {
+          res.statusCode = 405;
+          res.end("Method not allowed");
+          return;
+        }
+
+        let body = "";
+        req.on("data", (chunk) => {
+          body += chunk;
+        });
+        req.on("end", () => {
+          try {
+            const {targetDir, url} = JSON.parse(body);
+            const ticket = restoreTicketFile(srcDir, {targetDir, url});
+
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify(ticket));
           } catch (cause) {
             res.statusCode = 500;
             res.end(String(cause));

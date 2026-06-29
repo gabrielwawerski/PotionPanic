@@ -163,3 +163,38 @@ test("buildTicketSuggestionCatalog merges observed and seeded suggestions", () =
     },
   ]);
 });
+
+test("buildTicketSuggestionCatalog includes dependency urls and archive state when available",
+  () => {
+    const catalog = buildTicketSuggestionCatalog({
+      dependencyTickets: [
+        {
+          id: 2,
+          title: "Active ticket",
+          url: "/tickets/PP-2.html",
+        },
+        {
+          id: 9,
+          title: "Archived ticket",
+          url: "/archive/tickets/PP-9.html",
+          archivedAt: "2026-06-29T12:00:00.000Z",
+        },
+      ],
+      prefix: "PP",
+      tickets: [],
+    });
+
+    assert.deepEqual(catalog.dependencies, [
+      {
+        label: "PP-2 - Active ticket",
+        url: "/tickets/PP-2.html",
+        value: "PP-2",
+      },
+      {
+        archived: true,
+        label: "PP-9 - Archived ticket",
+        url: "/archive/tickets/PP-9.html",
+        value: "PP-9",
+      },
+    ]);
+  });

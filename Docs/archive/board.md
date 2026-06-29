@@ -1,8 +1,10 @@
 ---
 layout: page
+title: Archive Board
 board: true
-archiveTicketsDir: archive/tickets
-ticketsDir: tickets
+boardMode: archive
+ticketsDir: archive/tickets
+restoreTicketsDir: tickets
 ticketPrefix: PP
 defaultColumn: backlog
 ticketSections:

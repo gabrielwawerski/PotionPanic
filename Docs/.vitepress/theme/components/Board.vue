@@ -23,19 +23,31 @@ import TicketDetail from "./TicketDetail.vue";
 import TicketFixModal from "./TicketFixModal.vue";
 
 const { frontmatter } = useData()
-const { writeTicket } = useTicketWriter()
+const { archiveTicket, restoreTicket, writeTicket } = useTicketWriter()
 
 const columns = computed<Column[]>(() => frontmatter.value.columns || [])
+const boardMode = computed(() => frontmatter.value.boardMode || "active")
 const defaultColumn = computed(() => (
   frontmatter.value.defaultColumn || (columns.value.length > 0 ? columns.value[0].key : 'backlog')
 ))
 const demo = computed(() => !!frontmatter.value.demo)
+const archiveTicketsDir = computed(() => (
+  frontmatter.value.archiveTicketsDir || "archive/tickets"
+))
+const canEditBoard = computed(() => import.meta.env.DEV && boardMode.value === "active")
+const canRestoreTickets = computed(() => (
+  import.meta.env.DEV && boardMode.value === "archive"
+))
 const ticketPrefix = computed(() => frontmatter.value.ticketPrefix || '')
+const restoreTicketsDir = computed(() => (
+  frontmatter.value.restoreTicketsDir || "tickets"
+))
 const ticketsDir = computed(() => frontmatter.value.ticketsDir || 'tickets')
 const ticketSections = computed<string[]>(() => (
     normalizeTicketSections(frontmatter.value.ticketSections || [])
 ));
 const readOnly = computed(() => !import.meta.env.DEV)
+const ticketReadOnly = computed(() => !import.meta.env.DEV || boardMode.value === "archive")
 
 const draftTicket = ref<Ticket | null>(null)
 const filter = ref('')
@@ -86,7 +98,7 @@ function columnTickets(key: string) {
 }
 
 function fetchValidation() {
-  if (readOnly.value) {
+  if (!canEditBoard.value) {
     return
   }
 
@@ -177,7 +189,7 @@ function onFixed() {
 }
 
 function openNewTicket() {
-  if (readOnly.value) {
+  if (!canEditBoard.value) {
     return
   }
 
@@ -198,7 +210,7 @@ function openNewTicket() {
 }
 
 async function confirmCreate(draft: Ticket) {
-  if (readOnly.value) {
+  if (!canEditBoard.value) {
     return
   }
 
@@ -236,7 +248,7 @@ async function confirmCreate(draft: Ticket) {
 }
 
 function updateTicket(id: number, patch: Partial<Ticket>) {
-  if (readOnly.value) {
+  if (!canEditBoard.value) {
     return
   }
 
@@ -254,6 +266,58 @@ function updateTicket(id: number, patch: Partial<Ticket>) {
     if (Object.keys(fields).length > 0) {
       writeTicket(ticket.url, fields)
     }
+  }
+}
+
+async function archiveSelectedTicket() {
+  if (!canEditBoard.value || !selectedTicket.value?.url) {
+    return
+  }
+
+  const confirmed = window.confirm(
+    `Archive ${formatId(selectedTicket.value.id)}? You can restore it later from the archive board.`
+  )
+  if (!confirmed) {
+    return
+  }
+
+  try {
+    const archived = await archiveTicket(
+      selectedTicket.value.url,
+      archiveTicketsDir.value
+    )
+    if (archived) {
+      selectedId.value = null
+      loadTickets()
+    }
+  } catch (cause) {
+    console.error("Failed to archive ticket:", cause)
+  }
+}
+
+async function restoreSelectedTicket() {
+  if (!canRestoreTickets.value || !selectedTicket.value?.url) {
+    return
+  }
+
+  const confirmed = window.confirm(
+    `Restore ${formatId(selectedTicket.value.id)} to the active board?`
+  )
+  if (!confirmed) {
+    return
+  }
+
+  try {
+    const restored = await restoreTicket(
+      selectedTicket.value.url,
+      restoreTicketsDir.value
+    )
+    if (restored) {
+      selectedId.value = null
+      loadTickets()
+    }
+  } catch (cause) {
+    console.error("Failed to restore ticket:", cause)
   }
 }
 
@@ -292,7 +356,7 @@ if (typeof window !== 'undefined') {
       >
       <TagFilterDropdown v-model="selectedTags" :tags="allTags" />
       <button
-        v-if="!readOnly && ticketIssues.length > 0"
+        v-if="canEditBoard && ticketIssues.length > 0"
         style="font-size: 12px; padding: 4px 12px; background: rgba(237, 137, 54, 0.12); border: 1px solid rgba(237, 137, 54, 0.4); border-radius: 5px; color: #ed8936; cursor: pointer; font-weight: 600; line-height: 1.2; height: 28px; box-sizing: border-box"
         @click="showFixModal = true"
       >&#9888; Fix {{ ticketIssues.length }} issue{{
@@ -300,7 +364,7 @@ if (typeof window !== 'undefined') {
         }}
       </button>
       <button
-        v-if="!readOnly"
+        v-if="canEditBoard"
         title="New ticket"
         style="font-size: 13px; padding: 4px 12px; background: #2d3748; border: 1px solid #4a5568; border-radius: 5px; color: #e2e8f0; cursor: pointer; font-weight: 600; line-height: 1.2; height: 28px; box-sizing: border-box"
         @click="openNewTicket"
@@ -313,7 +377,7 @@ if (typeof window !== 'undefined') {
         :key="column.key"
         :column="column"
         :is-over="dragOverColumn === column.key"
-        :read-only="readOnly"
+        :read-only="ticketReadOnly"
         :selected-id="selectedId"
         :ticket-prefix="ticketPrefix"
         :tickets="columnTickets(column.key)"
@@ -329,7 +393,7 @@ if (typeof window !== 'undefined') {
     <TicketDetail
       v-if="draftTicket"
       :columns="columns"
-      :read-only="readOnly"
+      :read-only="ticketReadOnly"
       :suggestions="suggestionCatalog"
       :ticket="draftTicket"
         :ticket-sections="ticketSections"
@@ -342,13 +406,17 @@ if (typeof window !== 'undefined') {
 
     <TicketDetail
       v-else-if="selectedTicket"
+      :archive-enabled="canEditBoard"
       :columns="columns"
-      :read-only="readOnly"
+      :read-only="ticketReadOnly"
+      :restore-enabled="canRestoreTickets"
       :suggestions="suggestionCatalog"
       :ticket="selectedTicket"
         :ticket-sections="ticketSections"
       :ticket-prefix="ticketPrefix"
+      @archive="archiveSelectedTicket"
       @close="selectedId = null"
+      @restore="restoreSelectedTicket"
       @update="updateTicket"
     />
 

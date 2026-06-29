@@ -23,6 +23,29 @@ export function buildTicketHref(reference, ticketsDir = "tickets") {
   return `/${normalized}.html`;
 }
 
+export function resolveTicketHref(
+  reference,
+  {
+    ticketHrefs = {},
+    ticketsDir = "tickets",
+  } = {}
+) {
+  const normalized = normalizePath(reference)
+  .replace(/^\//, "")
+  .replace(/\.md$/i, "")
+  .replace(/\.html$/i, "");
+
+  if (!normalized) {
+    return null;
+  }
+
+  if (ticketHrefs[normalized]) {
+    return ticketHrefs[normalized];
+  }
+
+  return buildTicketHref(normalized, ticketsDir);
+}
+
 export function buildDocumentationHref(reference) {
   let normalized = normalizePath(reference);
   if (!normalized) {

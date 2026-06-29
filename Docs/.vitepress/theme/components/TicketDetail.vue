@@ -10,7 +10,10 @@ import {
   parseTicketSections,
   serializeTicketSections
 } from "../../lib/ticket-sections.mjs";
-import {buildDocumentationHref, buildTicketHref} from "../../lib/ticket-links.mjs";
+import {
+  buildDocumentationHref,
+  resolveTicketHref
+} from "../../lib/ticket-links.mjs";
 
 import type {
   Column,
@@ -27,20 +30,26 @@ import TagEditor from "./TagEditor.vue";
 import TokenSuggestionInput from "./TokenSuggestionInput.vue";
 
 const props = withDefaults(defineProps<{
+  archiveEnabled?: boolean
   columns: Column[]
   createMode?: boolean
   readOnly: boolean
+  restoreEnabled?: boolean
   suggestions: TicketSuggestionCatalog
   ticket: Ticket
   ticketPrefix: string
   ticketSections: string[]
 }>(), {
+  archiveEnabled: false,
   createMode: false,
+  restoreEnabled: false,
 })
 
 const emit = defineEmits<{
+  archive: []
   close: []
   create: []
+  restore: []
   update: [id: number, patch: Partial<Ticket>]
 }>()
 
@@ -98,6 +107,14 @@ const documentationSuggestionOptions = computed<SuggestionOption[]>(() => (
     label: entry,
     value: entry,
   }))
+))
+const ticketHrefLookup = computed<Record<string, string>>(() => (
+  props.suggestions.dependencies.reduce<Record<string, string>>((lookup, option) => {
+    if (option.url) {
+      lookup[option.value] = option.url;
+    }
+    return lookup;
+  }, {})
 ))
 const affectedFileSuggestionOptions = computed<SuggestionOption[]>(() => (
   props.suggestions.affectedFiles.map((entry) => ({
@@ -264,7 +281,9 @@ function updateTicketList(
 }
 
 function dependencyHref(value: string) {
-  return buildTicketHref(value);
+  return resolveTicketHref(value, {
+    ticketHrefs: ticketHrefLookup.value,
+  });
 }
 
 function documentationHref(value: string) {
@@ -408,7 +427,12 @@ onUnmounted(() => {
         >{{ ticket.title }}</h2>
 
         <span
-          v-if="readOnly"
+          v-if="restoreEnabled"
+          style="font-size: 11px; color: #90cdf4; background: rgba(99, 179, 237, 0.12); border: 1px solid rgba(99, 179, 237, 0.35); border-radius: 999px; padding: 4px 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px"
+        >Archived</span>
+
+        <span
+          v-else-if="readOnly"
           style="font-size: 11px; color: #ed8936; background: rgba(237, 137, 54, 0.12); border: 1px solid rgba(237, 137, 54, 0.4); border-radius: 999px; padding: 4px 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px"
         >Read only</span>
 
@@ -506,7 +530,9 @@ onUnmounted(() => {
             v-if="readOnly"
             style="font-size: 12px; color: #a0aec0; line-height: 1.5; margin-top: 0; margin-bottom: 20px"
           >
-            Open this board through the local docs server to make persistent changes from the webpage.
+            {{ restoreEnabled
+              ? "Archived tickets are read-only. Use Restore to move this ticket back to the active board."
+              : "Open this board through the local docs server to make persistent changes from the webpage." }}
           </p>
 
           <div style="margin-bottom: 20px">
@@ -686,6 +712,23 @@ onUnmounted(() => {
           <div v-if="!createMode && filePath" style="margin-bottom: 20px">
             <label style="display: block; font-size: 11px; color: #718096; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 6px">File</label>
             <span style="font-size: 12px; color: #4a5568; font-family: monospace; word-break: break-all">{{ filePath }}</span>
+          </div>
+
+          <div
+            v-if="!createMode && (archiveEnabled || restoreEnabled)"
+            style="padding-top: 20px; margin-bottom: 20px; border-top: 1px solid #2d3748"
+          >
+            <label style="display: block; font-size: 11px; color: #718096; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 8px">Actions</label>
+            <button
+              v-if="archiveEnabled"
+              style="font-size: 12px; color: #feb2b2; background: rgba(245, 101, 101, 0.09); border: 1px solid rgba(245, 101, 101, 0.27); border-radius: 6px; padding: 6px 14px; cursor: pointer; width: 100%; font-weight: 600"
+              @click="emit('archive')"
+            >Archive ticket</button>
+            <button
+              v-else-if="restoreEnabled"
+              style="font-size: 12px; color: #90cdf4; background: rgba(99, 179, 237, 0.09); border: 1px solid rgba(99, 179, 237, 0.27); border-radius: 6px; padding: 6px 14px; cursor: pointer; width: 100%; font-weight: 600"
+              @click="emit('restore')"
+            >Restore ticket</button>
           </div>
 
           <div v-if="createMode" style="padding-top: 20px; border-top: 1px solid #2d3748">

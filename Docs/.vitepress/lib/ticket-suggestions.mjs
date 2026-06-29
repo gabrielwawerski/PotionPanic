@@ -194,6 +194,7 @@ export function buildTicketSuggestionCatalog(
   {
     affectedFilePaths = [],
     boardSuggestions = {},
+    dependencyTickets = [],
     documentationPaths = [],
     prefix = "",
     tickets = [],
@@ -232,17 +233,27 @@ export function buildTicketSuggestionCatalog(
 
   const dependencyMap = new Map();
 
-  for (const ticket of tickets) {
+  for (const ticket of dependencyTickets.length > 0 ? dependencyTickets : tickets) {
     if (!ticket || !(Number(ticket.id) > 0)) {
       continue;
     }
 
     const value = toTicketReference(Number(ticket.id), prefix);
     const title = normalizeEntry(ticket.title);
-    dependencyMap.set(value, {
+    const dependency = {
       label: title ? `${value} - ${title}` : value,
       value,
-    });
+    };
+
+    if (ticket.url) {
+      dependency.url = ticket.url;
+    }
+
+    if (ticket.archivedAt) {
+      dependency.archived = true;
+    }
+
+    dependencyMap.set(value, dependency);
   }
 
   for (const seededDependency of normalizedBoardSuggestions.dependencies) {

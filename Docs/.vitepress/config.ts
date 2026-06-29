@@ -87,6 +87,7 @@ export default defineConfig({
             includeDirs: ["archive", "milestones"],
             items: [
               {text: "Milestones", link: "/milestones/"},
+              {text: "Archive Board", link: "/archive/board"},
               {text: "Archive", link: "/archive/"},
             ],
           },

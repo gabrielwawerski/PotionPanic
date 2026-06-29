@@ -1,6 +1,7 @@
 export interface Ticket {
   affectedFiles: string[];
   assignee: string;
+  archivedAt?: string;
   dependencies: string[];
   documentation: string[];
   id: number;
@@ -14,7 +15,9 @@ export interface Ticket {
 }
 
 export interface SuggestionOption {
+  archived?: boolean;
   label: string;
+  url?: string;
   value: string;
 }
 
