@@ -43,6 +43,10 @@ export function useTicketWriter() {
     await postJson("/__vitepress_pm_update", {url, updates});
   }
 
+  async function writeTickets(updates: Array<{url: string; updates: Record<string, unknown>}>) {
+    await postJson("/__vitepress_pm_update_batch", {updates});
+  }
+
   async function archiveTicket(url: string, targetDir: string) {
     return await postJson("/__vitepress_pm_archive", {targetDir, url});
   }
@@ -51,5 +55,12 @@ export function useTicketWriter() {
     return await postJson("/__vitepress_pm_restore", {targetDir, url});
   }
 
-  return {archiveTicket, error, restoreTicket, saving, writeTicket};
+  return {
+    archiveTicket,
+    error,
+    restoreTicket,
+    saving,
+    writeTicket,
+    writeTickets,
+  };
 }

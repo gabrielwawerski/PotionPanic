@@ -4,6 +4,7 @@ import type { Column, Ticket } from '../types'
 import BoardCard from './BoardCard.vue'
 
 const props = defineProps<{
+  activeDropIndex: number | null
   column: Column
   isOver: boolean
   readOnly: boolean
@@ -15,21 +16,25 @@ const props = defineProps<{
 const emit = defineEmits<{
   dragend: [event: DragEvent]
   dragleave: []
-  dragover: [event: DragEvent]
+  dragover: [event: DragEvent, index: number]
   dragstart: [event: DragEvent, id: number]
-  drop: [event: DragEvent]
+  drop: [event: DragEvent, index: number]
   select: [id: number]
 }>()
 
-function emitIfWritable(type: 'dragover' | 'drop' | 'dragleave', event?: DragEvent) {
+function emitIfWritable(
+  type: 'dragover' | 'drop' | 'dragleave',
+  event?: DragEvent,
+  index?: number
+) {
   if (props.readOnly) {
     return
   }
 
-  if (type === 'dragover' && event) {
-    emit('dragover', event)
-  } else if (type === 'drop' && event) {
-    emit('drop', event)
+  if (type === 'dragover' && event && typeof index === 'number') {
+    emit('dragover', event, index)
+  } else if (type === 'drop' && event && typeof index === 'number') {
+    emit('drop', event, index)
   } else {
     emit('dragleave')
   }
@@ -50,9 +55,7 @@ function emitIfWritable(type: 'dragover' | 'drop' | 'dragleave', event?: DragEve
       border: isOver ? `2px dashed ${column.color}55` : '2px solid transparent',
       transition: 'all 0.15s',
     }"
-    @dragover.prevent="emitIfWritable('dragover', $event)"
     @dragleave="emitIfWritable('dragleave')"
-    @drop.prevent="emitIfWritable('drop', $event)"
   >
     <div
       :style="{
@@ -86,22 +89,68 @@ function emitIfWritable(type: 'dragover' | 'drop' | 'dragleave', event?: DragEve
     </div>
 
     <div class="board-column-cards" style="flex: 1; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; padding-bottom: 12px">
-      <BoardCard
-        v-for="ticket in tickets"
-        :key="ticket.id"
-        :color="column.color"
-        :read-only="readOnly"
-        :selected="selectedId === ticket.id"
-        :ticket="ticket"
-        :ticket-prefix="ticketPrefix"
-        @dragend="$emit('dragend', $event)"
-        @dragstart="$emit('dragstart', $event, ticket.id)"
-        @select="$emit('select', ticket.id)"
-      />
       <div
         v-if="tickets.length === 0"
-        style="padding: 24px; text-align: center; color: rgba(45, 55, 72, 0.4); font-size: 12px; border: 1px dashed #2d3748; border-radius: 8px"
+        :style="{
+          minHeight: '52px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+          color: 'rgba(45, 55, 72, 0.72)',
+          fontSize: '12px',
+          border: activeDropIndex === 0
+            ? `1px dashed ${column.color}`
+            : '1px dashed #2d3748',
+          borderRadius: '8px',
+          background: activeDropIndex === 0 ? `${column.color}18` : 'transparent',
+          transition: 'all 0.15s',
+        }"
+        @dragover.prevent="emitIfWritable('dragover', $event, 0)"
+        @dragleave="emitIfWritable('dragleave')"
+        @drop.prevent="emitIfWritable('drop', $event, 0)"
       >{{ readOnly ? 'No tickets' : 'Drop here' }}</div>
+      <div
+        v-for="(ticket, index) in tickets"
+        :key="`${ticket.id}-slot`"
+        style="display: contents"
+      >
+        <div
+          :style="{
+            height: activeDropIndex === index ? '16px' : '6px',
+            marginBottom: '2px',
+            borderRadius: '999px',
+            background: activeDropIndex === index ? `${column.color}55` : 'transparent',
+            transition: 'all 0.15s',
+          }"
+          @dragover.prevent="emitIfWritable('dragover', $event, index)"
+          @dragleave="emitIfWritable('dragleave')"
+          @drop.prevent="emitIfWritable('drop', $event, index)"
+        />
+        <BoardCard
+          :color="column.color"
+          :read-only="readOnly"
+          :selected="selectedId === ticket.id"
+          :ticket="ticket"
+          :ticket-prefix="ticketPrefix"
+          @dragend="$emit('dragend', $event)"
+          @dragstart="$emit('dragstart', $event, ticket.id)"
+          @select="$emit('select', ticket.id)"
+        />
+      </div>
+      <div
+        v-if="tickets.length > 0"
+        :style="{
+          height: activeDropIndex === tickets.length ? '16px' : '6px',
+          marginTop: '2px',
+          borderRadius: '999px',
+          background: activeDropIndex === tickets.length ? `${column.color}55` : 'transparent',
+          transition: 'all 0.15s',
+        }"
+        @dragover.prevent="emitIfWritable('dragover', $event, tickets.length)"
+        @dragleave="emitIfWritable('dragleave')"
+        @drop.prevent="emitIfWritable('drop', $event, tickets.length)"
+      />
     </div>
   </div>
 </template>

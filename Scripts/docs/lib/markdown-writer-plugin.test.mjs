@@ -72,6 +72,7 @@ test("scanTickets returns assignee metadata from frontmatter", () => {
       "priority: high",
       "assignee: Aga",
       "milestone: m-0",
+      "order: 3",
       "dependencies:",
       "  - PP-2",
       "  - PP-4",
@@ -93,11 +94,68 @@ test("scanTickets returns assignee metadata from frontmatter", () => {
 
   assert.equal(ticket.assignee, "Aga");
   assert.equal(ticket.milestone, "m-0");
+  assert.equal(ticket.order, 3);
   assert.deepEqual(ticket.dependencies, ["PP-2", "PP-4"]);
   assert.deepEqual(ticket.documentation, ["README.md"]);
   assert.deepEqual(ticket.affectedFiles, ["Assets/Scenes/Laboratory.unity"]);
   assert.equal(ticket.title, "Owned ticket");
 });
+
+test("createTicketFile appends the next order within the starting status column",
+  () => {
+    const tempRoot = fs.mkdtempSync(
+      path.join(os.tmpdir(), "pp-ticket-create-order-"));
+
+    writeTicket(
+      tempRoot,
+      "PP-2.md",
+      [
+        "---",
+        "id: 2",
+        "title: Existing review ticket",
+        "status: review",
+        "priority: medium",
+        "order: 4",
+        "tags: []",
+        "---",
+        "",
+        "## Description",
+        "",
+        "Existing review work.",
+      ].join("\n")
+    );
+
+    writeTicket(
+      tempRoot,
+      "PP-4.md",
+      [
+        "---",
+        "id: 4",
+        "title: Existing backlog ticket",
+        "status: backlog",
+        "priority: medium",
+        "order: 7",
+        "tags: []",
+        "---",
+        "",
+        "## Description",
+        "",
+        "Existing backlog work.",
+      ].join("\n")
+    );
+
+    const created = createTicketFile(tempRoot, {
+      prefix: "PP",
+      priority: "high",
+      status: "review",
+      title: "Ordered ticket",
+    });
+
+    assert.equal(created.order, 5);
+
+    const saved = fs.readFileSync(path.join(tempRoot, "PP-5.md"), "utf8");
+    assert.match(saved, /^order: 5$/m);
+  });
 
 test(
   "validateTickets reports both identity issues and missing required sections",

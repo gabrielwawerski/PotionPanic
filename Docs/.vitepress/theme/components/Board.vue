@@ -6,6 +6,10 @@ import {
   buildTicketTemplate,
   normalizeTicketSections
 } from "../../lib/ticket-sections.mjs";
+import {
+  compareTicketsByOrder,
+  reorderTickets,
+} from "../../lib/board-ordering.mjs";
 import {READ_ONLY_BOARD_NOTICE} from "../../lib/board-notice.mjs";
 
 import type {
@@ -23,7 +27,7 @@ import TicketDetail from "./TicketDetail.vue";
 import TicketFixModal from "./TicketFixModal.vue";
 
 const { frontmatter } = useData()
-const { archiveTicket, restoreTicket, writeTicket } = useTicketWriter()
+const { archiveTicket, restoreTicket, writeTicket, writeTickets } = useTicketWriter()
 
 const columns = computed<Column[]>(() => frontmatter.value.columns || [])
 const boardMode = computed(() => frontmatter.value.boardMode || "active")
@@ -48,6 +52,12 @@ const ticketSections = computed<string[]>(() => (
 ));
 const readOnly = computed(() => !import.meta.env.DEV)
 const ticketReadOnly = computed(() => !import.meta.env.DEV || boardMode.value === "archive")
+const hasActiveFilters = computed(() => (
+  filter.value.trim().length > 0 || selectedTags.value.length > 0
+))
+const reorderReadOnly = computed(() => (
+  ticketReadOnly.value || hasActiveFilters.value
+))
 
 const draftTicket = ref<Ticket | null>(null)
 const filter = ref('')
@@ -86,7 +96,7 @@ const filteredTickets = computed(() => {
     result = result.filter((ticket) => ticket.tags.some((tag) => selected.has(tag)))
   }
 
-  return [...result].sort((left, right) => left.id - right.id)
+  return [...result].sort(compareTicketsByOrder)
 })
 
 const selectedTicket = computed(() => (
@@ -94,7 +104,9 @@ const selectedTicket = computed(() => (
 ))
 
 function columnTickets(key: string) {
-  return filteredTickets.value.filter((ticket) => ticket.status === key)
+  return filteredTickets.value
+  .filter((ticket) => ticket.status === key)
+  .sort(compareTicketsByOrder)
 }
 
 function fetchValidation() {
@@ -269,6 +281,31 @@ function updateTicket(id: number, patch: Partial<Ticket>) {
   }
 }
 
+async function persistReorder(updates: Array<{
+  order: number
+  status: string
+  url: string
+}>) {
+  if (demo.value || updates.length === 0) {
+    return
+  }
+
+  const reorderUpdates = updates.map((entry) => ({
+    url: entry.url,
+    updates: {
+      order: entry.order,
+      status: entry.status,
+    },
+  }))
+
+  try {
+    await writeTickets(reorderUpdates)
+  } catch (cause) {
+    console.error("Failed to persist ticket order:", cause)
+    loadTickets()
+  }
+}
+
 async function archiveSelectedTicket() {
   if (!canEditBoard.value || !selectedTicket.value?.url) {
     return
@@ -323,13 +360,32 @@ async function restoreSelectedTicket() {
 
 const {
   dragOverColumn,
+  dragOverIndex,
   handleDragEnd,
   handleDragLeave,
   handleDragOver,
   handleDragStart,
   handleDrop,
-} = useDragDrop((ticketId, targetColumn) => {
-  updateTicket(Number(ticketId), { status: targetColumn })
+} = useDragDrop((ticketId, targetColumn, targetIndex) => {
+  if (!canEditBoard.value || hasActiveFilters.value) {
+    return
+  }
+
+  const {reorderedTickets, updates} = reorderTickets({
+    targetColumn,
+    targetIndex,
+    ticketId: Number(ticketId),
+    tickets: tickets.value,
+  })
+
+  tickets.value = reorderedTickets
+  void persistReorder(
+    updates.filter((entry) => !!entry.url) as Array<{
+      order: number
+      status: string
+      url: string
+    }>
+  )
 })
 
 if (typeof window !== 'undefined') {
@@ -375,17 +431,18 @@ if (typeof window !== 'undefined') {
       <BoardColumn
         v-for="column in columns"
         :key="column.key"
+        :active-drop-index="dragOverColumn === column.key ? dragOverIndex : null"
         :column="column"
         :is-over="dragOverColumn === column.key"
-        :read-only="ticketReadOnly"
+        :read-only="reorderReadOnly"
         :selected-id="selectedId"
         :ticket-prefix="ticketPrefix"
         :tickets="columnTickets(column.key)"
         @dragend="handleDragEnd"
         @dragleave="handleDragLeave"
-        @dragover="(event: DragEvent) => handleDragOver(event, column.key)"
+        @dragover="(event: DragEvent, index: number) => handleDragOver(event, column.key, index)"
         @dragstart="(event: DragEvent, id: number) => handleDragStart(event, String(id))"
-        @drop="(event: DragEvent) => handleDrop(event, column.key)"
+        @drop="(event: DragEvent, index: number) => handleDrop(event, column.key, index)"
         @select="(id: number) => selectedId = selectedId === id ? null : id"
       />
     </div>

@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import matter from "gray-matter";
+import {compareTicketsByOrder} from "./board-ordering.mjs";
 
 import {
   buildTicketTemplate,
@@ -35,6 +36,7 @@ export function scanTickets(ticketsDir, dirRelative) {
     const raw = fs.readFileSync(path.join(ticketsDir, file), "utf8");
     const parsed = matter(raw);
     const metadata = normalizeTicketMetadata(parsed.data);
+    const order = Number(parsed.data.order);
 
     return {
       affectedFiles: metadata.affectedFiles,
@@ -44,6 +46,7 @@ export function scanTickets(ticketsDir, dirRelative) {
       documentation: metadata.documentation,
       id: Number(parsed.data.id) || 0,
       milestone: metadata.milestone,
+      order: Number.isFinite(order) ? order : undefined,
       title: parsed.data.title || path.basename(file, ".md"),
       status: parsed.data.status || "backlog",
       priority: parsed.data.priority || "medium",
@@ -51,7 +54,7 @@ export function scanTickets(ticketsDir, dirRelative) {
       body: parsed.content.trim(),
       url: `/${dirRelative}/${path.basename(file, ".md")}.html`,
     };
-  });
+  }).sort(compareTicketsByOrder);
 }
 
 function listTicketEntries(ticketsDir) {
@@ -361,9 +364,16 @@ export function createTicketFile(
   }
 
   const id = getMaxTicketId(ticketsDir) + 1;
+  const nextOrder = scanTickets(ticketsDir, dirRelative)
+  .filter((ticket) => ticket.status === status)
+  .reduce((maxOrder, ticket) => (
+    typeof ticket.order === "number" && ticket.order > maxOrder
+      ? ticket.order
+      : maxOrder
+  ), 0) + 1;
   const slug = prefix ? `${prefix}-${id}` : String(id);
   const contentBody = `${body ?? ""}`.trim() || buildTicketTemplate(sections);
-  const frontmatter = { id, title, status, priority };
+  const frontmatter = { id, title, status, priority, order: nextOrder };
   const normalizedAssignee = `${assignee ?? ""}`.trim();
   const metadata = normalizeTicketMetadata({
     affectedFiles,
@@ -402,6 +412,7 @@ export function createTicketFile(
     documentation: metadata.documentation,
     id,
     milestone: metadata.milestone,
+    order: nextOrder,
     title,
     status,
     priority,
@@ -409,6 +420,90 @@ export function createTicketFile(
     body: contentBody,
     url: `/${dirRelative}/${slug}.html`,
   };
+}
+
+function applyTicketUpdates(parsed, updates = {}) {
+  for (const [key, value] of Object.entries(updates || {})) {
+    if (key === "body") {
+      parsed.content = `\n${String(value)}\n`;
+    }
+    else if (key === "assignee") {
+      const normalizedAssignee = `${value ?? ""}`.trim();
+      if (normalizedAssignee) {
+        parsed.data.assignee = normalizedAssignee;
+      }
+      else {
+        delete parsed.data.assignee;
+      }
+    }
+    else if (key === "milestone") {
+      const normalizedMilestone = `${value ?? ""}`.trim();
+      if (normalizedMilestone) {
+        parsed.data.milestone = normalizedMilestone;
+      }
+      else {
+        delete parsed.data.milestone;
+      }
+    }
+    else if (key === "order") {
+      const normalizedOrder = Number(value);
+      if (Number.isFinite(normalizedOrder)) {
+        parsed.data.order = normalizedOrder;
+      }
+      else {
+        delete parsed.data.order;
+      }
+    }
+    else if (
+      key === "dependencies"
+      || key === "documentation"
+      || key === "affectedFiles"
+    ) {
+      const normalizedList = normalizeTicketList(value);
+      if (normalizedList.length > 0) {
+        parsed.data[key] = normalizedList;
+      }
+      else {
+        delete parsed.data[key];
+      }
+    }
+    else {
+      parsed.data[key] = value;
+    }
+  }
+}
+
+function writeParsedTicket(filePath, parsed) {
+  const output = matter.stringify(parsed.content, parsed.data);
+  fs.writeFileSync(filePath, output);
+}
+
+export function updateTicketFile(srcDir, {url, updates}) {
+  if (!url || typeof url !== "string") {
+    throw new Error("Missing url");
+  }
+
+  const mdPath = url.replace(/\.html$/i, ".md");
+  const {resolved: filePath, normalized} = resolveSiteFilePath(srcDir, mdPath);
+
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`File not found: ${normalized}`);
+  }
+
+  const raw = fs.readFileSync(filePath, "utf8");
+  const parsed = matter(raw);
+  applyTicketUpdates(parsed, updates);
+  writeParsedTicket(filePath, parsed);
+}
+
+export function updateTicketFiles(srcDir, updates = []) {
+  if (!Array.isArray(updates)) {
+    throw new Error("Missing updates");
+  }
+
+  for (const entry of updates) {
+    updateTicketFile(srcDir, entry);
+  }
 }
 
 function findMarkdownFiles(dir) {
@@ -622,67 +717,31 @@ export function markdownWriterPlugin() {
         req.on("end", () => {
           try {
             const { url, updates } = JSON.parse(body);
+            updateTicketFile(srcDir, {url, updates});
+            res.statusCode = 200;
+            res.end("ok");
+          } catch (cause) {
+            res.statusCode = 500;
+            res.end(String(cause));
+          }
+        });
+      });
 
-            if (!url || typeof url !== "string") {
-              res.statusCode = 400;
-              res.end("Missing url");
-              return;
-            }
+      server.middlewares.use("/__vitepress_pm_update_batch", (req, res) => {
+        if (req.method !== "POST") {
+          res.statusCode = 405;
+          res.end("Method not allowed");
+          return;
+        }
 
-            const mdPath = url.replace(/\.html$/, ".md").replace(/^\//, "");
-            const filePath = path.resolve(srcDir, mdPath);
-
-            if (!fs.existsSync(filePath)) {
-              res.statusCode = 404;
-              res.end(`File not found: ${mdPath}`);
-              return;
-            }
-
-            const raw = fs.readFileSync(filePath, "utf8");
-            const parsed = matter(raw);
-
-            for (const [key, value] of Object.entries(updates || {})) {
-              if (key === "body") {
-                parsed.content = `\n${String(value)}\n`;
-              }
-              else if (key === "assignee") {
-                const normalizedAssignee = `${value ?? ""}`.trim();
-                if (normalizedAssignee) {
-                  parsed.data.assignee = normalizedAssignee;
-                }
-                else {
-                  delete parsed.data.assignee;
-                }
-              }
-              else if (key === "milestone") {
-                const normalizedMilestone = `${value ?? ""}`.trim();
-                if (normalizedMilestone) {
-                  parsed.data.milestone = normalizedMilestone;
-                }
-                else {
-                  delete parsed.data.milestone;
-                }
-              }
-              else if (
-                key === "dependencies"
-                || key === "documentation"
-                || key === "affectedFiles"
-              ) {
-                const normalizedList = normalizeTicketList(value);
-                if (normalizedList.length > 0) {
-                  parsed.data[key] = normalizedList;
-                }
-                else {
-                  delete parsed.data[key];
-                }
-              }
-              else {
-                parsed.data[key] = value;
-              }
-            }
-
-            const output = matter.stringify(parsed.content, parsed.data);
-            fs.writeFileSync(filePath, output);
+        let body = "";
+        req.on("data", (chunk) => {
+          body += chunk;
+        });
+        req.on("end", () => {
+          try {
+            const {updates} = JSON.parse(body);
+            updateTicketFiles(srcDir, updates);
             res.statusCode = 200;
             res.end("ok");
           } catch (cause) {

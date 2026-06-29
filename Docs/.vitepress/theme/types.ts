@@ -6,6 +6,7 @@ export interface Ticket {
   documentation: string[];
   id: number;
   milestone: string;
+  order?: number;
   title: string;
   status: string;
   priority: "critical" | "high" | "medium" | "low";
