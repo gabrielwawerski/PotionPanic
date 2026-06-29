@@ -39,12 +39,12 @@ function Get-EncodedStartupCommand {
   )
 
   $escapedRepoRoot = $RepoRoot.Replace("'", "''")
-  $command = @"
+  $command = @'
 $ErrorActionPreference = 'Stop'
-Set-Location -LiteralPath '$escapedRepoRoot'
-\$npmCommand = (Get-Command npm.cmd -ErrorAction Stop).Source
-& \$npmCommand 'run' 'docs:dev'
-"@.Trim()
+Set-Location -LiteralPath '__REPO_ROOT__'
+$npmCommand = (Get-Command npm.cmd -ErrorAction Stop).Source
+& $npmCommand 'run' 'docs:dev:local'
+'@.Trim().Replace("__REPO_ROOT__", $escapedRepoRoot)
 
   return [Convert]::ToBase64String(
     [Text.Encoding]::Unicode.GetBytes($command)

@@ -9,6 +9,13 @@ import {promisify} from "node:util";
 const execFileAsync = promisify(execFile);
 
 const repoRoot = path.resolve(process.cwd());
+const powershellPath = path.join(
+  process.env.SystemRoot || "C:\\Windows",
+  "System32",
+  "WindowsPowerShell",
+  "v1.0",
+  "powershell.exe"
+);
 const installerScriptPath = path.join(
   repoRoot,
   "Scripts",
@@ -23,7 +30,7 @@ const legacyShortcutNames = [
 ];
 
 async function invokePowerShell(command) {
-  return execFileAsync("powershell.exe", [
+  return execFileAsync(powershellPath, [
     "-NoProfile",
     "-ExecutionPolicy",
     "Bypass",
@@ -67,7 +74,7 @@ test("install-windows-startup script creates a local-only docs shortcut",
     const startupDir = path.join(tempRoot, "Startup");
     fs.mkdirSync(startupDir, {recursive: true});
 
-    await execFileAsync("powershell.exe", [
+    await execFileAsync(powershellPath, [
       "-NoProfile",
       "-ExecutionPolicy",
       "Bypass",
@@ -96,7 +103,7 @@ test("install-windows-startup script is idempotent and uninstall removes shortcu
       fs.writeFileSync(path.join(startupDir, shortcutName), "legacy");
     }
 
-    await execFileAsync("powershell.exe", [
+    await execFileAsync(powershellPath, [
       "-NoProfile",
       "-ExecutionPolicy",
       "Bypass",
@@ -129,7 +136,7 @@ test("install-windows-startup script is idempotent and uninstall removes shortcu
     assert.doesNotMatch(decodedCommand, /cmd\s*\/c\s+start/i);
     assert.doesNotMatch(decodedCommand, /Start-Process/i);
 
-    await execFileAsync("powershell.exe", [
+    await execFileAsync(powershellPath, [
       "-NoProfile",
       "-ExecutionPolicy",
       "Bypass",
@@ -144,7 +151,7 @@ test("install-windows-startup script is idempotent and uninstall removes shortcu
     const startupEntries = fs.readdirSync(startupDir);
     assert.deepEqual(startupEntries, [canonicalShortcutName]);
 
-    await execFileAsync("powershell.exe", [
+    await execFileAsync(powershellPath, [
       "-NoProfile",
       "-ExecutionPolicy",
       "Bypass",
