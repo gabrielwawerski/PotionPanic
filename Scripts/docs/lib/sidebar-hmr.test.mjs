@@ -98,6 +98,7 @@ test("buildSidebarThemeConfig returns the root sidebar mapping", async () => {
           {text: "Milestones", link: "/milestones/"},
           {text: "Archive Board", link: "/archive/board"},
           {text: "Archive", link: "/archive/"},
+          {text: "Archived Plans", link: "/archive/completed/"},
         ],
       },
     ],

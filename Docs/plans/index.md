@@ -7,7 +7,7 @@ is in progress.
 Use one page per implementation slice. Keep milestone intent in
 [`../project/mvp-scope.md`](../project/mvp-scope.md), keep execution tracking
 in [`../board.md`](../board.md) and the related tickets, and move finished or
-superseded plans into the archive flow.
+superseded plans into [`../archive/completed/index.md`](../archive/completed/index.md).
 
 ## Active Plans
 

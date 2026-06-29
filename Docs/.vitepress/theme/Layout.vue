@@ -3,6 +3,7 @@ import {computed, onMounted, ref, watch} from 'vue'
 import { useData } from 'vitepress'
 import DefaultTheme from 'vitepress/theme'
 
+import ArchivePlanButton from './components/ArchivePlanButton.vue'
 import Board from './components/Board.vue'
 import {
   buildBoardPageKey,
@@ -85,6 +86,10 @@ watch(boardSidebarCollapsed, (collapsed) => {
 
       <template #page-top>
         <Board v-if="frontmatter.board" :key="boardComponentKey" />
+      </template>
+
+      <template #doc-footer-before>
+        <ArchivePlanButton />
       </template>
     </DefaultTheme.Layout>
   </div>

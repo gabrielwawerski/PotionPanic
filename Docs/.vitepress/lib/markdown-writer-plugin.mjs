@@ -9,6 +9,7 @@ import {
   findMissingTicketSections,
   normalizeTicketSections,
 } from "./ticket-sections.mjs";
+import {archivePlanFile} from "./plan-archive.mjs";
 import {
   normalizeTicketList,
   normalizeTicketMetadata
@@ -19,6 +20,8 @@ import {
   findDocumentationSuggestionPaths,
   normalizeBoardSuggestionConfig,
 } from "./ticket-suggestions.mjs";
+
+export {archivePlanFile} from "./plan-archive.mjs";
 
 export function scanTickets(ticketsDir, dirRelative) {
   if (!fs.existsSync(ticketsDir)) {
@@ -732,6 +735,31 @@ export function markdownWriterPlugin() {
 
             res.setHeader("Content-Type", "application/json");
             res.end(JSON.stringify(ticket));
+          } catch (cause) {
+            res.statusCode = 500;
+            res.end(String(cause));
+          }
+        });
+      });
+
+      server.middlewares.use("/__vitepress_pm_archive_plan", (req, res) => {
+        if (req.method !== "POST") {
+          res.statusCode = 405;
+          res.end("Method not allowed");
+          return;
+        }
+
+        let body = "";
+        req.on("data", (chunk) => {
+          body += chunk;
+        });
+        req.on("end", () => {
+          try {
+            const {url} = JSON.parse(body);
+            const archived = archivePlanFile(srcDir, {url});
+
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify(archived));
           } catch (cause) {
             res.statusCode = 500;
             res.end(String(cause));

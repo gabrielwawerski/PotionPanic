@@ -6,6 +6,7 @@ import matter from "gray-matter";
 export const DEFAULT_EXCLUDED_DIRS = [
   ".vitepress",
   "archive/completed",
+  "archive/tickets",
   "tickets",
 ];
 
@@ -73,6 +74,7 @@ export const SIDEBAR_SECTIONS = [
       {text: "Milestones", link: "/milestones/"},
       {text: "Archive Board", link: "/archive/board"},
       {text: "Archive", link: "/archive/"},
+      {text: "Archived Plans", link: "/archive/completed/"},
     ],
   },
 ];

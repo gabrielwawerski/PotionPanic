@@ -6,6 +6,7 @@ import test from "node:test";
 
 import {
   archiveTicketFile,
+  archivePlanFile,
   createTicketFile,
   fixTickets,
   restoreTicketFile,
@@ -284,3 +285,7 @@ test("restoreTicketFile moves an archived ticket back to the active directory an
     );
     assert.doesNotMatch(restoredFile, /^archivedAt: .+$/m);
   });
+
+test("archivePlanFile is exported for the docs archive endpoint", () => {
+  assert.equal(typeof archivePlanFile, "function");
+});

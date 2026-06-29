@@ -33,8 +33,11 @@ test("buildSidebar keeps pinned items first and auto-includes eligible pages",
     writeMarkdown(docsDir, "tickets/PP-7.md",
       "---\ntitle: Ticket Page\n---\n");
     writeMarkdown(docsDir, "archive/index.md", "# Archive\n");
+    writeMarkdown(docsDir, "archive/completed/index.md", "# Archived Plans\n");
     writeMarkdown(docsDir, "archive/completed/pp-1.md",
       "---\ntitle: Completed Task\n---\n");
+    writeMarkdown(docsDir, "archive/tickets/PP-9.md",
+      "---\ntitle: Archived Ticket\n---\n");
 
     const sections = buildSidebar({
       docsDir,
@@ -58,6 +61,7 @@ test("buildSidebar keeps pinned items first and auto-includes eligible pages",
           includeDirs: ["archive"],
           items: [
             {text: "Archive", link: "/archive/"},
+            {text: "Archived Plans", link: "/archive/completed/"},
           ],
         },
       ],
@@ -85,6 +89,7 @@ test("buildSidebar keeps pinned items first and auto-includes eligible pages",
         text: "Planning History",
         items: [
           {text: "Archive", link: "/archive/"},
+          {text: "Archived Plans", link: "/archive/completed/"},
         ],
       },
     ]);
