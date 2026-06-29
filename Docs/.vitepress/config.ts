@@ -1,5 +1,10 @@
+import {fileURLToPath} from "node:url";
+
 import {defineConfig} from "vitepress";
 import {markdownWriterPlugin} from "./lib/markdown-writer-plugin.mjs";
+import {buildSidebar} from "./lib/sidebar.mjs";
+
+const docsDir = fileURLToPath(new URL("..", import.meta.url));
 
 export default defineConfig({
   title: "Potion Panic",
@@ -18,66 +23,75 @@ export default defineConfig({
       {text: "Archive", link: "/archive/"},
     ],
     sidebar: {
-      "/": [
-        {
-          text: "Docs",
-          items: [
-            {text: "Overview", link: "/"},
-            {text: "Board", link: "/board"},
-          ],
-        },
-        {
-          text: "Onboarding",
-          items: [
-            {text: "Getting Started", link: "/onboarding/getting-started"},
-          ],
-        },
-        {
-          text: "Collaboration",
-          items: [
-            {text: "Team Workflow", link: "/collaboration/team-workflow"},
-          ],
-        },
-        {
-          text: "Project",
-          items: [
-            {text: "Game Design", link: "/project/game-design"},
-            {text: "MVP Scope", link: "/project/mvp-scope"},
-            {text: "Technical Architecture", link: "/project/technical-architecture"},
-            {text: "Game Design and Psychology", link: "/project/game-design-and-psychology"},
-          ],
-        },
-        {
-          text: "Plans",
-          items: [
-            {text: "Implementation Plans", link: "/plans/"},
-            {text: "VitePress Board UX Plans", link: "/plans/vitepress-board-ux-plans"},
-          ],
-        },
-        {
-          text: "Guides",
-          items: [
-            {text: "Unity Guides", link: "/guides/unity/"},
-            {text: "Runtime Architecture", link: "/guides/unity/runtime-architecture"},
-            {
-              text: "Coding And Implementation",
-              link: "/guides/unity/coding-and-implementation"
-            },
-            {text: "Editor Safety", link: "/guides/unity/editor-safety"},
-            {
-              text: "Presentation Workflows",
-              link: "/guides/unity/presentation-workflows"
-            },
-          ],
-        },
-        {
-          text: "Planning History",
-          items: [
-            {text: "Milestones", link: "/milestones/"},
-            {text: "Archive", link: "/archive/"},
-          ],
-        },
-      ],
+      "/": buildSidebar({
+        docsDir,
+        sections: [
+          {
+            text: "Docs",
+            items: [
+              {text: "Overview", link: "/"},
+              {text: "Board", link: "/board"},
+            ],
+          },
+          {
+            text: "Onboarding",
+            includeDirs: ["onboarding"],
+            items: [
+              {text: "Getting Started", link: "/onboarding/getting-started"},
+            ],
+          },
+          {
+            text: "Collaboration",
+            includeDirs: ["collaboration"],
+            items: [
+              {text: "Team Workflow", link: "/collaboration/team-workflow"},
+            ],
+          },
+          {
+            text: "Project",
+            includeDirs: ["project"],
+            items: [
+              {text: "Game Design", link: "/project/game-design"},
+              {text: "MVP Scope", link: "/project/mvp-scope"},
+              {text: "Technical Architecture", link: "/project/technical-architecture"},
+              {text: "Game Design and Psychology", link: "/project/game-design-and-psychology"},
+            ],
+          },
+          {
+            text: "Plans",
+            includeDirs: ["plans"],
+            items: [
+              {text: "Implementation Plans", link: "/plans/"},
+              {text: "VitePress Board UX Plans", link: "/plans/vitepress-board-ux-plans"},
+            ],
+          },
+          {
+            text: "Guides",
+            includeDirs: ["guides"],
+            items: [
+              {text: "Unity Guides", link: "/guides/unity/"},
+              {text: "Runtime Architecture", link: "/guides/unity/runtime-architecture"},
+              {
+                text: "Coding And Implementation",
+                link: "/guides/unity/coding-and-implementation"
+              },
+              {text: "Editor Safety", link: "/guides/unity/editor-safety"},
+              {
+                text: "Presentation Workflows",
+                link: "/guides/unity/presentation-workflows"
+              },
+            ],
+          },
+          {
+            text: "Planning History",
+            includeDirs: ["archive", "milestones"],
+            items: [
+              {text: "Milestones", link: "/milestones/"},
+              {text: "Archive", link: "/archive/"},
+            ],
+          },
+        ],
+      }),
     },
     socialLinks: [
       {icon: "github", link: "https://github.com/gabrielwawerski/PotionPanic"},
