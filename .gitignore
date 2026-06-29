@@ -120,3 +120,4 @@ InitTestScene*.unity*
 /node_modules/
 /Docs/.vitepress/cache/
 /Docs/.vitepress/dist/
+/.worktrees/
