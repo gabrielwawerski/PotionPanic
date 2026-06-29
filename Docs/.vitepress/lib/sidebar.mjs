@@ -263,7 +263,7 @@ function compareSidebarItems(left, right) {
   });
 }
 
-function comparePlanSidebarItems(left, right) {
+export function comparePlanSidebarItems(left, right) {
   if (left.isIndexPage !== right.isIndexPage) {
     return left.isIndexPage ? -1 : 1;
   }

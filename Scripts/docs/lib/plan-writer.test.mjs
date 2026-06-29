@@ -166,3 +166,162 @@ test("backfillPlanDates adds explicit dates to undated plans", async () => {
   );
   assert.match(fallbackFile, /^date: 2026-06-28$/m);
 });
+
+test("syncActivePlansIndex rebuilds the active plans section from filesystem truth",
+  async () => {
+    const {syncActivePlansIndex} = await loadPlanWriterModule();
+    const docsDir = fs.mkdtempSync(path.join(os.tmpdir(), "pp-plan-writer-"));
+
+    writeMarkdown(
+      docsDir,
+      "plans/index.md",
+      [
+        "# Implementation Plans",
+        "",
+        "Intro text that should stay.",
+        "",
+        "## Active Plans",
+        "",
+        "- [Stale Plan](./stale-plan.md)",
+        "",
+        "## Writing Rules",
+        "",
+        "- Keep this prose.",
+      ].join("\n")
+    );
+    writeMarkdown(
+      docsDir,
+      "plans/dated-plan.md",
+      [
+        "---",
+        "date: 2026-06-28",
+        "title: Frontmatter Title",
+        "---",
+        "",
+        "# Ignored Heading",
+      ].join("\n")
+    );
+    writeMarkdown(
+      docsDir,
+      "plans/heading-plan.md",
+      [
+        "---",
+        "date: 2026-06-29",
+        "---",
+        "",
+        "# Heading Title",
+      ].join("\n")
+    );
+    writeMarkdown(
+      docsDir,
+      "plans/filename-fallback.md",
+      [
+        "Body only.",
+      ].join("\n")
+    );
+
+    syncActivePlansIndex(docsDir);
+
+    const indexContent = fs.readFileSync(
+      path.join(docsDir, "plans", "index.md"),
+      "utf8"
+    );
+
+    assert.match(indexContent, /Intro text that should stay\./);
+    assert.match(indexContent, /## Writing Rules/);
+    assert.doesNotMatch(indexContent, /\[Stale Plan\]/);
+    assert.match(indexContent, /- \[Frontmatter Title\]\(\.\/dated-plan\.md\)/);
+    assert.match(indexContent, /- \[Heading Title\]\(\.\/heading-plan\.md\)/);
+    assert.match(indexContent, /- \[Filename Fallback\]\(\.\/filename-fallback\.md\)/);
+
+    assert.ok(
+      indexContent.indexOf("./dated-plan.md")
+      < indexContent.indexOf("./heading-plan.md")
+    );
+    assert.ok(
+      indexContent.indexOf("./heading-plan.md")
+      < indexContent.indexOf("./filename-fallback.md")
+    );
+  });
+
+test("syncActivePlansIndex handles the next section heading without a blank separator",
+  async () => {
+    const {syncActivePlansIndex} = await loadPlanWriterModule();
+    const docsDir = fs.mkdtempSync(path.join(os.tmpdir(), "pp-plan-writer-"));
+
+    writeMarkdown(
+      docsDir,
+      "plans/index.md",
+      [
+        "# Implementation Plans",
+        "",
+        "## Active Plans",
+        "",
+        "- [Stale Plan](./stale-plan.md)",
+        "## Writing Rules",
+        "",
+        "- Keep this prose.",
+      ].join("\n")
+    );
+    writeMarkdown(
+      docsDir,
+      "plans/real-plan.md",
+      [
+        "# Real Plan",
+      ].join("\n")
+    );
+
+    syncActivePlansIndex(docsDir);
+
+    const indexContent = fs.readFileSync(
+      path.join(docsDir, "plans", "index.md"),
+      "utf8"
+    );
+
+    assert.doesNotMatch(indexContent, /\[Stale Plan\]/);
+    assert.match(indexContent, /- \[Real Plan\]\(\.\/real-plan\.md\)/);
+    assert.match(indexContent, /\n## Writing Rules/);
+  });
+
+test("syncActivePlansIndex fully replaces a CRLF active plans section without stale bullets",
+  async () => {
+    const {syncActivePlansIndex} = await loadPlanWriterModule();
+    const docsDir = fs.mkdtempSync(path.join(os.tmpdir(), "pp-plan-writer-"));
+
+    writeMarkdown(
+      docsDir,
+      "plans/index.md",
+      [
+        "# Implementation Plans",
+        "",
+        "## Active Plans",
+        "",
+        "- [Old One](old-one.md)",
+        "- [Old Two](old-two.md)",
+        "## Writing Rules",
+        "",
+        "- Keep this prose.",
+        "",
+      ].join("\r\n")
+    );
+    writeMarkdown(
+      docsDir,
+      "plans/real-plan.md",
+      [
+        "# Real Plan",
+      ].join("\n")
+    );
+
+    syncActivePlansIndex(docsDir);
+
+    const indexContent = fs.readFileSync(
+      path.join(docsDir, "plans", "index.md"),
+      "utf8"
+    );
+
+    assert.doesNotMatch(indexContent, /\[Old One\]/);
+    assert.doesNotMatch(indexContent, /\[Old Two\]/);
+    assert.doesNotMatch(indexContent, /- \[\]\(\.\/\)/);
+    assert.match(indexContent, /- \[Real Plan\]\(\.\/real-plan\.md\)/);
+    assert.match(indexContent, /## Writing Rules/);
+  });

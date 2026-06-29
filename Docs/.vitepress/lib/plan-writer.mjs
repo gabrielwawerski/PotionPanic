@@ -5,6 +5,7 @@ import matter from "gray-matter";
 
 import {buildPlanPageUrl} from "./plan-archive-page.mjs";
 import {DEFAULT_PLAN_TEMPLATE} from "./plan-common.mjs";
+import {comparePlanSidebarItems} from "./sidebar.mjs";
 
 function normalizePath(value) {
   return `${value ?? ""}`.trim().replace(/\\/g, "/").replace(/^\/+|\/+$/g, "");
@@ -79,6 +80,14 @@ function inferDateFromPath(relativePath) {
 
   const prefixMatch = normalized.match(/(?:^|\/)(\d{4}-\d{2}-\d{2})-[^/]+\.md$/);
   return prefixMatch?.[1] || "";
+}
+
+function titleCaseFromSlug(value) {
+  return `${value ?? ""}`
+    .split(/[-_\s]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
 }
 
 function resolveDocsPath(docsDir, relativePath) {
@@ -189,34 +198,21 @@ function findSectionRange(lines, heading) {
   return {endIndex, headingIndex};
 }
 
-function updateActivePlansIndexContent(existingContent, {fileName, mode, title}) {
+function rebuildActivePlansIndexContent(existingContent, bullets) {
   const heading = "## Active Plans";
   const placeholder = "_No active plans yet._";
-  const bullet = `- [${title}](./${fileName})`;
   const lines = existingContent.split(/\r?\n/);
   const {endIndex, headingIndex} = findSectionRange(lines, heading);
 
   if (headingIndex === -1) {
     const trimmed = existingContent.trimEnd();
-    if (mode === "remove") {
-      return `${trimmed}\n`;
-    }
-
-    return `${trimmed}\n\n${heading}\n\n${bullet}\n`;
+    return `${trimmed}\n\n${heading}\n\n${
+      (bullets.length > 0 ? bullets : [placeholder]).join("\n")
+    }\n`;
   }
 
-  const sectionEntries = lines
-    .slice(headingIndex + 1, endIndex)
-    .filter((line) => line.trim() !== "" && line.trim() !== placeholder);
-  const filePattern = new RegExp(`^\\- \\[[^\\]]+\\]\\(\\./${fileName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\)$`);
-  const filteredEntries = sectionEntries.filter((line) => !filePattern.test(line.trim()));
-
-  if (mode !== "remove") {
-    filteredEntries.push(bullet);
-  }
-
-  const rebuiltSection = filteredEntries.length > 0
-    ? filteredEntries
+  const rebuiltSection = bullets.length > 0
+    ? bullets
     : [placeholder];
   const rebuilt = [
     ...lines.slice(0, headingIndex + 1),
@@ -226,6 +222,50 @@ function updateActivePlansIndexContent(existingContent, {fileName, mode, title})
   ];
 
   return `${rebuilt.join("\n").replace(/\n{3,}/g, "\n\n").trimEnd()}\n`;
+}
+
+function listActivePlanEntries(docsDir) {
+  const plansDir = path.join(docsDir, "plans");
+  if (!fs.existsSync(plansDir)) {
+    return [];
+  }
+
+  return fs.readdirSync(plansDir)
+    .filter((file) => file.endsWith(".md") && file !== "index.md")
+    .map((file) => {
+      const filePath = path.join(plansDir, file);
+      const raw = fs.readFileSync(filePath, "utf8");
+      const parsed = matter(raw);
+      const baseName = path.basename(file, ".md");
+
+      return {
+        date: normalizeDateValue(parsed.data.date),
+        fileName: baseName,
+        isIndexPage: false,
+        link: buildPlanPageUrl(path.posix.join("plans", file)),
+        text: `${parsed.data.title ?? ""}`.trim()
+          || extractHeading(parsed.content)
+          || titleCaseFromSlug(baseName),
+      };
+    })
+    .sort(comparePlanSidebarItems);
+}
+
+export function syncActivePlansIndex(docsDir) {
+  const indexPath = ensurePlansIndexExists(docsDir);
+  const existingContent = fs.readFileSync(indexPath, "utf8");
+  const entries = listActivePlanEntries(docsDir);
+  const bullets = entries.map((entry) => (
+    `- [${entry.text}](./${entry.fileName}.md)`
+  ));
+  const nextContent = rebuildActivePlansIndexContent(existingContent, bullets);
+
+  if (nextContent !== existingContent) {
+    fs.writeFileSync(indexPath, nextContent);
+    return true;
+  }
+
+  return false;
 }
 
 function ensurePlansIndexExists(docsDir) {
@@ -246,14 +286,10 @@ function ensurePlansIndexExists(docsDir) {
 }
 
 export function updateActivePlansIndex(docsDir, {fileName, mode = "upsert", title}) {
-  const indexPath = ensurePlansIndexExists(docsDir);
-  const existingContent = fs.readFileSync(indexPath, "utf8");
-  const nextContent = updateActivePlansIndexContent(existingContent, {
-    fileName,
-    mode,
-    title,
-  });
-  fs.writeFileSync(indexPath, nextContent);
+  void fileName;
+  void mode;
+  void title;
+  syncActivePlansIndex(docsDir);
 }
 
 export function readPlanFile(docsDir, {url} = {}) {

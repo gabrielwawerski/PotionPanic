@@ -4,6 +4,7 @@ import {
   buildSidebarThemeConfig,
   isSidebarContentPath,
 } from "./sidebar.mjs";
+import {syncActivePlansIndex} from "./plan-writer.mjs";
 
 function normalizePath(value) {
   return `${value ?? ""}`.trim().replace(/\\/g, "/");
@@ -27,9 +28,20 @@ export function sidebarHmrPlugin() {
     return isSidebarContentPath(relativePath);
   }
 
+  function isSyncablePlanFile(file) {
+    const relativePath = normalizePath(path.relative(srcDir, file));
+    return relativePath.startsWith("plans/")
+      && relativePath.endsWith(".md")
+      && relativePath !== "plans/index.md";
+  }
+
   async function emitUpdate(server, file) {
     if (!srcDir || !isRelevantFile(file)) {
       return;
+    }
+
+    if (isSyncablePlanFile(file)) {
+      syncActivePlansIndex(srcDir);
     }
 
     server.ws.send(buildPayload());

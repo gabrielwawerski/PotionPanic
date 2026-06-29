@@ -165,3 +165,82 @@ test("sidebar HMR plugin emits updates only for relevant docs markdown paths",
       {text: "Live Sidebar", link: "/plans/live-sidebar"},
     ]);
   });
+
+test("sidebar HMR plugin syncs the active plans index for manual plan file changes",
+  async () => {
+    const {sidebarHmrPlugin} = await loadSidebarHmrPluginModule();
+    const docsDir = fs.mkdtempSync(path.join(os.tmpdir(), "pp-sidebar-hmr-"));
+
+    writeMarkdown(
+      docsDir,
+      "plans/index.md",
+      [
+        "# Implementation Plans",
+        "",
+        "## Active Plans",
+        "",
+        "_No active plans yet._",
+      ].join("\n")
+    );
+    writeMarkdown(docsDir, "plans/live-sidebar.md",
+      "---\ndate: 2026-06-29\n---\n# Live Sidebar\n");
+
+    const addHandlers = [];
+    const unlinkHandlers = [];
+    const watcher = {
+      on(event, handler) {
+        if (event === "add") {
+          addHandlers.push(handler);
+        }
+        if (event === "unlink") {
+          unlinkHandlers.push(handler);
+        }
+        return watcher;
+      },
+    };
+
+    const plugin = sidebarHmrPlugin();
+    plugin.configResolved({root: docsDir});
+    const server = {
+      watcher,
+      ws: {
+        send() {},
+      },
+    };
+    plugin.configureServer(server);
+
+    writeMarkdown(docsDir, "plans/new-plan.md",
+      "---\ndate: 2026-06-27\n---\n# New Plan\n");
+    await addHandlers[0](path.join(docsDir, "plans", "new-plan.md"));
+
+    let indexContent = fs.readFileSync(
+      path.join(docsDir, "plans", "index.md"),
+      "utf8"
+    );
+    assert.match(indexContent, /- \[New Plan\]\(\.\/new-plan\.md\)/);
+    assert.match(indexContent, /- \[Live Sidebar\]\(\.\/live-sidebar\.md\)/);
+
+    writeMarkdown(docsDir, "plans/new-plan.md",
+      "---\ndate: 2026-06-27\n---\n# Renamed Plan\n");
+    await plugin.handleHotUpdate({
+      file: path.join(docsDir, "plans", "new-plan.md"),
+      server,
+    });
+
+    indexContent = fs.readFileSync(
+      path.join(docsDir, "plans", "index.md"),
+      "utf8"
+    );
+    assert.match(indexContent, /- \[Renamed Plan\]\(\.\/new-plan\.md\)/);
+    assert.doesNotMatch(indexContent, /- \[New Plan\]\(\.\/new-plan\.md\)/);
+
+    fs.unlinkSync(path.join(docsDir, "plans", "new-plan.md"));
+    await unlinkHandlers[0](path.join(docsDir, "plans", "new-plan.md"));
+
+    indexContent = fs.readFileSync(
+      path.join(docsDir, "plans", "index.md"),
+      "utf8"
+    );
+    assert.doesNotMatch(indexContent, /\.\/new-plan\.md/);
+    assert.match(indexContent, /- \[Live Sidebar\]\(\.\/live-sidebar\.md\)/);
+  });
