@@ -12,6 +12,7 @@ superseded plans into the archive flow.
 ## Active Plans
 
 - [VitePress Board UX Plans](vitepress-board-ux-plans.md)
+- [VitePress Windows Startup Refactor Plan](vitepress-windows-startup-refactor-2026-06-29.md)
 
 ## Writing Rules
 
