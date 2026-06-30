@@ -16,6 +16,8 @@ test("PotionPanic docs config can be consumed by Docboard package APIs", () => {
 
   assert.equal(config.title, "Potion Panic");
   assert.equal(config.themeConfig.nav, projectDocsConfig.nav);
+  assert.deepEqual(projectDocsConfig.themeConfig.outline, [2, 3]);
+  assert.deepEqual(config.themeConfig.outline, [2, 3]);
   assert.ok(
     config.themeConfig.sidebar["/"].some(
       (section) => section.text === "Unity Guides"

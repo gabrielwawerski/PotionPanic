@@ -55,6 +55,9 @@ const projectDocsConfig = defineDocsProject({
   socialLinks: [
     {icon: "github", link: "https://github.com/gabrielwawerski/PotionPanic"},
   ],
+  themeConfig: {
+    outline: [2, 3],
+  },
   sidebar: {
     excludedDirs: [
       ".vitepress",
