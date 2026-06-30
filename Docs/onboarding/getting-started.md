@@ -94,12 +94,16 @@ browser:
 npm run docs:startup:install
 ```
 
-This installs a per-user Startup shortcut that runs the local-only server with
-`npm run docs:dev:local`. Remove it later with:
+This installs a per-user Startup shortcut that runs the LAN-accessible server
+with `npm run docs:dev`. Remove it later with:
 
 ```powershell
+npm run docs:stop
 npm run docs:startup:uninstall
 ```
+
+Use `npm run docs:stop` whenever you want to shut down the background docs
+server without hunting for the process manually.
 
 If you add or rename a Markdown page under the normal docs folders while
 `npm run docs:dev` is running, the auto-generated sidebar should refresh

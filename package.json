@@ -9,6 +9,7 @@
     "docs:preview": "vitepress preview Docs --host 0.0.0.0 --port 6421",
     "docs:startup:install": "node Scripts/docs/run-windows-startup-installer.mjs",
     "docs:startup:uninstall": "node Scripts/docs/run-windows-startup-installer.mjs -Uninstall",
+    "docs:stop": "node Scripts/docs/run-windows-docs-stop.mjs",
     "docs:ticket": "node Scripts/docs/create-ticket.mjs",
     "docs:ui": "node Scripts/docs/open-board.mjs",
     "test": "node --test \"Scripts/docs/**/*.test.mjs\""

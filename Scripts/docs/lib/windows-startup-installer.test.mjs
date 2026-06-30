@@ -65,7 +65,7 @@ function decodeEncodedCommand(argumentsText) {
   return Buffer.from(match[1], "base64").toString("utf16le");
 }
 
-test("install-windows-startup script creates a local-only docs shortcut",
+test("install-windows-startup script creates a LAN docs shortcut",
   {skip: process.platform !== "win32"},
   async () => {
     const tempRoot = fs.mkdtempSync(
@@ -130,7 +130,8 @@ test("install-windows-startup script is idempotent and uninstall removes shortcu
     );
     const decodedCommand = decodeEncodedCommand(shortcut.Arguments);
 
-    assert.match(decodedCommand, /docs:dev:local/);
+    assert.match(decodedCommand, /docs:dev/);
+    assert.doesNotMatch(decodedCommand, /docs:dev:local/);
     assert.doesNotMatch(decodedCommand, /docs:ui/i);
     assert.doesNotMatch(decodedCommand, /open-board\.mjs/i);
     assert.doesNotMatch(decodedCommand, /cmd\s*\/c\s+start/i);

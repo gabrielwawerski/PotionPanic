@@ -85,6 +85,7 @@ Optional Windows startup management:
 ```powershell
 npm run docs:startup:install
 npm run docs:startup:uninstall
+npm run docs:stop
 ```
 
 Repository rules:
@@ -109,6 +110,8 @@ Repository rules:
 - `npm run docs:dev:local` starts the local-only VitePress dev server on
   `127.0.0.1:6420`.
 - `npm run docs:startup:install` installs the optional Windows sign-in shortcut
-  that starts `npm run docs:dev:local` in the background without opening a
+  that starts `npm run docs:dev` in the background without opening a
   browser.
 - `npm run docs:startup:uninstall` removes that Windows startup shortcut.
+- `npm run docs:stop` stops the docs server process that is listening on the
+  shared docs port `6420`.

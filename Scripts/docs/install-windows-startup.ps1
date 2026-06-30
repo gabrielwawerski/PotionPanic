@@ -43,7 +43,7 @@ function Get-EncodedStartupCommand {
 $ErrorActionPreference = 'Stop'
 Set-Location -LiteralPath '__REPO_ROOT__'
 $npmCommand = (Get-Command npm.cmd -ErrorAction Stop).Source
-& $npmCommand 'run' 'docs:dev:local'
+& $npmCommand 'run' 'docs:dev'
 '@.Trim().Replace("__REPO_ROOT__", $escapedRepoRoot)
 
   return [Convert]::ToBase64String(
@@ -81,7 +81,7 @@ function Install-DocsStartupShortcut {
 
   $shortcut.TargetPath = $powershellPath
   $shortcut.Arguments = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -EncodedCommand $encodedCommand"
-  $shortcut.Description = "Starts the PotionPanic local docs server at Windows sign-in."
+  $shortcut.Description = "Starts the PotionPanic docs server at Windows sign-in."
   $shortcut.WorkingDirectory = $RepoRoot
   $shortcut.Save()
 }
