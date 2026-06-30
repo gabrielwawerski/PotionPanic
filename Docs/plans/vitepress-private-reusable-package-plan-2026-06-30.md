@@ -22,6 +22,8 @@ boundaries once PotionPanic is running through the package.
 
 - Package name: `Docboard`
 - Scoped package import path: `@gabrielwawerski/docboard`
+- Repo strategy: create `Docboard` as a new repository, not a GitHub fork of
+  `McBrideMusings/vitepress-project-management`
 - Distribution: private Git dependency from a dedicated private repo
 - Git pinning: immutable tags or releases
 - CLI integration: direct package bins in `package.json`
@@ -36,6 +38,58 @@ boundaries once PotionPanic is running through the package.
 - PotionPanic topbar group label for onboarding and workflow: `Handbook`
 - PotionPanic keeps the sidebar section label `Unity Guides`
 - Docboard package defaults use the more general section label `Guides`
+
+## Provenance And Attribution
+
+### Repository Lineage Decision
+
+- `Docboard` should be created as a new repository rather than a GitHub fork
+- The implementation should still preserve clear provenance to
+  `McBrideMusings/vitepress-project-management`
+- The reason for avoiding the GitHub fork model is that `Docboard` now has a
+  broader scope, different package identity, and different long-term product
+  direction than the upstream package
+
+### README Attribution Wording
+
+Use this wording in the `Docboard` repository README:
+
+```md
+## Provenance
+
+Docboard was originally derived from
+[`McBrideMusings/vitepress-project-management`](https://github.com/McBrideMusings/vitepress-project-management)
+and has since been expanded into a broader private package for reusable
+VitePress-based documentation, planning, and workflow tooling.
+
+The original upstream project provided the starting point for the board/theme
+and markdown-backed project-management workflow. Docboard continues from that
+foundation under its own package identity and roadmap.
+```
+
+### Notice File
+
+Create a small `NOTICE` file in the `Docboard` repo root with this content:
+
+```text
+Docboard includes work originally derived from:
+
+  McBrideMusings/vitepress-project-management
+  https://github.com/McBrideMusings/vitepress-project-management
+
+Docboard has been modified and expanded beyond the original upstream package.
+See README.md for current project scope and provenance details.
+```
+
+### License Handling
+
+- Preserve the upstream MIT license notice in the new repository
+- If the repository contains upstream-derived code, keep the MIT license text
+  in `LICENSE`
+- If needed, add a short note in `NOTICE` or README that portions were derived
+  from the upstream package and later modified
+- Treat provenance and license carry-forward as part of the initial repo
+  scaffold, not as a follow-up cleanup task
 
 ## Inventory Of Reusable Modules
 
@@ -336,6 +390,11 @@ docboard create-ticket --board Docs/board.md --dir Docs/tickets
 
 - Create the private repo, package manifest, exports map, peer dependencies,
   CLI entrypoint, and test fixture site
+- Create the repo as a new repository, not a GitHub fork
+- Add provenance and licensing files during scaffold:
+  - `README.md` provenance section using the locked wording
+  - `NOTICE` file using the locked wording
+  - `LICENSE` carrying forward the upstream MIT notice
 - Copy reusable pure helpers and their unit tests first
 - Review gate: package tests run in isolation against a fixture docs tree
 
@@ -388,6 +447,8 @@ docboard create-ticket --board Docs/board.md --dir Docs/tickets
 - `Scripts/docs/create-ticket.mjs`
 - Non-startup package-behavior tests under `Scripts/docs/lib/*.test.mjs`,
   except `plans-index-links.test.mjs`
+- Upstream provenance and license context should also be carried into the new
+  repo scaffold, even though those files are newly authored rather than moved
 
 ### Likely To Remain In PotionPanic
 
@@ -445,6 +506,8 @@ docboard create-ticket --board Docs/board.md --dir Docs/tickets
 
 - Package/tool name: `Docboard`
 - Scoped package import path: `@gabrielwawerski/docboard`
+- Repo creation model: new repository with explicit upstream attribution, not a
+  GitHub fork
 
 ## Assumptions And Defaults
 
