@@ -21,6 +21,7 @@ boundaries once PotionPanic is running through the package.
 ## Locked Decisions
 
 - Package name: `Docboard`
+- Scoped package import path: `@gabrielwawerski/docboard`
 - Distribution: private Git dependency from a dedicated private repo
 - Git pinning: immutable tags or releases
 - CLI integration: direct package bins in `package.json`
@@ -116,7 +117,7 @@ boundaries once PotionPanic is running through the package.
 
 ```ts
 // Docs/.vitepress/project-docs.config.ts
-import {defineDocsProject} from "@your-org/docboard";
+import {defineDocsProject} from "@gabrielwawerski/docboard";
 
 export default defineDocsProject({
   title: "Potion Panic",
@@ -190,7 +191,7 @@ export default defineDocsProject({
 // Docs/.vitepress/config.ts
 import {fileURLToPath} from "node:url";
 import project from "./project-docs.config";
-import {createDocsConfig} from "@your-org/docboard";
+import {createDocsConfig} from "@gabrielwawerski/docboard";
 
 const docsDir = fileURLToPath(new URL("..", import.meta.url));
 
@@ -201,7 +202,7 @@ export default createDocsConfig(project, {docsDir});
 
 ```ts
 // Docs/.vitepress/theme/index.ts
-export {projectManagementTheme as default} from "@your-org/docboard/theme";
+export {projectManagementTheme as default} from "@gabrielwawerski/docboard/theme";
 ```
 
 ### CLI Shape
@@ -440,11 +441,10 @@ docboard create-ticket --board Docs/board.md --dir Docs/tickets
   - no hardcoded `Potion Panic` strings inside package internals
   - no dependency on startup scripts
 
-## Remaining Open Decision
+## Final Package Identity
 
-- Final scoped package import path
-  - working examples above use `@your-org/docboard`
-  - the package/tool name itself is locked as `Docboard`
+- Package/tool name: `Docboard`
+- Scoped package import path: `@gabrielwawerski/docboard`
 
 ## Assumptions And Defaults
 
