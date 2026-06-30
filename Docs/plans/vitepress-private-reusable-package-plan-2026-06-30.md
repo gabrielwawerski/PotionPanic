@@ -279,8 +279,14 @@ docboard create-ticket --board Docs/board.md --dir Docs/tickets
   - `ticketSections`
   - `columns`
   - `demo`
+- Preserve the current live sidebar refresh behavior during extraction:
+  - sidebar content changes should still rebuild sidebar data from config
+  - the dev HMR path should keep updating only `themeConfig.sidebar`
+  - `buildSidebarThemeConfig(...)` and `isSidebarContentPath(...)` should stay
+    usable by the HMR plugin, even if they start consuming host-owned config
 - Internal package naming should replace `potion-panic:*` event names, plugin
-  names, and localStorage keys with generic `docboard:*` equivalents
+  names, and localStorage keys with generic `docboard:*` equivalents after the
+  initial host refactor preserves the current live-update contract
 
 ## Proposed Navigation Structure
 
@@ -362,7 +368,9 @@ docboard create-ticket --board Docs/board.md --dir Docs/tickets
 - Theme and plugin runtime coupling through custom HMR events and internal
   endpoints
   - mitigation: keep both sides inside the package and do not expose endpoints
-    or events as public API
+    or events as public API; preserve the existing sidebar update payload shape
+    during the first extraction step, then rename internals only after both
+    emitter and listener move under package ownership
 - Git dependency operational friction
   - mitigation: pin to tags, document update workflow, avoid requiring a
     build/publish step for installs
@@ -384,6 +392,11 @@ docboard create-ticket --board Docs/board.md --dir Docs/tickets
   locked workflow-first navigation structure
 - Refactor local sidebar generation to consume host config instead of owning
   `SIDEBAR_SECTIONS`
+- Preserve the current sidebar HMR contract in this phase:
+  - keep the same dev update flow of rebuild -> emit sidebar payload -> replace
+    only `themeConfig.sidebar`
+  - do not rename custom sidebar update events yet while emitter and listener
+    still live in the host repo
 - Review gate: no behavior change, same board and docs pages still work locally
 
 ### Phase 2: Scaffold The Package Repo
@@ -411,6 +424,8 @@ docboard create-ticket --board Docs/board.md --dir Docs/tickets
 - Move `Layout.vue`, components, composables, styles, and theme typing into
   `src/theme/**`
 - Feed runtime options such as `pagePathPrefix` from package-built config
+- Move the sidebar HMR emitter/listener pair together so package-owned internal
+  event naming can change without breaking live updates
 - Review gate: fixture site renders the board, ticket modal, plan authoring,
   read-only build behavior, and live sidebar updates
 
