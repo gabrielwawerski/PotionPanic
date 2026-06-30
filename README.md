@@ -93,6 +93,13 @@ Published read-only site:
 https://gabrielwawerski.github.io/PotionPanic/
 ```
 
+GitHub Pages deployment note:
+
+- In `Settings > Pages`, set the source to `GitHub Actions`.
+- If the repository has never had Pages enabled, either do that once manually
+  or add a `PAGES_ENABLEMENT_TOKEN` secret so the workflow can request Pages
+  enablement during `actions/configure-pages`.
+
 Optional Windows startup management:
 
 ```powershell
