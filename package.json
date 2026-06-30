@@ -10,11 +10,12 @@
     "docs:startup:install": "node Scripts/docs/run-windows-startup-installer.mjs",
     "docs:startup:uninstall": "node Scripts/docs/run-windows-startup-installer.mjs -Uninstall",
     "docs:stop": "node Scripts/docs/run-windows-docs-stop.mjs",
-    "docs:ticket": "node Scripts/docs/create-ticket.mjs",
-    "docs:ui": "node Scripts/docs/open-board.mjs",
+    "docs:ticket": "docboard create-ticket",
+    "docs:ui": "docboard open-board --url http://127.0.0.1:6420/PotionPanic/board --script docs:dev",
     "test": "node --test \"Scripts/docs/**/*.test.mjs\""
   },
   "devDependencies": {
+    "@gabrielwawerski/docboard": "file:../Docboard",
     "gray-matter": "^4.0.3",
     "vitepress": "^1.6.4",
     "vue": "^3.5.39"

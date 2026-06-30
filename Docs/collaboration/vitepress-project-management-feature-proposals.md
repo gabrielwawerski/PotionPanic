@@ -1,10 +1,11 @@
 # VitePress Project Management Feature Proposals
 
-This repo currently uses a locally owned VitePress kanban UI backed by markdown
-tickets in `Docs/tickets/` and archived task history in
-`Docs/archive/completed/`. The current ticket modal exposes the whole markdown
-body as a single `Description` editor even though many tickets already use a
-richer multi-section structure.
+This repo uses the private `@gabrielwawerski/docboard` VitePress kanban UI
+backed by markdown tickets in `Docs/tickets/` and archived task history in
+`Docs/archive/completed/`. PotionPanic owns the content and board settings; the
+reusable UI and markdown workflow live in the package. The current ticket modal
+exposes the whole markdown body as a single `Description` editor even though
+many tickets already use a richer multi-section structure.
 
 ## Current Pain Point
 

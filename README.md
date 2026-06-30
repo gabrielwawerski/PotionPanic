@@ -4,8 +4,10 @@ Potion Panic is a small-scope Unity project for a two-person beginner team. The
 target is a finished small game, not a large experimental prototype.
 
 This repository uses a VitePress site rooted in `Docs/` as shared project state
-for planning, execution, and evergreen documentation. The default task workflow
-is the browser board served locally from the repo.
+for planning, execution, and evergreen documentation. The reusable board,
+sidebar, ticket, plan, and theme tooling comes from the private
+`@gabrielwawerski/docboard` package; this repo owns the docs content, board
+frontmatter, and thin PotionPanic VitePress adapters.
 
 Published docs site:
 
@@ -71,21 +73,26 @@ Current repo note:
 
 ## Docs Board Setup
 
-Use these bootstrap commands if you need to install or verify the shared docs
-tooling:
+Use these bootstrap commands if you need to install or verify the package-backed
+docs tooling:
 
 ```powershell
 npm install
 npm run docs:ui
 ```
 
-Equivalent npm commands:
+Useful npm commands:
 
 ```powershell
 npm run docs:dev
 npm run docs:dev:local
 npm run docs:build
+npm test
 ```
+
+`npm install` links the private `@gabrielwawerski/docboard` dependency from the
+sibling `../Docboard` checkout. `npm run docs:ui` calls the package CLI to start
+the VitePress server when needed and open the editable PotionPanic board.
 
 Published read-only site:
 
@@ -120,15 +127,17 @@ Repository rules:
 - AI collaborators should follow the committed `AGENTS.md`, `CLAUDE.md`, and
   `GEMINI.md` instructions.
 
-### Shared helper scripts
+### Docs commands
 
 - `npm install` installs or verifies the Node dependencies needed for the
-  VitePress docs workflow.
-- `npm run docs:ui` starts the local docs server if needed and opens the
-  editable task board in the default browser.
+  package-backed VitePress docs workflow.
+- `npm run docs:ui` uses the Docboard package CLI to start the local docs
+  server if needed and open the editable task board in the default browser.
 - `npm run docs:dev` starts the LAN-accessible VitePress dev server manually.
 - `npm run docs:dev:local` starts the local-only VitePress dev server on
   `127.0.0.1:6420`.
+- `npm run docs:ticket -- "Ticket title" --assignee "Name"` uses the Docboard
+  package CLI to create a markdown ticket from the board frontmatter settings.
 - `npm run docs:startup:install` installs the optional Windows sign-in shortcut
   that starts `npm run docs:dev` in the background without opening a
   browser.

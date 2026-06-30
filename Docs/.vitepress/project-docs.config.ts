@@ -1,7 +1,11 @@
-const projectDocsConfig = {
+import {defineDocsProject} from "@gabrielwawerski/docboard";
+
+const projectDocsConfig = defineDocsProject({
   title: "Potion Panic",
   description: "Shared project docs and task board for Potion Panic.",
   base: "/PotionPanic/",
+  docsRoot: "Docs",
+  pagePathPrefix: "Docs",
   nav: [
     {text: "Home", link: "/"},
     {
@@ -120,6 +124,12 @@ const projectDocsConfig = {
       },
     ],
   },
-};
+  plans: {
+    activeDir: "plans",
+    activeIndex: "plans/index.md",
+    archiveDir: "archive/completed",
+    archiveIndex: "archive/completed/index.md",
+  },
+});
 
 export default projectDocsConfig;

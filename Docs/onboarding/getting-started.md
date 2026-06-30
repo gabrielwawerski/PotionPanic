@@ -70,7 +70,10 @@ If this fails, do not start feature work yet.
 
 ## Open the docs board
 
-The board is the default place to pick, update, and track tasks.
+The board is the default place to pick, update, and track tasks. The reusable
+board, sidebar, ticket, plan, and theme tooling comes from the private
+`@gabrielwawerski/docboard` package. PotionPanic owns the `Docs/` markdown
+content, board frontmatter, and thin VitePress adapters.
 
 For human use:
 
@@ -79,13 +82,18 @@ npm install
 npm run docs:ui
 ```
 
+`npm install` links `@gabrielwawerski/docboard` from the sibling `../Docboard`
+checkout. `npm run docs:ui` uses that package CLI to start the docs server when
+needed and open the editable PotionPanic board.
+
 Equivalent manual command:
 
 ```powershell
 npm run docs:dev
 ```
 
-Open `http://127.0.0.1:6420/board` if the browser does not open automatically.
+Open `http://127.0.0.1:6420/PotionPanic/board` if the browser does not open
+automatically.
 
 Published read-only docs site:
 
