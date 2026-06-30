@@ -5,6 +5,7 @@ import matter from "gray-matter";
 
 import {buildPlanPageUrl} from "./plan-archive-page.mjs";
 import {DEFAULT_PLAN_TEMPLATE} from "./plan-common.mjs";
+import {stripSiteBase} from "./site-url.mjs";
 import {comparePlanSidebarItems} from "./sidebar.mjs";
 
 function normalizePath(value) {
@@ -104,13 +105,13 @@ function resolveDocsPath(docsDir, relativePath) {
   };
 }
 
-function siteUrlToRelativePath(url) {
+function siteUrlToRelativePath(url, base = "/") {
   const normalizedUrl = normalizeSiteUrl(url);
   if (!normalizedUrl) {
     throw new Error("Missing url");
   }
 
-  const normalizedPath = normalizedUrl.replace(/^\/+/, "");
+  const normalizedPath = stripSiteBase(normalizedUrl, base).replace(/^\/+/, "");
   if (!normalizedPath) {
     throw new Error("Missing url");
   }

@@ -10,6 +10,10 @@ import {
 test("buildTicketHref maps dependency references to ticket pages", () => {
   assert.equal(buildTicketHref("PP-2"), "/tickets/PP-2.html");
   assert.equal(buildTicketHref("tickets/PP-3"), "/tickets/PP-3.html");
+  assert.equal(
+    buildTicketHref("PP-2", "tickets", "/PotionPanic/"),
+    "/PotionPanic/tickets/PP-2.html"
+  );
 });
 
 test("resolveTicketHref prefers active ticket urls and falls back to archived urls",
@@ -29,6 +33,11 @@ test("resolveTicketHref prefers active ticket urls and falls back to archived ur
     assert.equal(resolveTicketHref("PP-10", {
       ticketHrefs: {},
     }), "/tickets/PP-10.html");
+
+    assert.equal(resolveTicketHref("PP-10", {
+      base: "/PotionPanic/",
+      ticketHrefs: {},
+    }), "/PotionPanic/tickets/PP-10.html");
   });
 
 test("buildDocumentationHref links docs pages that exist in the VitePress site",
@@ -38,6 +47,13 @@ test("buildDocumentationHref links docs pages that exist in the VitePress site",
     assert.equal(buildDocumentationHref("README.md"), "/README.html");
     assert.equal(buildDocumentationHref("Docs/collaboration/team-workflow.md"),
       "/collaboration/team-workflow.html");
+    assert.equal(
+      buildDocumentationHref(
+        "Docs/collaboration/team-workflow.md",
+        "/PotionPanic/"
+      ),
+      "/PotionPanic/collaboration/team-workflow.html"
+    );
   });
 
 test("buildDocumentationHref leaves non-site markdown files unlinked", () => {

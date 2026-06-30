@@ -3,6 +3,11 @@
 `Docs/` stores current project truth for Potion Panic and hosts the shared
 VitePress task board.
 
+Published read-only site:
+
+- `https://gabrielwawerski.github.io/PotionPanic/`
+- Local editing still happens through the repo-backed VitePress dev server.
+
 Use the board for time-bound planning, task execution, milestone notes, and
 project history. Use `plans/` for active implementation plans that should stay
 browsable in the VitePress site. Keep evergreen guidance in the rest of

@@ -1,8 +1,10 @@
+import {withSiteBase} from "./site-url.mjs";
+
 function normalizePath(value) {
   return `${value ?? ""}`.trim().replace(/\\/g, "/");
 }
 
-export function buildTicketHref(reference, ticketsDir = "tickets") {
+export function buildTicketHref(reference, ticketsDir = "tickets", base = "/") {
   const normalized = normalizePath(reference)
   .replace(/^\//, "")
   .replace(/\.md$/i, "")
@@ -13,19 +15,20 @@ export function buildTicketHref(reference, ticketsDir = "tickets") {
   }
 
   if (normalized.startsWith(`${ticketsDir}/`)) {
-    return `/${normalized}.html`;
+    return withSiteBase(`/${normalized}.html`, base);
   }
 
   if (!normalized.includes("/")) {
-    return `/${ticketsDir}/${normalized}.html`;
+    return withSiteBase(`/${ticketsDir}/${normalized}.html`, base);
   }
 
-  return `/${normalized}.html`;
+  return withSiteBase(`/${normalized}.html`, base);
 }
 
 export function resolveTicketHref(
   reference,
   {
+    base = "/",
     ticketHrefs = {},
     ticketsDir = "tickets",
   } = {}
@@ -40,13 +43,13 @@ export function resolveTicketHref(
   }
 
   if (ticketHrefs[normalized]) {
-    return ticketHrefs[normalized];
+    return withSiteBase(ticketHrefs[normalized], base);
   }
 
-  return buildTicketHref(normalized, ticketsDir);
+  return buildTicketHref(normalized, ticketsDir, base);
 }
 
-export function buildDocumentationHref(reference) {
+export function buildDocumentationHref(reference, base = "/") {
   let normalized = normalizePath(reference);
   if (!normalized) {
     return null;
@@ -61,7 +64,7 @@ export function buildDocumentationHref(reference) {
   }
 
   if (normalized === "README.md") {
-    return "/README.html";
+    return withSiteBase("/README.html", base);
   }
 
   if (!normalized.endsWith(".md")) {
@@ -72,5 +75,5 @@ export function buildDocumentationHref(reference) {
     return null;
   }
 
-  return `/${normalized.replace(/\.md$/i, ".html")}`;
+  return withSiteBase(`/${normalized.replace(/\.md$/i, ".html")}`, base);
 }

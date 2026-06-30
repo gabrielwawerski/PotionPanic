@@ -43,3 +43,18 @@ test("token suggestion input supports clickable selected tokens", () => {
     "selected token labels should render as links when an href exists"
   );
 });
+
+test("ticket detail resolves published links against the VitePress base url", () => {
+  const source = fs.readFileSync(ticketDetailPath, "utf8");
+
+  assert.match(
+    source,
+    /resolveTicketHref\(value,\s*\{\s*base: import\.meta\.env\.BASE_URL,/,
+    "dependency links should include the published site base"
+  );
+  assert.match(
+    source,
+    /buildDocumentationHref\(value,\s*import\.meta\.env\.BASE_URL\)/,
+    "documentation links should include the published site base"
+  );
+});

@@ -10,6 +10,7 @@ const docsDir = fileURLToPath(new URL("..", import.meta.url));
 export default defineConfig({
   title: "Potion Panic",
   description: "Shared project docs and task board for Potion Panic.",
+  base: "/PotionPanic/",
   cleanUrls: true,
   vite: {
     plugins: [markdownWriterPlugin(), sidebarHmrPlugin()],

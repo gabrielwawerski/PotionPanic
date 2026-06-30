@@ -35,6 +35,10 @@ test("buildPlanPageUrl converts a plan markdown path into a clean docs url",
       buildPlanPageUrl("plans/vitepress-archive-flow.md"),
       "/plans/vitepress-archive-flow"
     );
+    assert.equal(
+      buildPlanPageUrl("plans/vitepress-archive-flow.md", "/PotionPanic/"),
+      "/PotionPanic/plans/vitepress-archive-flow"
+    );
   });
 
 test("archivePlanFile moves a plan into archive completed and updates the index",

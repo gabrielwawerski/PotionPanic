@@ -117,6 +117,21 @@ test("updatePlanFile preserves the existing date and updates the active index la
     assert.doesNotMatch(indexContent, /- \[Fresh Plan\]\(\.\/fresh-plan\.md\)/);
   });
 
+test("siteUrlToRelativePath strips the published base before resolving markdown paths",
+  async () => {
+    const {siteUrlToRelativePath} = await loadPlanWriterModule();
+
+    assert.equal(
+      siteUrlToRelativePath("/PotionPanic/plans/fresh-plan", "/PotionPanic/"),
+      "plans/fresh-plan.md"
+    );
+    assert.equal(
+      siteUrlToRelativePath("/PotionPanic/archive/completed/fresh-plan.html",
+        "/PotionPanic/"),
+      "archive/completed/fresh-plan.md"
+    );
+  });
+
 test("backfillPlanDates adds explicit dates to undated plans", async () => {
   const {backfillPlanDates} = await loadPlanWriterModule();
   const docsDir = fs.mkdtempSync(path.join(os.tmpdir(), "pp-plan-writer-"));

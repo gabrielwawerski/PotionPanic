@@ -7,6 +7,13 @@ This repository uses a VitePress site rooted in `Docs/` as shared project state
 for planning, execution, and evergreen documentation. The default task workflow
 is the browser board served locally from the repo.
 
+Published docs site:
+
+- `https://gabrielwawerski.github.io/PotionPanic/`
+- This GitHub Pages site is read-only by design.
+- Persistent board, ticket, and plan editing still happens through
+  `npm run docs:ui` or `npm run docs:dev`.
+
 ## Start Here
 
 If this is your first day in the repo, read these in order:
@@ -78,6 +85,12 @@ Equivalent npm commands:
 npm run docs:dev
 npm run docs:dev:local
 npm run docs:build
+```
+
+Published read-only site:
+
+```text
+https://gabrielwawerski.github.io/PotionPanic/
 ```
 
 Optional Windows startup management:

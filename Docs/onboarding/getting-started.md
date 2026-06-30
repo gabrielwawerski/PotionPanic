@@ -87,6 +87,12 @@ npm run docs:dev
 
 Open `http://127.0.0.1:6420/board` if the browser does not open automatically.
 
+Published read-only docs site:
+
+- `https://gabrielwawerski.github.io/PotionPanic/`
+- Use it for browsing and sharing the current docs state.
+- Do not expect board or plan edits there to write back to markdown.
+
 If you want Windows sign-in to start the local docs server without opening a
 browser:
 

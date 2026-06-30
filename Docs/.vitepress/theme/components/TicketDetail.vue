@@ -282,12 +282,13 @@ function updateTicketList(
 
 function dependencyHref(value: string) {
   return resolveTicketHref(value, {
+    base: import.meta.env.BASE_URL,
     ticketHrefs: ticketHrefLookup.value,
   });
 }
 
 function documentationHref(value: string) {
-  return buildDocumentationHref(value);
+  return buildDocumentationHref(value, import.meta.env.BASE_URL);
 }
 
 function buildUpdatedBody(heading: string, content: string) {
