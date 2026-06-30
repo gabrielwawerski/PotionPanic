@@ -33,7 +33,7 @@ jobs:
 
       - name: Checkout private Docboard dependency
         run: |
-          git clone --depth 1 https://x-access-token:${{ secrets.DOCBOARD_REPO_TOKEN }}@github.com/gabrielwawerski/Docboard.git ../Docboard
+          git clone --depth 1 https://x-access-token:${{ secrets.DOCBOARD_REPO_TOKEN }}@github.com/gabrielwawerski/docboard.git ../Docboard
 
       - name: Install dependencies
         run: npm ci
