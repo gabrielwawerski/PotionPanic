@@ -1,6 +1,7 @@
 import path from "node:path";
 
 import {
+  DEFAULT_EXCLUDED_DIRS,
   buildSidebarThemeConfig,
   isSidebarContentPath,
 } from "./sidebar.mjs";
@@ -10,7 +11,10 @@ function normalizePath(value) {
   return `${value ?? ""}`.trim().replace(/\\/g, "/");
 }
 
-export function sidebarHmrPlugin() {
+export function sidebarHmrPlugin({
+  excludedDirs = DEFAULT_EXCLUDED_DIRS,
+  sections = [],
+} = {}) {
   let srcDir = "";
 
   function buildPayload() {
@@ -18,14 +22,14 @@ export function sidebarHmrPlugin() {
       type: "custom",
       event: "potion-panic:sidebar-update",
       data: {
-        sidebar: buildSidebarThemeConfig(srcDir),
+        sidebar: buildSidebarThemeConfig(srcDir, {excludedDirs, sections}),
       },
     };
   }
 
   function isRelevantFile(file) {
     const relativePath = normalizePath(path.relative(srcDir, file));
-    return isSidebarContentPath(relativePath);
+    return isSidebarContentPath(relativePath, {excludedDirs, sections});
   }
 
   function isSyncablePlanFile(file) {

@@ -10,74 +10,6 @@ export const DEFAULT_EXCLUDED_DIRS = [
   "tickets",
 ];
 
-export const SIDEBAR_SECTIONS = [
-  {
-    text: "Docs",
-    items: [
-      {text: "Overview", link: "/"},
-      {text: "Board", link: "/board"},
-    ],
-  },
-  {
-    text: "Onboarding",
-    includeDirs: ["onboarding"],
-    items: [
-      {text: "Getting Started", link: "/onboarding/getting-started"},
-    ],
-  },
-  {
-    text: "Collaboration",
-    includeDirs: ["collaboration"],
-    items: [
-      {text: "Team Workflow", link: "/collaboration/team-workflow"},
-    ],
-  },
-  {
-    text: "Project",
-    includeDirs: ["project"],
-    items: [
-      {text: "Game Design", link: "/project/game-design"},
-      {text: "MVP Scope", link: "/project/mvp-scope"},
-      {text: "Technical Architecture", link: "/project/technical-architecture"},
-      {text: "Game Design and Psychology", link: "/project/game-design-and-psychology"},
-    ],
-  },
-  {
-    text: "Plans",
-    includeDirs: ["plans"],
-    items: [
-      {text: "Implementation Plans", link: "/plans/"},
-    ],
-  },
-  {
-    text: "Guides",
-    includeDirs: ["guides"],
-    items: [
-      {text: "Unity Guides", link: "/guides/unity/"},
-      {text: "Runtime Architecture", link: "/guides/unity/runtime-architecture"},
-      {
-        text: "Coding And Implementation",
-        link: "/guides/unity/coding-and-implementation"
-      },
-      {text: "Editor Safety", link: "/guides/unity/editor-safety"},
-      {
-        text: "Presentation Workflows",
-        link: "/guides/unity/presentation-workflows"
-      },
-    ],
-  },
-  {
-    text: "Planning History",
-    includeDirs: ["archive", "milestones"],
-    items: [
-      {text: "Milestones", link: "/milestones/"},
-      {text: "Archive Board", link: "/archive/board"},
-      {text: "Archive", link: "/archive/"},
-      {text: "Archived Plans", link: "/archive/completed/"},
-    ],
-  },
-];
-
 function normalizePath(value) {
   return `${value ?? ""}`.trim().replace(/\\/g, "/").replace(/^\/+|\/+$/g, "");
 }
@@ -127,7 +59,7 @@ export function isSidebarContentPath(
   relativePath,
   {
     excludedDirs = DEFAULT_EXCLUDED_DIRS,
-    sections = SIDEBAR_SECTIONS,
+    sections = [],
   } = {}
 ) {
   const normalizedPath = normalizePath(relativePath);
@@ -336,7 +268,7 @@ export function buildSidebarThemeConfig(
   docsDir,
   {
     excludedDirs = DEFAULT_EXCLUDED_DIRS,
-    sections = SIDEBAR_SECTIONS,
+    sections = [],
   } = {}
 ) {
   return {

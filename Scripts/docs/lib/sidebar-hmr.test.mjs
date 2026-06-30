@@ -26,8 +26,72 @@ function writeMarkdown(root, relativePath, content) {
   fs.writeFileSync(filePath, content);
 }
 
+const workflowSidebarOptions = {
+  sections: [
+    {
+      text: "Start Here",
+      items: [
+        {text: "Docs Home", link: "/"},
+        {text: "Getting Started", link: "/onboarding/getting-started"},
+        {text: "Team Workflow", link: "/collaboration/team-workflow"},
+      ],
+    },
+    {
+      text: "Active Work",
+      includeDirs: ["plans"],
+      items: [
+        {text: "Board", link: "/board"},
+        {text: "Implementation Plans", link: "/plans/"},
+        {text: "Milestones", link: "/milestones/"},
+      ],
+    },
+    {
+      text: "Project Truth",
+      items: [
+        {text: "Game Design", link: "/project/game-design"},
+        {text: "MVP Scope", link: "/project/mvp-scope"},
+        {
+          text: "Technical Architecture",
+          link: "/project/technical-architecture",
+        },
+        {
+          text: "Game Design And Psychology",
+          link: "/project/game-design-and-psychology",
+        },
+      ],
+    },
+    {
+      text: "Unity Guides",
+      items: [
+        {text: "Guides", link: "/guides/unity/"},
+        {
+          text: "Runtime Architecture",
+          link: "/guides/unity/runtime-architecture",
+        },
+        {
+          text: "Coding And Implementation",
+          link: "/guides/unity/coding-and-implementation",
+        },
+        {text: "Editor Safety", link: "/guides/unity/editor-safety"},
+        {
+          text: "Presentation Workflows",
+          link: "/guides/unity/presentation-workflows",
+        },
+      ],
+    },
+    {
+      text: "Archive",
+      items: [
+        {text: "Archive", link: "/archive/"},
+        {text: "Archive Board", link: "/archive/board"},
+        {text: "Archived Plans", link: "/archive/completed/"},
+      ],
+    },
+  ],
+};
+
 test("buildSidebarThemeConfig returns the root sidebar mapping", async () => {
-  const {buildSidebarThemeConfig, SIDEBAR_SECTIONS} = await loadSidebarModule();
+  const {buildSidebarThemeConfig} = await loadSidebarModule();
   const docsDir = fs.mkdtempSync(path.join(os.tmpdir(), "pp-sidebar-hmr-"));
 
   writeMarkdown(docsDir, "index.md", "# Docs Index\n");
@@ -35,51 +99,50 @@ test("buildSidebarThemeConfig returns the root sidebar mapping", async () => {
   writeMarkdown(docsDir, "plans/index.md", "# Plans\n");
   writeMarkdown(docsDir, "plans/live-sidebar.md", "# Live Sidebar\n");
 
-  const sidebar = buildSidebarThemeConfig(docsDir);
+  const sidebar = buildSidebarThemeConfig(docsDir, workflowSidebarOptions);
 
-  assert.ok(Array.isArray(SIDEBAR_SECTIONS));
   assert.deepEqual(sidebar, {
     "/": [
       {
-        text: "Docs",
+        text: "Start Here",
         items: [
-          {text: "Overview", link: "/"},
-          {text: "Board", link: "/board"},
-        ],
-      },
-      {
-        text: "Onboarding",
-        items: [
+          {text: "Docs Home", link: "/"},
           {text: "Getting Started", link: "/onboarding/getting-started"},
-        ],
-      },
-      {
-        text: "Collaboration",
-        items: [
           {text: "Team Workflow", link: "/collaboration/team-workflow"},
         ],
       },
       {
-        text: "Project",
+        text: "Active Work",
         items: [
-          {text: "Game Design", link: "/project/game-design"},
-          {text: "MVP Scope", link: "/project/mvp-scope"},
-          {text: "Technical Architecture", link: "/project/technical-architecture"},
-          {text: "Game Design and Psychology", link: "/project/game-design-and-psychology"},
-        ],
-      },
-      {
-        text: "Plans",
-        items: [
+          {text: "Board", link: "/board"},
           {text: "Implementation Plans", link: "/plans/"},
+          {text: "Milestones", link: "/milestones/"},
           {text: "Live Sidebar", link: "/plans/live-sidebar"},
         ],
       },
       {
-        text: "Guides",
+        text: "Project Truth",
         items: [
-          {text: "Unity Guides", link: "/guides/unity/"},
-          {text: "Runtime Architecture", link: "/guides/unity/runtime-architecture"},
+          {text: "Game Design", link: "/project/game-design"},
+          {text: "MVP Scope", link: "/project/mvp-scope"},
+          {
+            text: "Technical Architecture",
+            link: "/project/technical-architecture",
+          },
+          {
+            text: "Game Design And Psychology",
+            link: "/project/game-design-and-psychology",
+          },
+        ],
+      },
+      {
+        text: "Unity Guides",
+        items: [
+          {text: "Guides", link: "/guides/unity/"},
+          {
+            text: "Runtime Architecture",
+            link: "/guides/unity/runtime-architecture",
+          },
           {
             text: "Coding And Implementation",
             link: "/guides/unity/coding-and-implementation",
@@ -92,11 +155,10 @@ test("buildSidebarThemeConfig returns the root sidebar mapping", async () => {
         ],
       },
       {
-        text: "Planning History",
+        text: "Archive",
         items: [
-          {text: "Milestones", link: "/milestones/"},
-          {text: "Archive Board", link: "/archive/board"},
           {text: "Archive", link: "/archive/"},
+          {text: "Archive Board", link: "/archive/board"},
           {text: "Archived Plans", link: "/archive/completed/"},
         ],
       },
@@ -131,7 +193,7 @@ test("sidebar HMR plugin emits updates only for relevant docs markdown paths",
       },
     };
 
-    const plugin = sidebarHmrPlugin();
+    const plugin = sidebarHmrPlugin(workflowSidebarOptions);
     plugin.configResolved({root: docsDir});
     const server = {
       watcher,
@@ -158,9 +220,11 @@ test("sidebar HMR plugin emits updates only for relevant docs markdown paths",
       "potion-panic:sidebar-update",
     ]);
     assert.equal(sent[0].type, "custom");
-    assert.equal(sent[0].data.sidebar["/"][4].items.at(-1).text, "Live Sidebar");
-    assert.deepEqual(sent[1].data.sidebar["/"][4].items, [
+    assert.equal(sent[0].data.sidebar["/"][1].items.at(-1).text, "Live Sidebar");
+    assert.deepEqual(sent[1].data.sidebar["/"][1].items, [
+      {text: "Board", link: "/board"},
       {text: "Implementation Plans", link: "/plans/"},
+      {text: "Milestones", link: "/milestones/"},
       {text: "New Plan", link: "/plans/new-plan"},
       {text: "Live Sidebar", link: "/plans/live-sidebar"},
     ]);
@@ -199,7 +263,7 @@ test("sidebar HMR plugin syncs the active plans index for manual plan file chang
       },
     };
 
-    const plugin = sidebarHmrPlugin();
+    const plugin = sidebarHmrPlugin(workflowSidebarOptions);
     plugin.configResolved({root: docsDir});
     const server = {
       watcher,
