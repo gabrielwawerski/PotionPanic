@@ -9,3 +9,6 @@ Completed or superseded implementation plans from `Docs/plans/` live here.
 - [VitePress Live Sidebar Updates During `docs:dev`](./vitepress-live-sidebar-updates-2026-06-29.md)
 - [VitePress Board UX Plans](./vitepress-board-ux-plans.md)
 - [VitePress Theme Review - 2026-06-28](./vitepress-theme-review-2026-06-28.md)
+- [VitePress Manual Plan Index Sync](./vitepress-manual-plan-index-sync-2026-06-29.md)
+- [VitePress Ticket Filename With Title Plan](./vitepress-ticket-filename-with-title-plan.md)
+- [Private Reusable VitePress Docs Package Plan](./vitepress-private-reusable-package-plan-2026-06-30.md)

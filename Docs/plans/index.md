@@ -12,11 +12,8 @@ superseded plans into [`../archive/completed/index.md`](../archive/completed/ind
 ## Active Plans
 
 - [Restore `TagEditor` As The Editable Tags UI](./vitepress-tag-editor-restore-plan.md)
-- [VitePress Manual Plan Index Sync](./vitepress-manual-plan-index-sync-2026-06-29.md)
 - [VitePress On-Page Plan Authoring](./vitepress-on-page-plan-authoring.md)
-- [VitePress Ticket Filename With Title Plan](./vitepress-ticket-filename-with-title-plan.md)
 - [Whole-Column Drag Targets For Board Columns](./vitepress-whole-column-drag-targets.md)
-- [Private Reusable VitePress Docs Package Plan](./vitepress-private-reusable-package-plan-2026-06-30.md)
 - [Archived Plan Restore](./vitepress-archived-plan-restore.md)
 ## Writing Rules
 
