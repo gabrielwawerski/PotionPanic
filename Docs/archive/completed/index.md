@@ -12,3 +12,4 @@ Completed or superseded implementation plans from `Docs/plans/` live here.
 - [VitePress Manual Plan Index Sync](./vitepress-manual-plan-index-sync-2026-06-29.md)
 - [VitePress Ticket Filename With Title Plan](./vitepress-ticket-filename-with-title-plan.md)
 - [Private Reusable VitePress Docs Package Plan](./vitepress-private-reusable-package-plan-2026-06-30.md)
+- [Whole-Column Drag Targets For Board Columns](./vitepress-whole-column-drag-targets.md)

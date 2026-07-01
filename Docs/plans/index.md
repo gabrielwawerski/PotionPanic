@@ -13,7 +13,6 @@ superseded plans into [`../archive/completed/index.md`](../archive/completed/ind
 
 - [Restore `TagEditor` As The Editable Tags UI](./vitepress-tag-editor-restore-plan.md)
 - [VitePress On-Page Plan Authoring](./vitepress-on-page-plan-authoring.md)
-- [Whole-Column Drag Targets For Board Columns](./vitepress-whole-column-drag-targets.md)
 - [Archived Plan Restore](./vitepress-archived-plan-restore.md)
 ## Writing Rules
 
