@@ -8,10 +8,10 @@ const projectDocsConfig = defineDocsProject({
   pagePathPrefix: "Docs",
   nav: [
     {text: "Home", link: "/"},
+    {text: "Board", link: "/board"},
     {
       text: "Work",
       items: [
-        {text: "Board", link: "/board"},
         {text: "Plans", link: "/plans/"},
         {text: "Milestones", link: "/milestones/"},
       ],
@@ -50,7 +50,14 @@ const projectDocsConfig = defineDocsProject({
         {text: "Workflow", link: "/collaboration/team-workflow"},
       ],
     },
-    {text: "Archive", link: "/archive/"},
+    {
+      text: "Archive",
+      items: [
+        {text: "Archive", link: "/archive/"},
+        {text: "Archive Board", link: "/archive/board"},
+        {text: "Archived Plans", link: "/archive/completed/"},
+      ],
+    },
   ],
   socialLinks: [
     {icon: "github", link: "https://github.com/gabrielwawerski/PotionPanic"},
