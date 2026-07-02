@@ -14,6 +14,10 @@ ticketSections:
   - Implementation Notes
   - Definition of Done
   - Notes
+tagColors:
+  as: '#9f7aea'
+  asd: '#e6a817'
+  docs-workflow: '#63b3ed'
 columns:
   - { key: backlog, label: Backlog, color: '#718096' }
   - { key: todo, label: To Do, color: '#63b3ed' }

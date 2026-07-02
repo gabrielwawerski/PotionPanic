@@ -25,6 +25,7 @@ affectedFiles:
   - CLAUDE.md
   - GEMINI.md
 tags: []
+order: 1
 ---
 
 ## Description

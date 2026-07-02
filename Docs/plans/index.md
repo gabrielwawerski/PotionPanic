@@ -11,8 +11,9 @@ superseded plans into [`../archive/completed/index.md`](../archive/completed/ind
 
 ## Active Plans
 
-- [Restore `TagEditor` As The Editable Tags UI](./vitepress-tag-editor-restore-plan.md)
+- [Restore `TagEditor` As The Editable Tags UI With Tag Color Editing](./vitepress-tag-editor-restore-plan.md)
 - [VitePress On-Page Plan Authoring](./vitepress-on-page-plan-authoring.md)
+- [VitePress Native Additions In Docboard](./vitepress-docboard-native-additions-plan.md)
 - [Archived Plan Restore](./vitepress-archived-plan-restore.md)
 ## Writing Rules
 
