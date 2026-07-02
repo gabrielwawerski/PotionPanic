@@ -4,6 +4,7 @@ const projectDocsConfig = defineDocsProject({
   title: "Potion Panic",
   description: "Shared project docs and task board for Potion Panic.",
   base: "/PotionPanic/",
+  lastUpdated: true,
   docsRoot: "Docs",
   pagePathPrefix: "Docs",
   nav: [

@@ -24,8 +24,7 @@ test("PotionPanic docs config can be consumed by Docboard package APIs", () => {
     [
       {text: "Home", items: undefined},
       {text: "Board", items: undefined},
-      {text: "Plans", items: undefined},
-      {text: "Work", items: ["Milestones"]},
+      {text: "Work", items: ["Plans", "Milestones"]},
       {text: "Project", items: [
         "Game Design",
         "MVP Scope",
@@ -46,8 +45,10 @@ test("PotionPanic docs config can be consumed by Docboard package APIs", () => {
       ]},
     ]
   );
+  assert.equal(config.lastUpdated, true);
   assert.deepEqual(projectDocsConfig.themeConfig.outline, [2, 3]);
   assert.deepEqual(config.themeConfig.outline, [2, 3]);
+  assert.deepEqual(config.themeConfig.search, {provider: "local"});
   assert.ok(
     config.themeConfig.sidebar["/"].some(
       (section) => section.text === "Unity Guides"
