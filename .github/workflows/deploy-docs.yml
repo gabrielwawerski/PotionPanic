@@ -53,6 +53,9 @@ jobs:
             "https://x-access-token:${DOCBOARD_REPO_TOKEN}@github.com/gabrielwawerski/docboard.git" \
             ../Docboard
 
+          git config --global --add url."https://x-access-token:${DOCBOARD_REPO_TOKEN}@github.com/".insteadOf "ssh://git@github.com/"
+          git config --global --add url."https://x-access-token:${DOCBOARD_REPO_TOKEN}@github.com/".insteadOf "git@github.com:"
+
       - name: Install dependencies
         run: npm ci
         env:

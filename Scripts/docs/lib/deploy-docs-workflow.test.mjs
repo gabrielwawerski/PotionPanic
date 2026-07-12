@@ -16,6 +16,13 @@ test("deploy docs workflow fetches full history for docs timestamps", () => {
   );
 });
 
+test("deploy docs workflow rewrites both private Git URL forms", () => {
+  const source = fs.readFileSync(workflowPath, "utf8");
+
+  assert.match(source, /git config --global --add .*insteadOf "ssh:\/\/git@github\.com\/"/);
+  assert.match(source, /git config --global --add .*insteadOf "git@github\.com:"/);
+});
+
 test("README documents the manual Pages settings fallback", () => {
   const source = fs.readFileSync(readmePath, "utf8");
 
