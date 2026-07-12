@@ -5,6 +5,7 @@ import test from "node:test";
 
 const workflowPath = path.resolve(".github/workflows/deploy-docs.yml");
 const readmePath = path.resolve("README.md");
+const packagePath = path.resolve("package.json");
 
 test("deploy docs workflow fetches full history for docs timestamps", () => {
   const source = fs.readFileSync(workflowPath, "utf8");
@@ -16,11 +17,12 @@ test("deploy docs workflow fetches full history for docs timestamps", () => {
   );
 });
 
-test("deploy docs workflow rewrites both private Git URL forms", () => {
+test("deploy docs workflow installs the checked-out private Docboard dependency", () => {
   const source = fs.readFileSync(workflowPath, "utf8");
+  const packageJson = JSON.parse(fs.readFileSync(packagePath, "utf8"));
 
-  assert.match(source, /git config --global --add .*insteadOf "ssh:\/\/git@github\.com\/"/);
-  assert.match(source, /git config --global --add .*insteadOf "git@github\.com:"/);
+  assert.match(source, /git clone --depth 1[\s\S]*\.\.\/Docboard/);
+  assert.strictEqual(packageJson.devDependencies["@gabrielwawerski/docboard"], "file:../Docboard");
 });
 
 test("README documents the manual Pages settings fallback", () => {
