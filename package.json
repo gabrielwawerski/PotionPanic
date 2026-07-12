@@ -12,10 +12,13 @@
     "docs:stop": "node Scripts/docs/run-windows-docs-stop.mjs",
     "docs:ticket": "docboard create-ticket",
     "docs:ui": "docboard open-board --url http://127.0.0.1:6420/PotionPanic/board --script docs:dev",
-    "test": "node --test \"Scripts/docs/**/*.test.mjs\""
+    "test": "node --test \"Scripts/docs/**/*.test.mjs\"",
+    "docboard": "docboard",
+    "docboard:open": "docboard open-board --script docs:dev --repo-root .",
+    "docboard:create-ticket": "docboard create-ticket --board docs/board.md --dir docs/tickets"
   },
   "devDependencies": {
-    "@gabrielwawerski/docboard": "file:../Docboard",
+    "@gabrielwawerski/docboard": "github:gabrielwawerski/docboard",
     "gray-matter": "^4.0.3",
     "vitepress": "^1.6.4",
     "vue": "^3.5.39"
