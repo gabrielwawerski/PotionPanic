@@ -49,10 +49,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install Docboard dependencies
+        working-directory: ../Docboard
+        run: npm ci
+
       - name: Build docs
         run: npm run docs:build
-        env:
-          NODE_OPTIONS: --preserve-symlinks
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
