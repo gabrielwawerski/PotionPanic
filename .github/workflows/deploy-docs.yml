@@ -55,6 +55,8 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+        env:
+          DOCBOARD_REPO_TOKEN: ${{ secrets.DOCBOARD_REPO_TOKEN }}
 
       - name: Install Docboard dependencies
         working-directory: ../Docboard
