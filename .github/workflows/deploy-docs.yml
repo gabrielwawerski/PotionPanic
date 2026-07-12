@@ -33,7 +33,7 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      - name: Configure Docboard Git access
+      - name: Checkout private Docboard dependency
         env:
           DOCBOARD_REPO_TOKEN: ${{ secrets.DOCBOARD_REPO_TOKEN }}
         run: |
@@ -42,11 +42,15 @@ jobs:
             exit 1
           fi
 
-          git config --global \
-            url."https://x-access-token:${DOCBOARD_REPO_TOKEN}@github.com/".insteadOf \
-            "ssh://git@github.com/"
+          git clone --depth 1 \
+            "https://x-access-token:${DOCBOARD_REPO_TOKEN}@github.com/gabrielwawerski/docboard.git" \
+            ../Docboard
 
       - name: Install dependencies
+        run: npm ci
+
+      - name: Install Docboard dependencies
+        working-directory: ../Docboard
         run: npm ci
 
       - name: Build docs

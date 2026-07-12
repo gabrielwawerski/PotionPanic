@@ -18,7 +18,7 @@
     "docboard:create-ticket": "docboard create-ticket --board docs/board.md --dir docs/tickets"
   },
   "devDependencies": {
-    "@gabrielwawerski/docboard": "github:gabrielwawerski/docboard",
+    "@gabrielwawerski/docboard": "file:../Docboard",
     "gray-matter": "^4.0.3",
     "vitepress": "^1.6.4",
     "vue": "^3.5.39"
