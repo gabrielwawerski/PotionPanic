@@ -17,18 +17,20 @@ test("deploy docs workflow fetches full history for docs timestamps", () => {
   );
 });
 
-test("deploy docs workflow installs the checked-out private Docboard dependency", () => {
+test("deploy docs workflow installs the private Git-sourced Docboard dependency", () => {
   const source = fs.readFileSync(workflowPath, "utf8");
+  const commandSource = source.replace(/\\\s*\r?\n\s*/g, " ");
   const packageJson = JSON.parse(fs.readFileSync(packagePath, "utf8"));
 
-  assert.match(source, /git clone --depth 1[\s\S]*\.\.\/Docboard/);
-  assert.strictEqual(packageJson.devDependencies["@gabrielwawerski/docboard"], "file:../Docboard");
-});
-
-test("deploy docs workflow installs Docboard's build dependencies", () => {
-  const source = fs.readFileSync(workflowPath, "utf8");
-
-  assert.match(source, /working-directory:\s*\.\.\/Docboard\s+run:\s*npm ci/);
+  assert.strictEqual(
+    packageJson.devDependencies["@gabrielwawerski/docboard"],
+    "github:gabrielwawerski/docboard"
+  );
+  assert.match(
+    commandSource,
+    /url\."https:\/\/x-access-token:\$\{DOCBOARD_REPO_TOKEN\}@github\.com\/"\.insteadOf\s+"ssh:\/\/git@github\.com\/"/
+  );
+  assert.doesNotMatch(source, /git clone --depth 1|working-directory:\s*\.\.\/Docboard/);
 });
 
 test("README documents the manual Pages settings fallback", () => {

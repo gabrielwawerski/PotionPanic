@@ -90,9 +90,10 @@ npm run docs:build
 npm test
 ```
 
-`npm install` links the private `@gabrielwawerski/docboard` dependency from the
-sibling `../Docboard` checkout. `npm run docs:ui` calls the package CLI to start
-the VitePress server when needed and open the editable PotionPanic board.
+`npm install` downloads the private `@gabrielwawerski/docboard` dependency from
+GitHub. Configure GitHub SSH access with read permission first. `npm run docs:ui`
+calls the package CLI to start the VitePress server when needed and open the
+editable PotionPanic board.
 
 Published read-only site:
 

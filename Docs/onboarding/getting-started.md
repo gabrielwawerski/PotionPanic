@@ -82,9 +82,9 @@ npm install
 npm run docs:ui
 ```
 
-`npm install` links `@gabrielwawerski/docboard` from the sibling `../Docboard`
-checkout. `npm run docs:ui` uses that package CLI to start the docs server when
-needed and open the editable PotionPanic board.
+`npm install` downloads `@gabrielwawerski/docboard` from GitHub. Configure
+GitHub SSH access with read permission first. `npm run docs:ui` uses that package
+CLI to start the docs server when needed and open the editable PotionPanic board.
 
 Equivalent manual command:
 
