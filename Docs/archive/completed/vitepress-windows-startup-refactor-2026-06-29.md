@@ -64,7 +64,7 @@ precedent.
     `http://127.0.0.1:6420/board`.
 
 - Documentation alignment
-  - Update `README.md` and `Docs/onboarding/getting-started.md` to explain:
+  - Update `README.md` and [Docs/onboarding/getting-started.md](../../onboarding/getting-started.md) to explain:
     - `docs:dev` = LAN-accessible manual server
     - `docs:dev:local` = local-only server
     - `docs:ui` = manual browser-opening command

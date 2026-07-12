@@ -17,11 +17,11 @@ added.
 
 ### Board Behavior And Docs Structure
 
-- Keep the active board at `Docs/board.md`.
-- Add a dedicated archive board page at `Docs/archive/board.md`.
+- Keep the active board at [Docs/board.md](../../board.md).
+- Add a dedicated archive board page at [Docs/archive/board.md](../board.md).
 - Store active tickets in `Docs/tickets/` and archived tickets in
   `Docs/archive/tickets/`.
-- Link the new archive board from `Docs/archive/index.md` and the VitePress
+- Link the new archive board from [Docs/archive/index.md](../index.md) and the VitePress
   sidebar so it is discoverable from the existing Archive section.
 - Treat the archive board as read-only except for a restore action.
 

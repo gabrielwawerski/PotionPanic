@@ -6,10 +6,10 @@ date: 2026-06-29
 
 ## Summary
 
-- Add dev-only plan authoring for active plan docs so plans can be created from `Docs/plans/index.md` and edited from individual `Docs/plans/*.md` pages.
+- Add dev-only plan authoring for active plan docs so plans can be created from [Docs/plans/index.md](./index.md) and edited from individual `Docs/plans/*.md` pages.
 - Use a raw markdown body editor with a separate title field, not a ticket-style structured section editor.
 - Keep static builds and archived plans read-only.
-- Auto-maintain the `## Active Plans` list in `Docs/plans/index.md` and keep the existing archive flow.
+- Auto-maintain the `## Active Plans` list in [Docs/plans/index.md](./index.md) and keep the existing archive flow.
 - Sort the Plans sidebar section by plan `date:` ascending, with `plans/index.md` always first, so newer plans appear later.
 
 ## Implementation Changes
@@ -53,15 +53,15 @@ date: 2026-06-29
   - `POST /__vitepress_pm_update_plan`
 - Endpoint behavior:
   - `GET` returns `{ title, body, url, filePath, date }` for active plan pages only.
-  - `create` writes `Docs/plans/<title-slug>.md`, sets `date: YYYY-MM-DD`, returns the new URL, and updates `Docs/plans/index.md`.
-  - `update` preserves the existing `date`, preserves any unrelated frontmatter, rewrites the first H1 from `title`, rewrites the markdown body, keeps the slug stable, and updates the matching `Docs/plans/index.md` label if the title changed.
+  - `create` writes `Docs/plans/<title-slug>.md`, sets `date: YYYY-MM-DD`, returns the new URL, and updates [Docs/plans/index.md](./index.md).
+  - `update` preserves the existing `date`, preserves any unrelated frontmatter, rewrites the first H1 from `title`, rewrites the markdown body, keeps the slug stable, and updates the matching [Docs/plans/index.md](./index.md) label if the title changed.
 - Treat the first `# ...` heading as the canonical plan title. If an older file lacks one, inject it on save.
 - Treat `date:` frontmatter as the canonical sort key for plan pages.
 - For existing plan files that lack `date:`, add a one-time backfill as part of this slice:
   - use an explicit `YYYY-MM-DD` value in frontmatter
   - infer from an existing filename date when available
   - otherwise set the date intentionally during migration rather than relying on filesystem timestamps
-- Extend `Docs/.vitepress/lib/plan-archive.mjs` so archiving also removes that plan’s bullet from `Docs/plans/index.md` while continuing to add it to `Docs/archive/completed/index.md`.
+- Extend `Docs/.vitepress/lib/plan-archive.mjs` so archiving also removes that plan’s bullet from [Docs/plans/index.md](./index.md) while continuing to add it to [Docs/archive/completed/index.md](../archive/completed/index.md).
 
 ### Sidebar Ordering and Index Rules
 
@@ -70,8 +70,8 @@ date: 2026-06-29
   2. then `date:` ascending
   3. then link/text as a stable tiebreaker
 - Keep non-Plan sections on their current behavior unless explicitly changed later.
-- Auto-maintain only the `## Active Plans` section in `Docs/plans/index.md`.
-- Preserve all other prose in `Docs/plans/index.md`.
+- Auto-maintain only the `## Active Plans` section in [Docs/plans/index.md](./index.md).
+- Preserve all other prose in [Docs/plans/index.md](./index.md).
 - Creation appends a new bullet if missing.
 - Edit updates the existing bullet text for the same plan URL.
 - Archive removes the bullet from `## Active Plans`.
@@ -100,7 +100,7 @@ date: 2026-06-29
   - slug generation and collision suffixes
   - create/update writes
   - `date:` write-on-create and preserve-on-update behavior
-  - `Docs/plans/index.md` add/update/remove behavior
+  - [Docs/plans/index.md](./index.md) add/update/remove behavior
 - Extend sidebar tests to verify the Plans section sorts:
   - `plans/index.md` first
   - then dated plans oldest to newest
@@ -122,7 +122,7 @@ date: 2026-06-29
 
 ## Assumptions
 
-- V1 scope is active plans only: create from `Docs/plans/index.md`, edit on `Docs/plans/*.md`.
+- V1 scope is active plans only: create from [Docs/plans/index.md](./index.md), edit on `Docs/plans/*.md`.
 - Archived plans remain read-only and keep the current one-way archive flow.
 - Raw markdown body editing is intentional; no structured section editor or live preview is included.
 - The current plan index page remains authoritative and should not drift from actual active plan files.

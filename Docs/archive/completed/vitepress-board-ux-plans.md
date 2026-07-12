@@ -20,7 +20,7 @@ and isolates the riskier persistence change for drag ordering.
 ### Shared Suggestion Infrastructure
 
 - Add a board-level suggestion catalog that merges observed values from current
-  tickets with optional curated seeds from `Docs/board.md`.
+  tickets with optional curated seeds from [Docs/board.md](../../board.md).
 - Add one reusable modal input component for assisted entry:
   - single-value combobox mode for `milestone`
   - multi-value chip/token mode for `tags`, `dependencies`, and
@@ -36,7 +36,7 @@ and isolates the riskier persistence change for drag ordering.
   suggests existing matching tags as the user types.
 - Use two suggestion sources:
   - observed tags from loaded tickets
-  - optional `ticketFieldSuggestions.tags` seeds from `Docs/board.md`
+  - optional `ticketFieldSuggestions.tags` seeds from [Docs/board.md](../../board.md)
 - Keep stored values as the same lowercase string tags already used today.
 - Do not add a separate tag-management screen or enforce a closed tag
   vocabulary.
@@ -119,7 +119,7 @@ and isolates the riskier persistence change for drag ordering.
 
 - Suggestion UX is meant to accelerate entry, not force strict controlled
   vocabularies.
-- `Docs/board.md` remains the single board-level configuration source.
+- [Docs/board.md](../../board.md) remains the single board-level configuration source.
 - Documentation suggestions should prioritize VitePress-site docs; non-site
   files remain allowed via custom entry.
 - Manual ordering is per status column, not one board-wide global sequence.

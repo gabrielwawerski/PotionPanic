@@ -37,7 +37,7 @@ the background.
    server-only autolaunch entrypoint instead of the manual browser-opening launcher.
 4. Keep removal behavior reliable and update any shortcut naming or descriptions only as
    needed to reflect the new background-startup semantics.
-5. Update `README.md` and `Docs/getting-started.md` so human collaborators understand that
+5. Update `README.md` and [Docs/getting-started.md](../../onboarding/getting-started.md) so human collaborators understand that
    sign-in starts the Backlog server in the background, while `./scripts/backlog-ui.ps1`
    is the explicit command that opens the board.
 6. Verify the split with script parsing plus stubbed PowerShell runs that prove the
@@ -55,7 +55,7 @@ the background.
    server-only autolaunch entrypoint instead of the manual browser-opening launcher.
 4. Keep removal behavior reliable and update any shortcut naming or descriptions only as
    needed to reflect the new background-startup semantics.
-5. Update `README.md` and `Docs/getting-started.md` so human collaborators understand that
+5. Update `README.md` and [Docs/getting-started.md](../../onboarding/getting-started.md) so human collaborators understand that
    sign-in starts the Backlog server in the background, while `./scripts/backlog-ui.ps1`
    is the explicit command that opens the board.
 6. Verify the split with script parsing plus stubbed PowerShell runs that prove the
@@ -76,7 +76,7 @@ first when the server-only autolaunch script did not yet exist. After implementa
 reran the harness successfully to confirm the manual launcher starts the server and opens
 the URL, while the autolaunch script starts the server without opening a browser.
 
-Documentation: updated `README.md` and `Docs/getting-started.md` so humans know sign-in
+Documentation: updated `README.md` and [Docs/getting-started.md](../../onboarding/getting-started.md) so humans know sign-in
 only starts the Backlog server in the background and `./scripts/backlog-ui.ps1` remains
 the explicit browser-opening command.
 
@@ -93,8 +93,8 @@ includes a committed branch, and no commit was created in this session.
 - [x] #5 Branch committed and ready for review or merge
 
 ## Notes
-- Documentation: `README.md`, `Docs/getting-started.md`
+- Documentation: `README.md`, [Docs/getting-started.md](../../onboarding/getting-started.md)
 - Likely affected files: `scripts/backlog-browser-server.ps1`,
   `scripts/backlog-autolaunch.ps1`, `scripts/backlog-ui.ps1`,
   `scripts/install-backlog-autolaunch.ps1`, `scripts/remove-backlog-autolaunch.ps1`,
-  `scripts/test-backlog-launchers.ps1`, `README.md`, `Docs/getting-started.md`
+  `scripts/test-backlog-launchers.ps1`, `README.md`, [Docs/getting-started.md](../../onboarding/getting-started.md)

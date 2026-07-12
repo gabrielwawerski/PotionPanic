@@ -8,12 +8,12 @@ date: 2026-06-29
 
 - Keep the existing behavior where `Docs/plans/*.md` auto-refreshes the
   sidebar during `npm run docs:dev`.
-- Add matching auto-maintenance for `Docs/plans/index.md` so manual plan file
+- Add matching auto-maintenance for [Docs/plans/index.md](../../plans/index.md) so manual plan file
   adds, deletes, renames, and title changes update the `## Active Plans`
   section without hand-editing the index page.
 - Limit source-file mutation to dev-time authoring workflows; static builds
   should stay read-only.
-- Preserve all non-generated prose in `Docs/plans/index.md`.
+- Preserve all non-generated prose in [Docs/plans/index.md](../../plans/index.md).
 
 ## Key Changes
 
@@ -25,7 +25,7 @@ date: 2026-06-29
   - reads each plan title from frontmatter `title`, then first `#` heading,
     then filename fallback
   - reads optional `date:` frontmatter for deterministic ordering
-  - rewrites only the `## Active Plans` section in `Docs/plans/index.md`
+  - rewrites only the `## Active Plans` section in [Docs/plans/index.md](../../plans/index.md)
   - restores the `_No active plans yet._` placeholder when no active plans
     remain
 - Reuse the same plan ordering rules already used by the sidebar so the Plans
@@ -41,10 +41,10 @@ date: 2026-06-29
   sidebar HMR flow, for active plan pages under `Docs/plans/`.
 - On `add`, `unlink`, or content changes to non-index active plan files:
   - run `syncActivePlansIndex(docsDir)` before sending sidebar updates
-  - let the normal VitePress markdown watcher refresh `Docs/plans/index.md`
+  - let the normal VitePress markdown watcher refresh [Docs/plans/index.md](../../plans/index.md)
     after the sync rewrites it
 - Ignore:
-  - `Docs/plans/index.md` itself to avoid self-trigger loops
+  - [Docs/plans/index.md](../../plans/index.md) itself to avoid self-trigger loops
   - archived plan paths
   - non-plan docs pages
 - Keep static `vitepress build` behavior non-mutating. If index repair is
@@ -80,10 +80,10 @@ date: 2026-06-29
   - full-section rebuild from multiple plan files
   - title resolution from frontmatter, heading, and filename fallback
   - placeholder restoration when there are no active plans
-  - preservation of surrounding prose in `Docs/plans/index.md`
+  - preservation of surrounding prose in [Docs/plans/index.md](../../plans/index.md)
 - Extend `Scripts/docs/lib/sidebar-hmr.test.mjs` or add a focused watcher test
   to verify:
-  - adding `Docs/plans/new-plan.md` rewrites `Docs/plans/index.md`
+  - adding `Docs/plans/new-plan.md` rewrites [Docs/plans/index.md](../../plans/index.md)
   - deleting a plan removes its bullet
   - editing a plan title updates the index label
   - non-plan markdown changes do not rewrite the plans index
@@ -94,7 +94,7 @@ date: 2026-06-29
   - `npm run docs:build`
 - Manual verification in `npm run docs:dev`:
   - create a plan file directly under `Docs/plans/` and confirm it appears in
-    both the sidebar and `Docs/plans/index.md`
+    both the sidebar and [Docs/plans/index.md](../../plans/index.md)
   - rename or delete that file and confirm both locations update
   - change the plan title and confirm the index label updates
   - confirm archived plans still stay out of the active index
@@ -105,6 +105,6 @@ date: 2026-06-29
   be redesigned.
 - Auto-sync is only required while the VitePress dev server is running; this
   slice does not introduce a background watcher outside docs tooling.
-- `Docs/plans/index.md` remains the human-readable landing page, but its
+- [Docs/plans/index.md](../../plans/index.md) remains the human-readable landing page, but its
   `## Active Plans` section becomes generated from filesystem truth.
 - Plan `date:` frontmatter remains the canonical sort signal when present.
