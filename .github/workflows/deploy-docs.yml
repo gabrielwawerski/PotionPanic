@@ -51,6 +51,8 @@ jobs:
 
       - name: Build docs
         run: npm run docs:build
+        env:
+          NODE_OPTIONS: --preserve-symlinks
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4

@@ -25,6 +25,12 @@ test("deploy docs workflow installs the checked-out private Docboard dependency"
   assert.strictEqual(packageJson.devDependencies["@gabrielwawerski/docboard"], "file:../Docboard");
 });
 
+test("deploy docs workflow preserves the Docboard package symlink", () => {
+  const source = fs.readFileSync(workflowPath, "utf8");
+
+  assert.match(source, /NODE_OPTIONS:\s*--preserve-symlinks/);
+});
+
 test("README documents the manual Pages settings fallback", () => {
   const source = fs.readFileSync(readmePath, "utf8");
 
