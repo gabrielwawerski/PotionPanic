@@ -66,6 +66,12 @@ If you are new to the repo, read these in order:
   - repo-aligned script structure
 
 - [`game-design-and-psychology.md`](project/game-design-and-psychology.md)
+  - research and reference guide, not locked project requirements
+  - player motivation, attention, and engagement
+  - game feel, feedback, and ethical retention
+  - small-team design and market considerations
+  - prototype and playtest validation
+  - temporarily stored under `project/` until moved to a research section
 
 ### `guides/unity/`
 
@@ -113,15 +119,20 @@ If you are new to the repo, read these in order:
 
 Use one primary doc per topic:
 
-| Topic                         | Canonical doc                                                                                                            |
-|-------------------------------|--------------------------------------------------------------------------------------------------------------------------|
-| Local onboarding              | [`onboarding/getting-started.md`](onboarding/getting-started.md)                                                         |
-| Team process                  | [`collaboration/team-workflow.md`](collaboration/team-workflow.md)                                                       |
-| Player-facing design          | [`project/game-design.md`](project/game-design.md)                                                                       |
-| MVP scope and milestone order | [`project/mvp-scope.md`](project/mvp-scope.md)                                                                           |
-| Runtime architecture          | [`project/technical-architecture.md`](project/technical-architecture.md)                                                 |
-| Unity implementation guidance | [`guides/unity/index.md`](guides/unity/index.md) and its linked guide pages                                              |
+| Topic | Canonical doc |
+| --- | --- |
+| Local onboarding | [`onboarding/getting-started.md`](onboarding/getting-started.md) |
+| Team process | [`collaboration/team-workflow.md`](collaboration/team-workflow.md) |
+| Player-facing design | [`project/game-design.md`](project/game-design.md) |
+| MVP scope and milestone order | [`project/mvp-scope.md`](project/mvp-scope.md) |
+| Runtime architecture | [`project/technical-architecture.md`](project/technical-architecture.md) |
+| Unity implementation guidance | [`guides/unity/index.md`](guides/unity/index.md) and its linked guide pages |
 | Tasks and active plan history | [`board.md`](board.md), [`plans/index.md`](plans/index.md), `tickets/`, [`milestones/index.md`](milestones/index.md), [`archive/index.md`](archive/index.md) |
+
+Research and reference guides are advisory. In particular,
+[`project/game-design-and-psychology.md`](project/game-design-and-psychology.md)
+does not override the canonical game design, MVP scope, or technical
+architecture documents.
 
 ## What Does Not Belong In Evergreen Docs
 
