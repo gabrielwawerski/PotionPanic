@@ -100,6 +100,11 @@ const projectDocsConfig = defineDocsProject({
             text: "Technical Architecture",
             link: "/project/technical-architecture",
           },
+        ],
+      },
+      {
+        text: "Research And Reference",
+        items: [
           {
             text: "Game Design And Psychology",
             link: "/project/game-design-and-psychology",
