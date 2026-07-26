@@ -1,14 +1,14 @@
-// Docboard managed config v1
+// Docboard managed config wrapper v1
 import {fileURLToPath} from "node:url";
 
-import {createDocsConfig, defineDocsProject} from "@gabrielwawerski/docboard";
+import {defineDocsProject, withDocboardConfig} from "@gabrielwawerski/docboard";
+import hostConfig from "./config.docboard-host.ts";
 
-const docsDir = fileURLToPath(new URL("..", import.meta.url));
+const docsDir = fileURLToPath(new URL("../", import.meta.url));
 
-export default createDocsConfig(defineDocsProject({
+export default withDocboardConfig(hostConfig, defineDocsProject({
   title: "Project Docs",
   description: "Internal docs and planning",
-  pagePathPrefix: "docs",
   nav: [
     {text: "Home", link: "/"},
     {text: "Board", link: "/board"},
