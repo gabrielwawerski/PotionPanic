@@ -13,5 +13,4 @@ Completed or superseded implementation plans from `Docs/plans/` live here.
 - [VitePress Ticket Filename With Title Plan](./vitepress-ticket-filename-with-title-plan.md)
 - [Private Reusable VitePress Docs Package Plan](./vitepress-private-reusable-package-plan-2026-06-30.md)
 - [Whole-Column Drag Targets For Board Columns](./vitepress-whole-column-drag-targets.md)
-- [VitePress On-Page Plan Authoring](./vitepress-on-page-plan-authoring.md)
 - [VitePress Native Additions In Docboard](./vitepress-docboard-native-additions-plan.md)
