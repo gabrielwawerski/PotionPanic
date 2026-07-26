@@ -6,8 +6,10 @@ import {createDocsConfig, defineDocsProject} from "@gabrielwawerski/docboard";
 const docsDir = fileURLToPath(new URL("..", import.meta.url));
 
 export default createDocsConfig(defineDocsProject({
-  title: "Project Docs",
-  description: "Internal docs and planning",
+  title: "Potion Panic",
+  description: "Shared project docs and task board for Potion Panic.",
+  base: "/PotionPanic/",
+  docsRoot: "Docs",
   pagePathPrefix: "Docs",
   nav: [
     {text: "Home", link: "/"},
@@ -21,4 +23,7 @@ export default createDocsConfig(defineDocsProject({
     archiveDir: "plans/archive",
     archiveIndex: "plans/archive/index.md",
   },
+  socialLinks: [
+    {icon: "github", link: "https://github.com/gabrielwawerski/PotionPanic"},
+  ],
 }), {docsDir});
