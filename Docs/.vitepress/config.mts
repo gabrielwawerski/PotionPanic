@@ -8,7 +8,7 @@ const docsDir = fileURLToPath(new URL("..", import.meta.url));
 export default createDocsConfig(defineDocsProject({
   title: "Project Docs",
   description: "Internal docs and planning",
-  pagePathPrefix: "docs",
+  pagePathPrefix: "Docs",
   nav: [
     {text: "Home", link: "/"},
     {text: "Board", link: "/board"},
