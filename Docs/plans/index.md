@@ -11,8 +11,7 @@ superseded plans into [`../archive/completed/index.md`](../archive/completed/ind
 
 ## Active Plans
 
-- [Restore `TagEditor` As The Editable Tags UI With Tag Color Editing](./vitepress-tag-editor-restore-plan.md)
-- [Archived Plan Restore](./vitepress-archived-plan-restore.md)
+_No active plans yet._
 ## Writing Rules
 
 - Use descriptive file names that match the planned change.
