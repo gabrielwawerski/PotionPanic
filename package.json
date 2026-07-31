@@ -5,7 +5,7 @@
   "scripts": {
     "docs:build": "vitepress build Docs",
     "docs:dev": "vitepress dev Docs --host 0.0.0.0 --port 6420",
-    "docs:dev:local": "vitepress dev Docs --host 127.0.0.1 --port 6420",
+    "docs:dev:lan": "vitepress dev Docs --host 0.0.0.0 --port 6420",
     "docs:preview": "vitepress preview Docs --host 0.0.0.0 --port 6421",
     "docs:startup:install": "node Scripts/docs/run-windows-startup-installer.mjs",
     "docs:startup:uninstall": "node Scripts/docs/run-windows-startup-installer.mjs -Uninstall",
