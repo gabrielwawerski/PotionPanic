@@ -7,13 +7,13 @@ hero:
   actions:
     - theme: brand
       text: Start Here
-      link: /onboarding/getting-started
+      link: /site-map
     - theme: alt
       text: Board
       link: /board
     - theme: alt
-      text: Docs Map
-      link: /site-map
+      text: Collaboration
+      link: /onboarding/getting-started
 
 features:
   - title: Game Documentation
