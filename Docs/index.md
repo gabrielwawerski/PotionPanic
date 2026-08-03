@@ -5,7 +5,7 @@ hero:
   text: "Potion Panic Docs"
   tagline: Shared project docs, implementation plans, and task board for the Potion Panic MVP
   image:
-    src: /logo.png
+    src: /PotionPanic/logo.png
     alt: "Potion Panic Logo"
   actions:
     - theme: brand
