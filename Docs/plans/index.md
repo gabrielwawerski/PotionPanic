@@ -11,7 +11,8 @@ superseded plans into [`../archive/completed/index.md`](../archive/completed/ind
 
 ## Active Plans
 
-_No active plans yet._
+- [Coordinated File Leasing System](coordinated-file-leasing-system.md) — Remote Unity scene and prefab presence, editing leases, conflict warnings, and Cloudflare synchronization.
+
 ## Writing Rules
 
 - Use descriptive file names that match the planned change.
