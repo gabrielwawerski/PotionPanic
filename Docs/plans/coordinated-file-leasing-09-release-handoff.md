@@ -21,14 +21,15 @@ publish stable operating guidance and close the program.
 - Append deployment, test, and two-machine evidence to `Docs/tickets/PP-7.md`.
 - Create Cloudflare secrets `TOKEN_HMAC_KEY` and `ADMIN_TOKEN`; issue one
   developer token per person without committing any secret.
-- Move the program page and completed slice pages into the repository's
-  completed-plan archive only after acceptance.
+- Move the program page and completed slice pages into
+  `Docs/archive/completed/` only after acceptance, and update
+  `Docs/archive/completed/index.md` through the existing plan archive flow.
 
 ## Acceptance run
 
-- Deploy the Worker from `Tools/CoordinationServer`, verify the health and
-  authenticated session routes, and configure two Windows machines on different
-  networks.
+- Deploy the Worker from `Tools/CoordinationServer`, verify the defined
+  unauthenticated `GET /health` response and authenticated session route, and
+  configure two Windows machines on different networks.
 - Verify viewing presence, pre-edit reservation, simultaneous acquisition,
   remote conflict, cancel, override and displacement notification, clean close,
   process termination, network loss, Worker outage, token revocation, session

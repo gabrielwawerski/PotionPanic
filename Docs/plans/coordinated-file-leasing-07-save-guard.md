@@ -16,6 +16,7 @@ resumes only the omitted paths after an authoritative grant or override.
 
 - Create the save-guard and resume-coordinator files under
   `Assets/Scripts/Editor/Coordination/`.
+- Create `SaveConflictDialog.cs` under `Assets/Scripts/Editor/Coordination/`.
 - Add matching tests under `Assets/Tests/EditMode/Coordination/`.
 
 ## Implementation steps
@@ -28,9 +29,13 @@ resumes only the omitted paths after an authoritative grant or override.
 - After an authoritative grant or override, resume only the omitted target via
   `EditorApplication.delayCall`. Use a one-shot recursion guard that clears on
   completion and on failure.
-- Show cancel and explicit override outcomes for remote conflicts. If an
-  override fails, if the backend is offline, or if the editor reloads, preserve
-  dirty local changes and leave the file editable.
+- When an authoritative `lease.denied` result identifies a remote owner, queue
+  `SaveConflictDialog` with `EditorApplication.delayCall`; never open UI inside
+  `OnWillSaveAssets`. The dialog has exactly `Override and save`, `Cancel save`,
+  and `Keep working` actions. Only `Override and save` sends `lease.override`;
+  the other actions preserve dirty local changes without scheduling a save.
+  If an override fails, if the backend is offline, or if the editor reloads,
+  preserve dirty local changes and leave the file editable.
 - Never treat a timeout or local offline state as ownership. Manual coordination
   remains the fallback.
 
@@ -38,9 +43,10 @@ resumes only the omitted paths after an authoritative grant or override.
 
 Run focused EditMode tests for remote conflicts, pending claims, multi-path
 saves, offline saves without claims, override failure, grant resume, and
-recursive resume prevention. Run the full Coordination EditMode suite and a
-manual editor smoke test that edits a coordinated scene, cancels a conflict,
-and verifies the scene remains dirty when the claim fails.
+recursive resume prevention. Cover the dialog's three actions and confirm it is
+created only after the save callback returns. Run the full Coordination EditMode
+suite and a manual editor smoke test that edits a coordinated scene, cancels a
+conflict, and verifies the scene remains dirty when the claim fails.
 
 **Commit:** `feat(coordination): guard conflicting saves`
 

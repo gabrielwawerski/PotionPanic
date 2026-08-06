@@ -32,8 +32,9 @@ scene or selected prefab transition and survives reconnect and domain reload.
 - Republish loaded stages after reconnect or domain reload. Release presence on
   close where the editor callback allows it; leave abrupt cleanup to server
   expiry.
-- Keep Git branch and task context as data supplied to the connection service;
-  do not read or write machine-local context into tracked files.
+- Pass Git branch and task context through the Slice 05 connection service; the
+  tracker does not read or write machine-local settings and never stores context
+  in tracked files.
 
 ## Verification
 

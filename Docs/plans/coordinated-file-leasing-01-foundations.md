@@ -21,12 +21,13 @@ backend checks without deployment credentials.
 - Modify `Assets/Tests/EditMode/PotionPanic.EditModeTests.asmdef` to reference
   `PotionPanic.Editor`.
 - Create `Assets/Scripts/Editor/Coordination/CoordinationConfig.cs`,
-  `CoordinationPathMatcher.cs`, `CoordinationProtocol.cs`, and matching tests
-  under `Assets/Tests/EditMode/Coordination/`.
+  `CoordinationUserSettings.cs`, `CoordinationPathMatcher.cs`,
+  `CoordinationProtocol.cs`, and matching tests under
+  `Assets/Tests/EditMode/Coordination/`.
 - Create `Tools/CoordinationServer/package.json`, `package-lock.json`,
   `tsconfig.json`, `wrangler.jsonc`, `vitest.config.ts`, `.dev.vars.example`,
-  `README.md`, `src/index.ts`, `src/env.ts`, `src/protocol.ts`, and focused
-  protocol tests.
+  `README.md`, `src/index.ts`, `src/env.ts`, `src/protocol.ts`,
+  `src/coordination-object.ts`, and focused protocol tests.
 - Create `.github/workflows/coordination-server.yml`.
 
 ## Implementation steps
@@ -36,16 +37,20 @@ backend checks without deployment credentials.
   the enabled exclusive scene rule from the program page.
 - Make the C# loader reject missing or malformed required fields, normalize
   slash direction and Unicode paths, honor a local untracked endpoint override,
-  and match `**/` against zero or more directories. Disabled rules must never
-  match.
+  and match `**/` against zero or more directories. Implement the local settings
+  store at `UserSettings/PotionPanic/coordination.local.json` with the exact
+  shape in the program page. Disabled rules must never match; local settings
+  must never contain developer or session tokens.
 - Define the exact flat protocol envelopes in the program page's `Protocol v1
   contract`, including every listed message name and field. Enforce protocol
   version `1`, UUID request IDs, field length limits, canonical path rules, and
   the 16 KiB UTF-8 envelope limit. Reject invalid inbound state versions and
   ignore server state older than the newest version already applied.
 - Scaffold a strict Worker package with the SQLite Durable Object migration
-  binding and Vitest Workers integration. The Worker may return a deliberate
-  not-yet-authenticated response in this slice; do not implement auth or state.
+  binding, an exported no-op `CoordinationObject` class, and Vitest Workers
+  integration. Implement `GET /health` with the program-contract response.
+  Other routes may return a deliberate not-yet-authenticated response in this
+  slice; do not implement auth or state.
 - Add CI steps for `npm ci`, type checking, Vitest, and Wrangler dry-run. CI
   must not require `TOKEN_HMAC_KEY`, `ADMIN_TOKEN`, or a deployed endpoint.
 
@@ -57,6 +62,11 @@ backend checks without deployment credentials.
 - TypeScript and Unity protocol tests: verify every v1 message DTO, required
   field, rejected client identity field, invalid path, oversize envelope, and
   older server `stateVersion` handling.
+- Unity settings tests: verify the default settings, endpoint override, task
+  context, disabled switch, malformed-file rejection, and token-free persisted
+  shape.
+- Backend health test: verify the unauthenticated response shape and that it
+  contains neither project nor developer data.
 - Backend: from `Tools/CoordinationServer`, run `npm ci`, `npm run typecheck`,
   `npm test`, and `npx wrangler deploy --dry-run`.
 - Repository: run `npm test` and `npm run docs:build`; both must pass.

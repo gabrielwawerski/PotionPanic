@@ -29,7 +29,8 @@ SQLite-backed Durable Objects, WebSocket Hibernation API, Wrangler, and Vitest.
 
 - One session owns one slice page.
 - Start by checking `git status --short`, reading the slice, and confirming its
-  dependency commits are present.
+  dependency commits are merged into `master`. Create a fresh branch named
+  `feature/coordination-<slice-number>-<short-name>` from that `master` commit.
 - Stay within the slice's file map. Do not edit scenes, prefabs, packages, or
   project settings for this program.
 - Use TDD for behavior: add the focused failing test, implement the smallest
@@ -87,6 +88,22 @@ PotionPanic/
   `Assets/Scenes/SampleScene.unity` path matches the initial rule.
 - Add prefab rules only after confirming actual paths; begin with exact
   allowlisted paths rather than `Assets/**/*.prefab`.
+- Store local endpoint overrides, the manual task context, and the local
+  `Disabled` switch only in
+  `UserSettings/PotionPanic/coordination.local.json`. The file is untracked and
+  must contain no developer or session token. Its v1 shape is:
+
+  ```json
+  {
+    "schemaVersion": 1,
+    "serverBaseUrlOverride": "",
+    "taskContext": "",
+    "disabled": false
+  }
+  ```
+
+  The client derives `branch` from Git at send time and reads `task` from this
+  local settings file. An unavailable Git branch is sent as an empty string.
 
 ## Protocol v1 contract
 
@@ -95,16 +112,35 @@ The endpoint and authenticated session, never client payload fields, determine
 the project, developer, and connection.
 
 ```text
+GET /health
+
 POST /v1/projects/{projectId}/sessions
 Authorization: Bearer <developer-token>
 
 GET /v1/projects/{projectId}/connect
 Authorization: Bearer <session-token>
 Upgrade: websocket
+
+POST /v1/projects/{projectId}/developers
+Authorization: Bearer <ADMIN_TOKEN>
+
+DELETE /v1/projects/{projectId}/developers/{developerId}
+Authorization: Bearer <ADMIN_TOKEN>
 ```
 
+`GET /health` returns HTTP 200 with `service: "potion-panic-coordination"` and
+`serverTime`. It accepts no credential and exposes no project or developer data.
+
 The session response contains `developerId`, `displayName`, `serverTime`,
-`connectionId`, `leaseTtlSeconds`, `reservationTtlSeconds`, and `stateVersion`.
+`leaseTtlSeconds`, `reservationTtlSeconds`, and `stateVersion`. It never contains
+`connectionId`. A successful WebSocket upgrade creates the connection and
+`session.ready` returns its server-assigned `connectionId`.
+
+The administrator create-developer request contains only `displayName`; its
+response contains `developerId`, `displayName`, and one `developerToken` value.
+The caller displays that token once and never logs or persists it. The delete
+route marks the developer revoked, deletes its sessions, and returns HTTP 204.
+The WebSocket slice closes that developer's active sockets immediately.
 
 Every client-to-server envelope contains these fields:
 
@@ -169,7 +205,15 @@ contain multiple connections. Replay records are scoped to developer and request
 ID, contain a payload hash, return the earlier result only for an identical
 payload for five minutes, and reject mismatched reuse. The server accepts a
 heartbeat from its authenticated owning connection even if unrelated state has
-advanced; stale server state is rejected by the client at apply time.
+advanced; stale server state is rejected by the client at apply time. The
+authoritative-state slice returns state-transition data only; the WebSocket slice
+is solely responsible for sending it to clients.
+
+The Durable Object owns all persistent state. Slice 02 creates its auth-only
+foundation: `developers`, `sessions`, and the initial state-version row plus the
+object class. Slice 03 extends that same class with `connections`, `presence`,
+`leases`, `reservations`, and `replayRecords`. A WebSocket upgrade in Slice 04
+creates a connection record; an HTTP session never does.
 
 ## Dependency graph
 
