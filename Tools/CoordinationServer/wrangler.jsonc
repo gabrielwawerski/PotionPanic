@@ -1,0 +1,19 @@
+{
+  "name": "potion-panic-coordination",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-06",
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "COORDINATION_OBJECT",
+        "class_name": "CoordinationObject"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["CoordinationObject"]
+    }
+  ]
+}

@@ -124,6 +124,7 @@ InitTestScene*.unity*
 
 # Coordination local credentials, runtime state, and tooling output
 /Tools/CoordinationServer/.dev.vars
+/Tools/CoordinationServer/node_modules/
 /Tools/CoordinationServer/.wrangler/
 /Tools/CoordinationServer/*.log
 /Tools/CoordinationServer/coverage/
