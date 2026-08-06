@@ -1,67 +1,38 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import {
-  createDocsConfig,
-  defineDocsProject,
-} from "@gabrielwawerski/docboard";
 import fs from "node:fs";
 import path from "node:path";
 
-import projectDocsConfig from "../../../Docs/.vitepress/project-docs.config.ts";
+import docsConfig from "../../../Docs/.vitepress/config.mts";
 
-test("PotionPanic docs config can be consumed by Docboard package APIs", () => {
-  const project = defineDocsProject(projectDocsConfig);
-  const config = createDocsConfig(project, {docsDir: "Docs"});
-
-  assert.equal(config.title, "Potion Panic");
-  assert.equal(config.themeConfig.nav, projectDocsConfig.nav);
+test("PotionPanic managed docs config exposes the current navigation contract", () => {
+  assert.equal(docsConfig.title, "Potion Panic");
   assert.deepEqual(
-    projectDocsConfig.nav.map((item) => ({
-      text: item.text,
-      items: item.items?.map((child) => child.text),
-    })),
+    docsConfig.themeConfig.nav,
     [
-      {text: "Home", items: undefined},
-      {text: "Board", items: undefined},
-      {text: "Work", items: ["Plans", "Milestones"]},
-      {text: "Project", items: [
-        "Game Design",
-        "MVP Scope",
-        "Technical Architecture",
-      ]},
-      {text: "Guides", items: [
-        "Guides",
-        "Runtime Architecture",
-        "Coding And Implementation",
-        "Editor Safety",
-        "Presentation Workflows",
-      ]},
-      {text: "Handbook", items: ["Getting Started", "Workflow"]},
-      {text: "Archive", items: [
-        "Archive",
-        "Archive Board",
-        "Archived Plans",
-      ]},
+      {text: "Home", link: "/"},
+      {text: "Board", link: "/board"},
+      {text: "Plans", link: "/plans/"},
+      {text: "Archive", link: "/archive/board"},
     ]
   );
-  assert.equal(config.lastUpdated, true);
-  assert.deepEqual(projectDocsConfig.themeConfig.outline, [2, 3]);
-  assert.deepEqual(config.themeConfig.outline, [2, 3]);
-  assert.deepEqual(config.themeConfig.search, {provider: "local"});
+  assert.equal(docsConfig.lastUpdated, true);
+  assert.deepEqual(docsConfig.themeConfig.outline, [2, 3]);
+  assert.deepEqual(docsConfig.themeConfig.search, {provider: "local"});
   assert.ok(
-    config.themeConfig.sidebar["/"].some(
-      (section) => section.text === "Unity Guides"
+    docsConfig.themeConfig.sidebar["/"].some(
+      (section) => section.text === "Guides"
     ),
-    "expected PotionPanic to keep the Unity Guides sidebar section"
+    "expected PotionPanic to keep the Guides sidebar section"
   );
-  assert.deepEqual(JSON.parse(config.vite.define.__DOCBOARD_THEME_OPTIONS__), {
+  assert.deepEqual(JSON.parse(docsConfig.vite.define.__DOCBOARD_THEME_OPTIONS__), {
     pagePathPrefix: "Docs",
     plans: {
       activeDir: "plans",
       activeIndex: "plans/index.md",
-      archiveDir: "archive/completed",
-      archiveIndex: "archive/completed/index.md",
+      archiveDir: "plans/archive",
+      archiveIndex: "plans/archive/index.md",
     },
   });
 });
@@ -74,6 +45,7 @@ test("PotionPanic theme entrypoint delegates to the Docboard package theme", () 
 
   assert.equal(
     themeEntrypoint.trim(),
-    'export {projectManagementTheme as default} from "@gabrielwawerski/docboard/theme";'
+    '// Docboard managed theme v1\n' +
+      'export {projectManagementTheme as default} from "@gabrielwawerski/docboard/theme";'
   );
 });
