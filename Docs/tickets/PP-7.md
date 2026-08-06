@@ -22,9 +22,10 @@ assignee: Codex
 
 ## Description
 
-Implement the tracked coordination plan for advisory Unity scene and selected
-prefab presence, leases, reservations, conflict-safe saving, and a Cloudflare
-Durable Object backend.
+Implement the tracked coordination program for advisory Unity scene and
+selected-prefab presence, leases, reservations, conflict-safe saving, and a
+Cloudflare Durable Object backend. Execute one linked plan slice per Codex
+session, in dependency order.
 
 ## Acceptance Criteria
 
@@ -38,15 +39,17 @@ Durable Object backend.
 
 ## Implementation Plan
 
-Follow the active implementation plan task by task. Record commit hashes,
-verification output, deployment details, and two-machine acceptance evidence in
-Implementation Notes.
+Follow the nine linked implementation slices in dependency order. Each session
+must record its commit hash, verification output, and handoff result in
+Implementation Notes. Do not combine slices or mark the ticket complete before
+the release-acceptance slice records two-machine evidence.
 
 ## Implementation Notes
 
-2026-08-06: Plan revised before implementation. PP-8 restored the root
-documentation test baseline; `npm test` and `npm run docs:build` pass. No
-coordination server or Unity client implementation has started.
+2026-08-06: Plan split into nine independent Codex session slices. PP-8
+restored the root documentation test baseline; `npm test` and
+`npm run docs:build` pass. No coordination server or Unity client
+implementation has started.
 
 ## Definition of Done
 
