@@ -16,7 +16,8 @@ affectedFiles:
   - Tools/CoordinationServer
   - .github/workflows/coordination-server.yml
 tags: []
-order: 4
+order: 1
+assignee: Codex
 ---
 
 ## Description
