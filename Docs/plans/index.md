@@ -11,10 +11,11 @@ superseded plans into [`../archive/completed/index.md`](../archive/completed/ind
 
 ## Active Plans
 
-- [Coordinated File Leasing System](coordinated-file-leasing-system.md) — Remote Unity scene and prefab presence, editing leases, conflict warnings, and Cloudflare synchronization.
-
+- [Coordinated File Leasing System](./coordinated-file-leasing-system.md)
 ## Writing Rules
 
+- Docboard regenerates the Active Plans links from each plan's frontmatter
+  title or first heading. Keep those links title-only.
 - Use descriptive file names that match the planned change.
 - Keep task-by-task execution notes in tickets rather than duplicating them
   here.

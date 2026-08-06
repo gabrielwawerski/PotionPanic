@@ -1,87 +1,137 @@
+---
+title: Coordinated File Leasing System
+---
+
 # Coordinated File Leasing System Implementation Plan
 
-> **For agentic workers:** Implement this plan task by task. Keep each task independently testable and commit after its verification steps pass.
+> **For agentic workers:** Implement this plan task by task. Keep each task
+> independently testable and commit after its verification steps pass.
 
-**Goal:** Add a remote coordination system that shows when either Potion Panic developer has a coordinated Unity file open, claims it on first modification, warns about conflicting edits, and synchronizes state through a free Cloudflare backend.
+**Goal:** Add a remote coordination system that publishes Unity file presence,
+claims files when editing starts, prevents accidental conflicting saves, and
+keeps authoritative state in a Cloudflare Durable Object.
 
-**Architecture:** Keep the Unity editor client and Cloudflare service in this repository for the first version. A SQLite-backed Cloudflare Durable Object owns authoritative presence and lease state and broadcasts changes over WebSockets. The Unity editor extension detects scene and selected-prefab lifecycle events, stores a long-lived developer token in Windows Credential Manager, exchanges it for a 24-hour session, and presents coordination state inside Unity.
+**Architecture:** The Unity editor extension and Cloudflare Worker remain in
+this repository for the first release. One SQLite-backed Durable Object per
+project owns sessions, connections, presence, leases, reservations, replay
+records, and the monotonic coordination state version. The Unity editor client
+uses Windows Credential Manager for the long-lived developer token, retains a
+short-lived opaque session only in memory, and resumes a blocked save only after
+an authoritative result arrives.
 
-**Tech stack:** Unity `6000.5.1f1`, C# editor scripting, Unity Test Framework EditMode tests, Windows Credential Manager, TypeScript, Cloudflare Workers, SQLite-backed Durable Objects, WebSocket Hibernation API, Wrangler, and Vitest.
+**Tech stack:** Unity `6000.5.1f1`, C# editor scripting, Unity Test Framework
+EditMode tests, Windows Credential Manager, TypeScript, Cloudflare Workers,
+SQLite-backed Durable Objects, WebSocket Hibernation API, Wrangler, and Vitest.
 
 ## Approved behavior
 
 - Opening a coordinated file publishes non-exclusive `viewing` presence.
 - The first meaningful modification requests an exclusive `editing` lease.
-- Initial coordinated files are all scenes and an explicit allowlist of important prefabs.
-- Project settings and package files are added only after scene and prefab handling is stable.
+- A developer may reserve an unclaimed coordinated file before editing it.
+- Initial coordinated files are all scenes and an explicit allowlist of
+  important prefabs.
 - A healthy client sends a heartbeat every 30 seconds.
-- A disconnected editing lease expires after 120 seconds.
-- Closing a file releases its lease unless the developer creates a 30-minute reservation.
-- Editing a remotely claimed file shows a warning with owner, branch, task, and expiry.
-- Saving a remotely claimed file requires an explicit override or cancellation.
-- An override immediately transfers ownership and notifies the displaced developer.
+- A disconnected connection's viewing presence and editing leases expire after
+  120 seconds.
+- Reservations last 30 minutes and remain valid when the owning connection
+  closes.
+- Closing an editing file releases its lease unless the developer reserves it.
+- Editing a remotely claimed file shows a warning with owner, branch, task, and
+  expiry. Saving requires cancellation or an explicit override.
+- An override immediately transfers ownership and notifies the displaced
+  developer.
 - Backend outages never block local editing or permanently trap unsaved work.
-- Important events initially use Unity notifications and a dedicated Coordination window.
-- Native Windows notifications are deferred until the Unity-only workflow is proven.
-- Rider integration is deferred.
-- The backend stores only current users, sessions, presence, and leases. It keeps no activity history.
-- Authentication uses one revocable developer token per person.
-- The token is entered once per machine and stored in Windows Credential Manager.
-- Machine-local identity, task context, and preferences remain outside Git.
-- Repository-wide coordination rules live in tracked `coordination.json`.
+- Important events initially use Unity notifications and a Coordination window.
+  Native Windows notifications and Rider integration are deferred.
+- The backend stores only current developers, sessions, connections, presence,
+  leases, reservations, and short-lived replay records. It keeps no activity
+  history.
+- Authentication uses one revocable developer token per developer. The token is
+  entered once per Windows user and machine, stored in Windows Credential
+  Manager, and exchanged for an opaque 24-hour session.
+- Machine-local task context, preferences, and local development endpoint stay
+  outside Git. Repository-wide coordination rules live in tracked
+  `coordination.json`.
+- The system is advisory coordination, not a hard filesystem lock. Manual
+  announcements remain required for protected changes during outages.
 
-## Repository boundary
+## Repository boundary and constraints
 
-Keep the first version inside `gabrielwawerski/PotionPanic`:
+Keep the first release inside `gabrielwawerski/PotionPanic`:
 
 ```text
 PotionPanic/
 ├── coordination.json
-├── Assets/
-│   ├── Scripts/
-│   │   └── Editor/
-│   │       └── Coordination/
-│   └── Tests/
-│       └── EditMode/
-│           └── Coordination/
-├── Tools/
-│   └── CoordinationServer/
+├── Assets/Scripts/Editor/Coordination/
+├── Assets/Tests/EditMode/Coordination/
+├── Tools/CoordinationServer/
 └── Docs/
-    └── plans/
 ```
 
-Do not create a separate repository until another project uses the system, the client and server require independent releases, or a separate team owns deployment and access control.
-
-## Global constraints
-
+- Do not create a separate repository until another project uses the system,
+  independent releases are required, or another team owns access control.
 - Keep runtime gameplay assemblies independent of coordination code.
-- Put all Unity client code under `Assets/Scripts/Editor/Coordination`.
-- Put Unity tests under `Assets/Tests/EditMode/Coordination`.
-- Put the Cloudflare service under `Tools/CoordinationServer`.
-- Use 2-space indentation.
-- Do not commit tokens, sessions, `.dev.vars`, `.env`, generated logs, caches, or runtime lease state.
-- Do not market this as guaranteed pre-edit filesystem locking. Unity often reports dirty state after the first modification.
-- Warnings may interrupt saving, but the extension must always provide a safe path that preserves local work.
-- Implement production code on short-lived branches even though this plan document was committed directly to `master`.
+- Reuse `PotionPanic.Editor`; add `PotionPanic.Editor` to the existing
+  `PotionPanic.EditModeTests` assembly references.
+- Put Cloudflare code under `Tools/CoordinationServer` and commit its
+  `package-lock.json`.
+- Use 2-space indentation. Do not commit developer tokens, sessions,
+  `.dev.vars`, local coordination settings, logs, caches, or runtime lease
+  state.
+- Windows is the only supported editor host in the first release. Guard
+  Credential Manager P/Invoke code and show `Disabled` on unsupported hosts.
+- Use a short-lived branch for each production implementation task. Do not mix
+  this work with scene, prefab, package, or project-setting edits.
 
-## Protocol
+## Configuration contract
 
-Use protocol version `1` and a flat JSON envelope that Unity can deserialize without adding a JSON package.
+Create `coordination.json` at the repository root:
 
 ```json
 {
-  "protocolVersion": 1,
-  "type": "lease.acquire",
-  "requestId": "f4acb47d-b239-46b4-902f-9f3fd6153cb5",
+  "schemaVersion": 1,
   "projectId": "potion-panic",
-  "connectionId": "b9209e03-5b3c-42ca-8079-0780a3146129",
-  "path": "Assets/Scenes/SampleScene.unity",
-  "branch": "feature/player-movement",
-  "task": "PP-014 Player movement",
-  "state": "editing",
-  "force": false
+  "serverBaseUrl": "https://potion-panic-coordination.<account>.workers.dev",
+  "heartbeatSeconds": 30,
+  "rules": [
+    {
+      "pattern": "Assets/Scenes/**/*.unity",
+      "mode": "exclusive",
+      "claimOn": "dirty",
+      "enabled": true
+    }
+  ]
 }
 ```
+
+- `serverBaseUrl` is the one committed endpoint. Derive the HTTP and WebSocket
+  URLs from it.
+- `heartbeatSeconds` is client behavior. Lease and reservation durations are
+  server-authoritative and returned in `session.ready`.
+- Define `**/` as matching zero or more directories, so the initial direct path
+  `Assets/Scenes/SampleScene.unity` matches the scene rule.
+- Add prefab rules only after confirming actual paths. Start with exact
+  allowlisted paths, not `Assets/**/*.prefab`.
+- Keep local Wrangler endpoint overrides in the untracked user settings file.
+
+## Authenticated protocol
+
+Use protocol version `1` and flat JSON envelopes that Unity can deserialize
+without an additional JSON package. The endpoint and authenticated session,
+not client-provided fields, determine project, developer, and connection.
+
+```text
+POST /v1/projects/{projectId}/sessions
+Authorization: Bearer <developer-token>
+
+GET /v1/projects/{projectId}/connect
+Authorization: Bearer <session-token>
+Upgrade: websocket
+```
+
+The session response returns the canonical developer ID and display name,
+server time, assigned connection ID, `leaseTtlSeconds`,
+`reservationTtlSeconds`, and the current `stateVersion`.
 
 Client-to-server message types:
 
@@ -113,357 +163,245 @@ error
 
 Protocol invariants:
 
-- Every message uses `protocolVersion: 1`.
-- Every mutating request has a unique `requestId`.
-- Paths are repository-relative, use `/`, never start with `/`, and cannot contain `..`.
-- The server derives developer identity from the authenticated session.
-- One path has at most one `editing` or `reserved` lease.
-- Presence may contain multiple developers for one path.
-- Duplicate request IDs return the previous result for at least five minutes.
-- Reservations last exactly 1,800 seconds.
-- Accepted heartbeats extend editing expiry to current server time plus 120 seconds.
-- Messages larger than 16 KiB are rejected.
+- Every message has `protocolVersion: 1`. Every mutating request has a UUID
+  `requestId`.
+- Server messages carrying state include the resulting monotonic
+  `stateVersion`. Clients discard older state.
+- Paths normalize separators and Unicode, reject control characters, leading
+  separators, drive prefixes, `.` and `..` segments, and use a lower-invariant
+  canonical key. The display path preserves the submitted normalized casing.
+- The server derives project and developer identity from the authenticated
+  request. `connectionId` is server-assigned and never accepted from a client
+  envelope.
+- One canonical path has at most one editing or reserved lease. Presence may
+  contain multiple connections for one path.
+- Replay records are scoped to developer and request ID, store a payload hash,
+  and return the earlier result only for an identical payload for five minutes.
+  A mismatched reuse fails explicitly.
+- The server rejects messages over 16 KiB and task or branch context over the
+  documented protocol limits.
 
-## Configuration contract
+## State and authentication model
 
-Create `coordination.json` at the repository root:
-
-```json
-{
-  "schemaVersion": 1,
-  "projectId": "potion-panic",
-  "serverHttpUrl": "https://potion-panic-coordination.<account>.workers.dev",
-  "serverWebSocketUrl": "wss://potion-panic-coordination.<account>.workers.dev",
-  "heartbeatSeconds": 30,
-  "disconnectExpirySeconds": 120,
-  "reservationSeconds": 1800,
-  "rules": [
-    {
-      "pattern": "Assets/Scenes/**/*.unity",
-      "mode": "exclusive",
-      "claimOn": "dirty",
-      "enabled": true
-    }
-  ]
-}
-```
-
-Add important prefab paths only after confirming their actual repository locations. Do not begin with a broad `Assets/**/*.prefab` rule. Add disabled rules for `ProjectSettings/**`, `Packages/manifest.json`, and `Packages/packages-lock.json` for the later shared-configuration milestone.
+- A developer token is generated server-side from 32 random bytes, displayed
+  once, and persisted only as a domain-separated HMAC-SHA-256 digest.
+- A session token is a random opaque value stored only as an HMAC digest with
+  developer ID and 24-hour expiry. The client keeps it in memory only.
+- The administration endpoint requires a separate random `ADMIN_TOKEN` secret.
+  Revocation marks the developer revoked, deletes active session records, and
+  closes that developer's active sockets without affecting other developers.
+- A connection owns its presence records and editing leases. Only that
+  connection's heartbeat extends its lease. Reconnecting as the same developer
+  may rebind that developer's lease to the new connection; a stale connection
+  cannot release or extend the rebound lease.
+- A reservation is developer-owned and independent of a connection. It can be
+  created from an unclaimed path, converted from that developer's editing lease,
+  or converted back to editing by that developer's first dirty transition.
+- The Durable Object schedules only its nearest expiry because it has one
+  active alarm. Alarm processing deletes all due sessions, connections,
+  presence, leases, reservations, and replay records, broadcasts resulting
+  state changes, then schedules the next expiry.
 
 ## File map
 
-### Repository root
+### Repository and CI
 
-- Create `coordination.json`: shared project ID, URLs, timing, and coordinated path rules.
-- Modify `.gitignore`: ignore Cloudflare secrets, local coordination settings, logs, and caches.
+- Create `coordination.json` and add scoped ignores for coordination secrets,
+  local settings, logs, and caches.
+- Modify `Assets/Tests/EditMode/PotionPanic.EditModeTests.asmdef` to reference
+  `PotionPanic.Editor`.
+- Create `.github/workflows/coordination-server.yml` to install, test, type
+  check, and dry-run the backend without deployment credentials.
 
 ### Cloudflare service
 
-Create:
-
-```text
-Tools/CoordinationServer/package.json
-Tools/CoordinationServer/tsconfig.json
-Tools/CoordinationServer/wrangler.jsonc
-Tools/CoordinationServer/vitest.config.ts
-Tools/CoordinationServer/.dev.vars.example
-Tools/CoordinationServer/README.md
-Tools/CoordinationServer/src/index.ts
-Tools/CoordinationServer/src/env.ts
-Tools/CoordinationServer/src/protocol.ts
-Tools/CoordinationServer/src/auth/crypto.ts
-Tools/CoordinationServer/src/auth/session.ts
-Tools/CoordinationServer/src/coordination-object.ts
-Tools/CoordinationServer/scripts/issue-token.mjs
-Tools/CoordinationServer/test/protocol.test.ts
-Tools/CoordinationServer/test/session.test.ts
-Tools/CoordinationServer/test/leases.test.ts
-Tools/CoordinationServer/test/websocket.test.ts
-```
+Create `Tools/CoordinationServer/` with `package.json`, `package-lock.json`,
+`tsconfig.json`, `wrangler.jsonc`, `vitest.config.ts`, `.dev.vars.example`,
+`README.md`, `src/index.ts`, `src/env.ts`, `src/protocol.ts`,
+`src/auth/crypto.ts`, `src/auth/session.ts`, `src/coordination-object.ts`,
+`scripts/issue-token.mjs`, and focused protocol, authentication, lease, and
+WebSocket tests.
 
 ### Unity editor client
 
-Create focused files under `Assets/Scripts/Editor/Coordination`:
+Create focused files under `Assets/Scripts/Editor/Coordination` for models,
+configuration, user settings, Credential Manager access, HTTP/WebSocket
+clients, reconnection, service state, Git context, path matching, scene and
+prefab tracking, save conflict processing, bootstrap, notifications, and the
+Coordination window. Create matching tests under
+`Assets/Tests/EditMode/Coordination`.
 
-```text
-Model/CoordinationConfig.cs
-Model/CoordinationMessage.cs
-Model/CoordinationState.cs
-Configuration/CoordinationConfigLoader.cs
-Configuration/CoordinationUserSettings.cs
-Security/ICredentialStore.cs
-Security/WindowsCredentialStore.cs
-Networking/CoordinationHttpClient.cs
-Networking/CoordinationWebSocketClient.cs
-Networking/CoordinationReconnectPolicy.cs
-Services/CoordinationService.cs
-Services/GitContextProvider.cs
-Tracking/CoordinatedPathMatcher.cs
-Tracking/SceneCoordinationTracker.cs
-Tracking/PrefabCoordinationTracker.cs
-Tracking/SaveConflictProcessor.cs
-UI/CoordinationWindow.cs
-UI/CoordinationNotifications.cs
-CoordinationBootstrap.cs
-```
+## Task 0: Restore the repository verification baseline
 
-Create matching EditMode tests under `Assets/Tests/EditMode/Coordination`.
+- [ ] Create `PP-8` for the stale Docboard package-wiring test that imports
+  missing `Docs/.vitepress/project-docs.config.ts`.
+- [ ] Fix that ticket independently before claiming the root `npm test` suite
+  is clean. Do not bundle its implementation into coordination commits.
+- [ ] Record the baseline failure in the coordination ticket until PP-8 closes.
 
-## Task 1: Establish configuration and protocol models
+## Task 1: Scaffold backend, configuration, and test access
 
-**Files:** `coordination.json`, `src/protocol.ts`, C# model files, path matcher tests.
+- [ ] Create the server package, committed lockfile, strict TypeScript,
+  Wrangler SQLite Durable Object migration, Vitest Workers integration, and
+  CI workflow before running backend protocol tests.
+- [ ] Add failing Unity tests proving the existing EditMode test assembly can
+  reference coordination editor code, then add the assembly reference.
+- [ ] Add failing tests for root and nested scene rule matching, disabled
+  rules, one base URL, and local override precedence.
+- [ ] Implement only the configuration DTOs, loader, matcher, and local user
+  settings needed for those tests.
+- [ ] Commit with `feat(coordination): scaffold backend and configuration`.
 
-- [ ] Add failing TypeScript tests for accepted message types, protocol version rejection, normalized paths, `..` rejection, and the 16 KiB limit.
-- [ ] Add failing Unity tests for configuration loading, rule matching, slash normalization, and disabled rules.
-- [ ] Implement the smallest TypeScript parser and C# DTO/config loader that pass the tests.
-- [ ] Verify unknown protocol versions fail explicitly rather than being ignored.
-- [ ] Run backend tests and Unity EditMode tests.
-- [ ] Commit with `feat(coordination): define configuration and protocol`.
+## Task 2: Define and validate the protocol
 
-## Task 2: Scaffold the Cloudflare service
+- [ ] Add failing TypeScript and Unity tests for protocol version rejection,
+  message size, path canonicalization, direct-scene glob matching, invalid
+  traversal, and stale `stateVersion` rejection.
+- [ ] Implement flat message DTOs and validation. Derive project, developer,
+  and connection values from authenticated server context rather than client
+  payloads.
+- [ ] Include server time, TTLs, assigned connection ID, and `stateVersion` in
+  `session.ready`.
+- [ ] Commit with `feat(coordination): define authenticated protocol`.
 
-**Files:** server package files, Wrangler config, `src/index.ts`, `src/env.ts`.
+## Task 3: Implement opaque developer and session authentication
 
-- [ ] Configure strict TypeScript, Vitest Workers integration, and a SQLite-backed Durable Object binding named `COORDINATION`.
-- [ ] Add a `GET /health` endpoint returning protocol version and service status.
-- [ ] Add project routing so `projectId` maps to one Durable Object instance.
-- [ ] Add tests proving unsupported projects and malformed requests fail with clear status codes.
-- [ ] Run `npm test` and `npm run check` from `Tools/CoordinationServer`.
-- [ ] Commit with `feat(coordination): scaffold Cloudflare service`.
-
-## Task 3: Implement developer-token and session authentication
-
-**Files:** `src/auth/crypto.ts`, `src/auth/session.ts`, `scripts/issue-token.mjs`, authentication tests.
-
-- [ ] Generate developer tokens from 32 random bytes and display plaintext only once.
-- [ ] Store only an HMAC-SHA-256 digest and developer metadata server-side.
-- [ ] Add an authenticated administration endpoint protected by a separate Worker secret.
-- [ ] Exchange a developer token for a signed 24-hour session.
-- [ ] Reject expired, altered, revoked, and wrong-project sessions.
-- [ ] Make token revocation prevent new sessions without breaking unrelated developers.
+- [ ] Add failing tests for server-generated tokens, digest-only persistence,
+  session expiry, invalid token rejection, revocation, and the requirement that
+  tokens never appear in URLs or logs.
+- [ ] Implement HMAC digesting with domain separation, opaque session storage,
+  separate administrator authentication, and token issuance/revocation routes.
+- [ ] Make revocation remove active sessions and close the revoked developer's
+  sockets.
 - [ ] Document issuance, rotation, and revocation in the server README.
-- [ ] Commit with `feat(coordination): add developer authentication`.
+- [ ] Commit with `feat(coordination): add revocable opaque sessions`.
 
-## Task 4: Implement authoritative presence and lease state
+## Task 4: Implement authoritative state and expiry
 
-**Files:** `src/coordination-object.ts`, lease tests.
-
-- [ ] Create SQLite tables for current developers, current presence, current leases, and recent request IDs.
-- [ ] Implement atomic `presence.open` and `presence.close`.
-- [ ] Implement `lease.acquire`, returning the existing owner when denied.
-- [ ] Implement owner-only release and reservation.
-- [ ] Implement immediate override transfer and a displaced-owner event.
-- [ ] Implement 30-second heartbeats and 120-second editing expiry.
-- [ ] Use Durable Object alarms to remove expired editing leases and reservations.
-- [ ] Keep no historical event table.
-- [ ] Add concurrency tests proving two simultaneous acquisitions produce one owner.
-- [ ] Commit with `feat(coordination): implement lease state machine`.
+- [ ] Add failing concurrency tests for simultaneous acquire and reserve,
+  connection-scoped heartbeats, stale presence expiry, replay payload mismatch,
+  reservation conversion, rebinding, override, and nearest-expiry alarm
+  scheduling.
+- [ ] Create SQLite tables for developers, sessions, connections, presence,
+  leases, reservations, replay records, and state version.
+- [ ] Implement atomic transitions and one-alarm pruning. Keep no activity
+  history.
+- [ ] Commit with `feat(coordination): implement authoritative lease state`.
 
 ## Task 5: Add hibernating WebSocket synchronization
 
-**Files:** WebSocket handling in `src/index.ts` and `src/coordination-object.ts`, WebSocket tests.
+- [ ] Authenticate the WebSocket upgrade through the Authorization header and
+  route project identity from the path.
+- [ ] Attach only server-derived metadata using WebSocket hibernation
+  attachments. Restore it after hibernation.
+- [ ] Send an ordered snapshot immediately, broadcast state changes with their
+  version, and remove stale connection state through normal expiry processing.
+- [ ] Add reconnect, snapshot ordering, hibernation, duplicate-request, and
+  active-revocation tests.
+- [ ] Commit with `feat(coordination): synchronize authoritative state`.
 
-- [ ] Authenticate before upgrading to WebSocket.
-- [ ] Attach project, developer, and connection metadata to each accepted socket.
-- [ ] Send a complete snapshot immediately after connection.
-- [ ] Broadcast presence and lease changes to all project clients.
-- [ ] Restore socket metadata correctly after Durable Object hibernation.
-- [ ] Remove connection presence on clean close while allowing leases to expire normally after abrupt disconnect.
-- [ ] Verify reconnect and duplicate-request behavior.
-- [ ] Commit with `feat(coordination): synchronize leases over WebSockets`.
+## Task 6: Add secure Unity authentication and connection state
 
-## Task 6: Store credentials and create Unity session handling
+- [ ] Add failing EditMode tests using a mock credential store for token setup,
+  identity returned by the server, forgotten credentials, session refresh, and
+  unsupported-platform disabling.
+- [ ] Implement `ICredentialStore` and Windows Credential Manager access under
+  Windows editor compilation conditions. Store only the developer token under
+  `PotionPanic/Coordination/<projectId>/developer-token`.
+- [ ] Build HTTP and WebSocket clients that keep sessions in memory, marshal
+  editor state to the main thread, and expose `Connected`, `Reconnecting`,
+  `Offline`, `AuthenticationFailed`, and `Disabled`.
+- [ ] Never queue lease mutations while offline.
+- [ ] Commit with `feat(coordination): add secure Unity connection service`.
 
-**Files:** credential store, HTTP client, settings, related EditMode tests.
+## Task 7: Track scenes and selected prefabs
 
-- [ ] Define `ICredentialStore` so secure storage can be mocked.
-- [ ] Implement Windows Credential Manager access with `CredWriteW`, `CredReadW`, and `CredDeleteW`.
-- [ ] Use credential target `PotionPanic/Coordination/<projectId>/<developerId>`.
-- [ ] Never log token or session values.
-- [ ] Build a setup UI that asks for developer ID, display name, and token once.
-- [ ] Exchange the saved token for a 24-hour session and refresh it automatically before expiry.
-- [ ] Add `Forget credentials` and authentication-failure recovery actions.
-- [ ] Commit with `feat(coordination): add secure Unity authentication`.
+- [ ] Use the installed Unity scene and Prefab Stage open, dirty, save, and
+  close callbacks.
+- [ ] Add tests for untitled and additive scenes, duplicate callbacks, domain
+  reload, selected prefabs, non-coordinated prefabs, reconnect, and own
+  reservation conversion on first dirty transition.
+- [ ] Publish presence only for enabled rules and request one lease per dirty
+  transition. Republish loaded stages after reconnect or domain reload.
+- [ ] Commit scene and prefab tracking in independently reviewable commits.
 
-## Task 7: Build the Unity WebSocket service and local state model
+## Task 8: Guard conflicting saves with cancel and resume
 
-**Files:** networking clients, reconnect policy, service, state tests.
-
-- [ ] Connect with the current session and request a snapshot.
-- [ ] Marshal all state updates onto the Unity editor main thread.
-- [ ] Reconnect with bounded exponential backoff and jitter.
-- [ ] Re-authenticate automatically when a session expires.
-- [ ] Expose `Connected`, `Reconnecting`, `Offline`, and `AuthenticationFailed` states.
-- [ ] Never queue authoritative lease mutations while offline.
-- [ ] Republish current presence and reclaim dirty files after reconnect.
-- [ ] Commit with `feat(coordination): add Unity connection service`.
-
-## Task 8: Track scene presence and first-dirty claims
-
-**Files:** `SceneCoordinationTracker.cs`, bootstrap, tests.
-
-- [ ] Register `EditorSceneManager.sceneOpened`, `sceneDirtied`, `sceneSaved`, and `sceneClosed` handlers.
-- [ ] Publish presence only for paths enabled by `coordination.json`.
-- [ ] Request one lease on the first dirty transition, not on every dirty callback.
-- [ ] Release the lease on normal close unless a reservation was requested.
-- [ ] Restore trackers after domain reload and republish loaded coordinated scenes.
-- [ ] Warn immediately when a remotely claimed scene is opened.
-- [ ] Test duplicate callbacks, untitled scenes, additive scenes, and domain reload.
-- [ ] Commit with `feat(coordination): coordinate Unity scenes`.
-
-## Task 9: Track selected important prefabs
-
-**Files:** `PrefabCoordinationTracker.cs`, configuration update, tests.
-
-- [ ] Use Prefab Stage open, dirty, save, and closing events.
-- [ ] Resolve the prefab asset path and apply the same presence and lease rules as scenes.
-- [ ] Keep prefab coordination allowlisted by exact path in the first release.
-- [ ] Do not claim nested dependencies or every referenced prefab automatically.
-- [ ] Test opening, modifying, closing, domain reload, and a non-coordinated prefab.
-- [ ] Commit with `feat(coordination): coordinate selected prefabs`.
-
-## Task 10: Guard saves and implement deliberate override
-
-**Files:** `SaveConflictProcessor.cs`, service override API, tests.
-
-- [ ] Intercept scene and asset save callbacks where Unity permits it.
-- [ ] When another developer owns the lease, show owner, branch, task, and expiry.
-- [ ] Provide `Cancel Save` and `Override Claim and Save` while online.
-- [ ] Provide `Save Without Claim` only when offline.
-- [ ] Transfer ownership before continuing an online override save.
-- [ ] If override communication fails, preserve local changes and require another explicit decision.
-- [ ] Prevent recursive save prompts after a confirmed override.
+- [ ] Add failing tests for remote conflicts, pending claims, multi-path saves,
+  offline save without claim, override failure, and recursive resume prevention.
+- [ ] In `AssetModificationProcessor.OnWillSaveAssets`, return all safe paths
+  immediately and omit conflicted paths. Start the asynchronous acquisition or
+  override request after the callback returns.
+- [ ] After an authoritative grant or override, resume only the omitted target
+  save through `EditorApplication.delayCall` using a one-shot recursion guard.
+- [ ] Preserve dirty local changes if the request fails or the editor reloads.
 - [ ] Commit with `feat(coordination): guard conflicting saves`.
 
-## Task 11: Build the Coordination window and Unity notifications
+## Task 9: Build the coordination interface and harden lifecycle behavior
 
-**Files:** UI files and UI state tests.
+- [ ] Add `Window > Potion Panic > Coordination` with authenticated identity,
+  branch/task context, presence, leases, reservations, connection state, and
+  actions to reconnect, reserve, release, override, copy path, and forget
+  credentials.
+- [ ] Use Unity notifications only for claims, conflicts, overrides,
+  reservations, authentication failure, and prolonged disconnect.
+- [ ] Release owned connection presence and editing leases on normal shutdown
+  where possible. Treat abrupt shutdown as stale expiry.
+- [ ] Ensure compilation and domain reload recreate services without duplicate
+  subscriptions.
+- [ ] Commit with `feat(coordination): add editor coordination interface`.
 
-- [ ] Add `Window > Potion Panic > Coordination`.
-- [ ] Show connection state, authenticated developer, current branch, task context, open presence, active leases, and reservations.
-- [ ] Add actions for reconnect, reserve 30 minutes, release own lease, override, copy path, and forget credentials.
-- [ ] Show prominent offline and authentication-failure banners.
-- [ ] Notify only for important events: remote claim, conflict, override, reservation, authentication failure, and prolonged disconnect.
-- [ ] Do not send disruptive notifications for ordinary viewing presence or clean release.
-- [ ] Commit with `feat(coordination): add Unity coordination interface`.
+## Task 10: Deploy and perform two-machine acceptance testing
 
-## Task 12: Add offline reconciliation and lifecycle hardening
+- [ ] Create `TOKEN_HMAC_KEY` and `ADMIN_TOKEN` as Cloudflare secrets, deploy
+  the Worker, and replace the endpoint placeholder in `coordination.json`.
+- [ ] Issue one developer token per person and configure two Windows machines
+  on different networks.
+- [ ] Verify viewing presence, pre-edit reservation, simultaneous acquisition,
+  remote conflict, override, clean close, process termination, network loss,
+  server outage, token revocation, session refresh, and 120-second stale expiry.
+- [ ] Run the complete coordination EditMode tests and a Play Mode smoke test
+  against the scene that is canonical at execution time.
+- [ ] Record backend, Unity, and two-machine evidence in `PP-7`.
 
-**Files:** service, bootstrap, trackers, reconnection tests.
+## Task 11: Documentation and handoff
 
-- [ ] Release presence and owned leases on normal Unity shutdown where possible.
-- [ ] Treat abrupt shutdown as a normal stale-lease expiry case.
-- [ ] After reconnect, publish current scenes and prefab stages, then request leases for dirty coordinated files.
-- [ ] Surface conflicts using the normal override workflow.
-- [ ] Ensure script compilation and domain reload recreate services without duplicate event subscriptions.
-- [ ] Add a local `Disabled` switch that stops networking and tracking without affecting project editability.
-- [ ] Commit with `fix(coordination): harden reconnect and editor lifecycle`.
+- [ ] Update `README.md`, onboarding, team workflow, and editor-safety guidance
+  only after the accepted first release exists.
+- [ ] Document token setup, reservations, overrides, offline recovery, advisory
+  locking limits, and the manual-outage fallback.
+- [ ] Keep manual announcements for protected changes. Do not describe the
+  system as a hard lock or an automatic replacement for repository rules.
+- [ ] Run `npm test`, `npm run docs:build`, backend checks, Unity EditMode
+  tests, and Play Mode smoke tests. Do not claim the root test suite is clean
+  until `PP-8` closes.
+- [ ] Archive this plan only after release acceptance and documentation handoff.
 
-## Task 13: Deploy and perform two-machine acceptance testing
-
-- [ ] Create Cloudflare secrets for session signing and administration.
-- [ ] Deploy the Worker and Durable Object.
-- [ ] Replace placeholder URLs in `coordination.json`.
-- [ ] Issue one token per developer and configure both machines.
-- [ ] Verify both developers connect from different networks.
-- [ ] Verify opening publishes presence without acquiring a lease.
-- [ ] Verify first modification acquires a lease and notifies the other client.
-- [ ] Verify a second save warns and an override transfers ownership.
-- [ ] Verify a clean close releases immediately.
-- [ ] Verify a crashed client lease expires within 120 seconds.
-- [ ] Verify a reservation lasts 30 minutes.
-- [ ] Verify offline editing remains possible with a prominent warning.
-- [ ] Verify token revocation blocks new sessions.
-- [ ] Verify the shared scene still enters Play Mode without new Console errors.
-
-## Task 14: Documentation and first-release handoff
-
-**Files:** onboarding guide, team workflow, server README, this plan, and related board ticket.
-
-- [ ] Replace manual coordination instructions with the automated workflow while retaining a manual fallback for outages.
-- [ ] Document first-time token setup and the expected once-per-machine lifecycle.
-- [ ] Document claim, reservation, override, offline, and recovery behavior.
-- [ ] State explicitly that the tool provides coordination warnings rather than hard filesystem locks.
-- [ ] Run `npm run docs:build`.
-- [ ] Record backend tests, Unity EditMode tests, Play Mode smoke test, and two-machine acceptance evidence.
-- [ ] Move this plan to the archive only after the first usable release is deployed and accepted.
-
-## Later milestone: shared project configuration
-
-After scenes and prefabs are stable, enable coordination for:
-
-```text
-ProjectSettings/**
-Packages/manifest.json
-Packages/packages-lock.json
-```
-
-Use debounced filesystem and asset-modification detection. Compare metadata before requesting claims so Unity imports and package resolution do not create false claims. Apply the same save warning and override behavior as scenes and prefabs.
-
-## Later milestone: Windows notifications
-
-Add native Windows notifications only after Unity notifications prove reliable. Notify when Unity is minimized or unfocused for remote claims, conflicts, overrides, reservations, authentication failure, and prolonged disconnection. Do not make Windows notification support a dependency of coordination correctness.
-
-## Optional Docboard integration
-
-Add a read-only active-claims panel only after the Unity workflow is complete. The Cloudflare service remains authoritative. Do not place developer tokens in generated static documentation and do not let Docboard mutate leases in the first integration.
-
-## Verification commands
-
-Backend:
-
-```powershell
-cd Tools/CoordinationServer
-npm test
-npm run check
-```
-
-Documentation:
-
-```powershell
-npm run docs:build
-```
-
-Unity:
-
-1. Open Unity `6000.5.1f1`.
-2. Run the complete coordination EditMode test assembly.
-3. Open `Assets/Scenes/SampleScene.unity`.
-4. Enter Play Mode and confirm no new relevant Console errors.
-5. Exit Play Mode and verify coordination reconnects or remains connected.
-
-Repository review:
-
-```powershell
-git status
-git diff --check
-git diff master...HEAD --stat
-```
-
-Confirm that no secret files, tokens, sessions, generated Unity folders, logs, or unrelated scene changes are present.
-
-## Acceptance criteria
+## Verification and acceptance criteria
 
 The first usable release is complete only when:
 
-- Both developers connect from different networks.
-- Opening a coordinated scene or selected prefab shows viewing presence.
-- First modification acquires one authoritative lease.
-- Simultaneous acquisition produces exactly one owner.
-- Remote owner, branch, and task context are visible.
-- Saving against a remote owner requires a deliberate decision.
-- Override transfers ownership and notifies both developers.
-- Clean close releases immediately.
-- Abrupt-disconnect leases expire within 120 seconds.
-- Reservations expire after 30 minutes.
-- Offline mode never prevents preserving local work.
-- Credentials survive Unity restarts without re-entry.
-- Revocation prevents new sessions for only the revoked developer.
-- No activity history is retained.
-- Backend and Unity tests pass.
-- `SampleScene.unity` still enters Play Mode cleanly.
-- The documentation build passes.
+- Two developers connect from different networks using opaque sessions.
+- Opening a coordinated scene or selected prefab publishes viewing presence.
+- Pre-edit reservation and first dirty acquisition each produce exactly one
+  authoritative owner.
+- Presence, leases, reservations, branch context, task context, and expiry
+  remain current after reconnect and hibernation.
+- Saving against a remote owner requires a deliberate cancel or override path.
+- The callback-based save guard preserves local work during pending, failed,
+  offline, and domain-reload paths.
+- Clean close releases editing state, while abrupt connection loss removes
+  presence and editing leases within 120 seconds.
+- Revocation immediately invalidates only the affected developer's sessions.
+- No activity history, token, session, or generated runtime state enters Git.
+- Backend tests, Unity tests, Play Mode smoke testing, documentation build, and
+  two-machine acceptance evidence are recorded. The root documentation suite
+  is claimed clean only after `PP-8` is resolved.
 
 ## Rollback
 
-If the Unity client destabilizes the editor, enable the local `Disabled` switch, stop trackers and networking, preserve project editability, and revert the Unity client commit range if required. If the backend fails, clients enter offline mode and the team temporarily uses explicit manual announcements. Do not rotate developer tokens unless the incident involves credential exposure.
+If the Unity client destabilizes the editor, enable the local `Disabled` switch,
+stop networking and tracking, preserve project editability, and revert the
+coordination client commits if required. If the backend fails, clients enter
+offline mode and the team uses explicit manual announcements. Rotate developer
+tokens only for credential exposure.
