@@ -51,6 +51,17 @@ restored the root documentation test baseline; `npm test` and
 `npm run docs:build` pass. No coordination server or Unity client
 implementation has started.
 
+2026-08-06: Slice 01 foundations committed as
+`d6563ed868b6b359024ba1ec179c683f5a452313`
+(`feat(coordination): scaffold backend and configuration`). Commands passed:
+`Tools/CoordinationServer`: `npm ci`, `npm run typecheck`, `npm test` (49),
+and `npx wrangler deploy --dry-run`; repository root: `npm test` (11) and
+`npm run docs:build`. The Unity Coordination EditMode command could not run:
+Unity 6000.5.1f1 exited with code 198 before compilation because no valid
+Editor license is activated. `npm ci` also reported four Worker dependency
+audit findings (three moderate, one high); no dependency upgrade was made in
+this slice.
+
 ## Definition of Done
 
 - [ ] Acceptance criteria met
