@@ -88,6 +88,25 @@ hold, send, or broadcast through a WebSocket. Slice 04 must authenticate the
 upgrade, call `openConnection`, deliver returned envelopes, and extend the
 alarm handler with live-socket broadcasting without duplicating lease logic.
 
+2026-08-06: Slice 04 WebSocket synchronization is staged for the atomic
+`feat(coordination): synchronize authoritative state` commit. Commands passed
+from `Tools/CoordinationServer`: `npm run typecheck`,
+`npm test -- tests/websocket` (11), `npm test` (75), and
+`npx wrangler deploy --dry-run`. The authenticated
+`GET /v1/projects/{projectId}/connect` upgrade rejects query strings, creates a
+connection only through `openConnection`, and sends `session.ready` followed by
+the current snapshot. The Durable Object keeps only server-derived project,
+developer, session, and connection metadata in hibernation attachments; it
+restores that metadata on wake, routes validated client envelopes without a
+client state version, broadcasts authoritative transitions, releases
+connection-scoped state on close or revocation, and broadcasts expiry
+transitions from its existing alarm. Transport tests cover upgrade
+authentication, ordering, server-assigned IDs, mutation broadcasts, hibernation
+restore, replay, client version rejection, oversized envelopes, revocation,
+alarm expiry broadcasts, and older server-version rejection. Remaining risk:
+deployment and two-machine Unity client acceptance remain deferred to later
+slices; no live Worker was deployed by this slice.
+
 ## Definition of Done
 
 - [ ] Acceptance criteria met

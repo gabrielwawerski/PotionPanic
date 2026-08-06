@@ -56,8 +56,47 @@ Authorization: Bearer <ADMIN_TOKEN>
 `POST /v1/projects/potion-panic/sessions` exchanges a bearer developer token
 for a 24-hour opaque session. It returns developer identity, server time, the
 lease and reservation TTLs, and state version; it never creates or returns a
-connection ID. `GET /health` remains unauthenticated. WebSocket upgrade and
-other coordination state routes are deferred to later slices.
+connection ID. `GET /health` remains unauthenticated.
+
+## Local WebSocket operation
+
+Start the Worker in one terminal after setting local-only secrets in
+`.dev.vars`, then create a session in a second terminal. Do not put either
+token in the WebSocket URL.
+
+```powershell
+npx wrangler dev --local
+
+$session = Invoke-RestMethod `
+  -Method Post `
+  -Uri 'http://127.0.0.1:8787/v1/projects/potion-panic/sessions' `
+  -Headers @{ Authorization = 'Bearer <developer token>' }
+
+npx wscat -c 'ws://127.0.0.1:8787/v1/projects/potion-panic/connect' `
+  -H "Authorization: Bearer $($session.sessionToken)"
+```
+
+The successful upgrade immediately sends `session.ready`, then the current
+`snapshot`. The server assigns `connectionId`; clients never send it, project
+or developer identity, or a state version. Every client message needs a UUID
+v4 `requestId`, for example:
+
+```json
+{
+  "protocolVersion": 1,
+  "type": "presence.open",
+  "requestId": "11111111-1111-4111-8111-111111111111",
+  "path": "Assets/Scenes/SampleScene.unity",
+  "branch": "feature/example",
+  "task": "PP-7"
+}
+```
+
+The server broadcasts resulting state changes to connected clients. It keeps
+the socket metadata in Durable Object hibernation attachments, so a dormant
+connection remains usable after the object wakes. Close the client cleanly
+when finished; the server releases connection-scoped presence and editing
+leases, while reservations remain until their expiry.
 
 Copy `.dev.vars.example` to `.dev.vars` only when a later slice requires local
 secrets. Never commit `.dev.vars`.

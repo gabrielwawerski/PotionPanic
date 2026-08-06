@@ -14,6 +14,7 @@ import {
 } from './auth/session';
 import {
   normalizePath,
+  parseClientEnvelope,
   ProtocolVersion,
   type ClientEnvelope,
   type LeaseRecord,
@@ -99,11 +100,13 @@ export interface StateTransition {
 
 export class CoordinationObject {
   private readonly initialized: Promise<void>;
+  private readonly sockets = new Map<WebSocket, SocketAttachment>();
 
   constructor(
     readonly state: DurableObjectState,
     readonly env: Env
   ) {
+    this.restoreSockets();
     this.initialized = state.blockConcurrencyWhile(() => this.initialize());
   }
 
@@ -124,12 +127,49 @@ export class CoordinationObject {
       return this.createSession(request);
     }
     if (route.kind === 'connect' && request.method === 'GET') {
-      return await this.authenticateSession(request) === null
-        ? unauthorized()
-        : new Response('Not implemented', { status: 501 });
+      if (new URL(request.url).search !== '') {
+        return badRequest();
+      }
+      const session = await this.authenticateSession(request);
+      if (session === null) {
+        return unauthorized();
+      }
+      if (request.headers.get('Upgrade')?.toLowerCase() !== 'websocket') {
+        return badRequest();
+      }
+      return this.upgradeConnection(route.projectId, session);
     }
 
     return new Response('Not implemented', { status: 501 });
+  }
+
+  private async upgradeConnection(projectId: string, session: SessionRow): Promise<Response> {
+    const opened = await this.openConnection({
+      sessionId: session.session_id,
+      developerId: session.developer_id,
+      displayName: session.display_name,
+      expiresAt: session.expires_at
+    });
+    const ready = opened.requester;
+    if (ready === null || ready.type !== 'session.ready') {
+      throw new Error('Opening a connection did not return session readiness.');
+    }
+
+    const [client, server] = Object.values(new WebSocketPair());
+    const attachment: SocketAttachment = {
+      projectId,
+      sessionId: session.session_id,
+      developerId: session.developer_id,
+      displayName: session.display_name,
+      connectionId: ready.connectionId
+    };
+    server.serializeAttachment(attachment);
+    this.state.acceptWebSocket(server);
+    this.sockets.set(server, attachment);
+    server.send(JSON.stringify(ready));
+    server.send(JSON.stringify(await this.currentSnapshot()));
+
+    return new Response(null, { status: 101, webSocket: client });
   }
 
   async openConnection(session: AuthenticatedSession, now = new Date()): Promise<StateTransition> {
@@ -167,6 +207,38 @@ export class CoordinationObject {
       stateChanges: [],
       stateVersion
     };
+  }
+
+  async currentSnapshot(now = new Date()): Promise<ServerEnvelope> {
+    await this.initialized;
+    return this.snapshotEnvelope(undefined, now, this.stateVersion());
+  }
+
+  async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer): Promise<void> {
+    const attachment = this.socketAttachment(ws);
+    if (attachment === null) {
+      ws.close(1008, 'Invalid connection metadata.');
+      return;
+    }
+
+    const parsed = clientSuppliesStateVersion(message)
+      ? { ok: false as const, error: 'invalid_envelope' }
+      : parseClientEnvelope(message);
+    if (!parsed.ok) {
+      this.send(ws, this.messageError(parsed.error));
+      return;
+    }
+
+    const transition = await this.handleMessage(attachment.connectionId, parsed.value);
+    this.deliverTransition(ws, transition);
+  }
+
+  async webSocketClose(ws: WebSocket): Promise<void> {
+    await this.closeSocket(ws);
+  }
+
+  async webSocketError(ws: WebSocket): Promise<void> {
+    await this.closeSocket(ws);
   }
 
   async closeConnection(connectionId: string, now = new Date()): Promise<StateTransition> {
@@ -213,7 +285,12 @@ export class CoordinationObject {
       if (replay.payload_hash !== payloadHash) {
         return this.prepend(pruned, this.error(message.requestId, 'replay_payload_mismatch', now));
       }
-      return this.prepend(pruned, JSON.parse(replay.result_json) as StateTransition);
+      const replayed = JSON.parse(replay.result_json) as StateTransition;
+      return {
+        requester: replayed.requester,
+        stateChanges: pruned.stateChanges,
+        stateVersion: pruned.stateVersion
+      };
     }
 
     const transition = this.applyMessage(connection, message, now);
@@ -281,7 +358,76 @@ export class CoordinationObject {
 
   async alarm(): Promise<void> {
     await this.initialized;
-    await this.pruneExpired(new Date());
+    const transition = await this.pruneExpired(new Date());
+    this.broadcast(transition.stateChanges);
+  }
+
+  private restoreSockets(): void {
+    for (const ws of this.state.getWebSockets()) {
+      const attachment = parseSocketAttachment(ws.deserializeAttachment());
+      if (attachment === null) {
+        ws.close(1008, 'Invalid connection metadata.');
+        continue;
+      }
+      this.sockets.set(ws, attachment);
+    }
+  }
+
+  private socketAttachment(ws: WebSocket): SocketAttachment | null {
+    const existing = this.sockets.get(ws);
+    if (existing !== undefined) {
+      return existing;
+    }
+
+    const restored = parseSocketAttachment(ws.deserializeAttachment());
+    if (restored !== null) {
+      this.sockets.set(ws, restored);
+    }
+    return restored;
+  }
+
+  private async closeSocket(ws: WebSocket): Promise<void> {
+    const attachment = this.socketAttachment(ws);
+    this.sockets.delete(ws);
+    if (attachment === null) {
+      return;
+    }
+
+    const transition = await this.closeConnection(attachment.connectionId);
+    this.broadcast(transition.stateChanges);
+  }
+
+  private deliverTransition(ws: WebSocket, transition: StateTransition): void {
+    if (transition.requester !== null && !transition.stateChanges.includes(transition.requester)) {
+      this.send(ws, transition.requester);
+    }
+    this.broadcast(transition.stateChanges);
+  }
+
+  private broadcast(envelopes: ServerEnvelope[]): void {
+    for (const envelope of envelopes) {
+      for (const ws of this.sockets.keys()) {
+        this.send(ws, envelope);
+      }
+    }
+  }
+
+  private send(ws: WebSocket, envelope: ServerEnvelope): void {
+    try {
+      ws.send(JSON.stringify(envelope));
+    } catch {
+      this.sockets.delete(ws);
+    }
+  }
+
+  private messageError(code: string): ServerEnvelope {
+    return {
+      protocolVersion: ProtocolVersion,
+      type: 'error',
+      stateVersion: this.stateVersion(),
+      code,
+      message: 'The coordination message is invalid.'
+    };
   }
 
   private async initialize(): Promise<void> {
@@ -683,12 +829,16 @@ export class CoordinationObject {
     };
   }
 
-  private snapshotEnvelope(requestId: string, now: Date, stateVersion: number): ServerEnvelope {
+  private snapshotEnvelope(
+    requestId: string | undefined,
+    now: Date,
+    stateVersion: number
+  ): ServerEnvelope {
     return {
       protocolVersion: ProtocolVersion,
       type: 'snapshot',
       stateVersion,
-      requestId,
+      ...(requestId === undefined ? {} : { requestId }),
       presence: this.allPresence(),
       leases: this.allEffectiveLeases(),
       serverTime: now.toISOString()
@@ -1092,6 +1242,15 @@ export class CoordinationObject {
       developerId
     );
     this.state.storage.sql.exec('DELETE FROM sessions WHERE developer_id = ?', developerId);
+    const sockets = Array.from(this.sockets.entries()).filter(
+      ([, attachment]) => attachment.developerId === developerId
+    );
+    for (const [ws, attachment] of sockets) {
+      this.sockets.delete(ws);
+      ws.close(4003, 'Developer access revoked.');
+      const transition = await this.closeConnection(attachment.connectionId);
+      this.broadcast(transition.stateChanges);
+    }
     await this.scheduleNextAlarm();
     return new Response(null, { status: 204 });
   }
@@ -1158,25 +1317,71 @@ interface PathDetails {
   display: string;
 }
 
+interface SocketAttachment {
+  projectId: string;
+  sessionId: string;
+  developerId: string;
+  displayName: string;
+  connectionId: string;
+}
+
+function parseSocketAttachment(value: unknown): SocketAttachment | null {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return null;
+  }
+
+  const attachment = value as Record<string, unknown>;
+  const fields = ['projectId', 'sessionId', 'developerId', 'displayName', 'connectionId'];
+  return fields.every((field) => typeof attachment[field] === 'string' && attachment[field].length > 0)
+    ? attachment as unknown as SocketAttachment
+    : null;
+}
+
+function clientSuppliesStateVersion(message: string | ArrayBuffer): boolean {
+  if (typeof message !== 'string') {
+    return false;
+  }
+
+  try {
+    const value: unknown = JSON.parse(message);
+    return typeof value === 'object' && value !== null && !Array.isArray(value)
+      && 'stateVersion' in value;
+  } catch {
+    return false;
+  }
+}
+
 type Route =
-  | { kind: 'developers' }
-  | { kind: 'developer'; developerId: string }
-  | { kind: 'sessions' }
-  | { kind: 'connect' };
+  | { kind: 'developers'; projectId: string }
+  | { kind: 'developer'; projectId: string; developerId: string }
+  | { kind: 'sessions'; projectId: string }
+  | { kind: 'connect'; projectId: string };
 
 function parseRoute(pathname: string): Route | null {
-  const match = /^\/v1\/projects\/[^/]+\/(developers|sessions|connect)(?:\/([^/]+))?$/.exec(pathname);
+  const match = /^\/v1\/projects\/([^/]+)\/(developers|sessions|connect)(?:\/([^/]+))?$/.exec(pathname);
   if (match === null) {
     return null;
   }
 
-  if (match[1] === 'developers') {
-    return match[2] === undefined ? { kind: 'developers' } : { kind: 'developer', developerId: match[2] };
-  }
-  if (match[2] !== undefined) {
+  let projectId: string;
+  try {
+    projectId = decodeURIComponent(match[1]);
+  } catch {
     return null;
   }
-  return match[1] === 'sessions' ? { kind: 'sessions' } : { kind: 'connect' };
+  if (projectId.length === 0) {
+    return null;
+  }
+
+  if (match[2] === 'developers') {
+    return match[3] === undefined
+      ? { kind: 'developers', projectId }
+      : { kind: 'developer', projectId, developerId: match[3] };
+  }
+  if (match[3] !== undefined) {
+    return null;
+  }
+  return match[2] === 'sessions' ? { kind: 'sessions', projectId } : { kind: 'connect', projectId };
 }
 
 function pathDetails(path: string): PathDetails | null {
