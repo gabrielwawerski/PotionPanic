@@ -1,7 +1,7 @@
 ---
 id: 4
 title: Validate Laboratory milestone and align scene-name docs
-status: todo
+status: backlog
 priority: medium
 milestone: m-0
 dependencies:
@@ -25,7 +25,7 @@ affectedFiles:
   - CLAUDE.md
   - GEMINI.md
 tags: []
-order: 1
+order: 3
 ---
 
 ## Description

@@ -1,7 +1,7 @@
 ---
 id: 2
 title: Replace SampleScene with Laboratory milestone scene
-status: todo
+status: backlog
 priority: high
 milestone: m-0
 documentation:
@@ -19,7 +19,7 @@ affectedFiles:
 tags:
   - asd
 assignee: Robcio
-order: 3
+order: 1
 ---
 
 ## Description

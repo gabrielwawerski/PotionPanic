@@ -1,7 +1,7 @@
 ---
 id: 3
 title: Add Milestone 1 CharacterController movement
-status: todo
+status: backlog
 priority: medium
 milestone: m-0
 dependencies:
