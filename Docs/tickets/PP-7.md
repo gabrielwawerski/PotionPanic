@@ -62,6 +62,18 @@ Editor license is activated. `npm ci` also reported four Worker dependency
 audit findings (three moderate, one high); no dependency upgrade was made in
 this slice.
 
+2026-08-06: Slice 02 authentication committed as
+`cb539c2` (`feat(coordination): add revocable opaque sessions`). Commands
+passed from `Tools/CoordinationServer`: `npm run typecheck`,
+`npm test -- tests/auth` (6), `npm test` (55), and
+`npx wrangler deploy --dry-run`. The slice adds domain-separated HMAC-SHA-256
+digest-only developer and session persistence, independent administrator
+authentication, revocation, the one-time issuance script, and no-connection-ID
+HTTP sessions. Risk/handoff: expired session rows are rejected by Slice 02
+authentication but remain persisted until Slice 03 implements the program's
+authoritative expiry and pruning behavior. Slice 04 remains responsible for
+closing a revoked developer's live sockets.
+
 ## Definition of Done
 
 - [ ] Acceptance criteria met
