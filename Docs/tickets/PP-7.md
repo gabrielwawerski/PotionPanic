@@ -88,8 +88,8 @@ hold, send, or broadcast through a WebSocket. Slice 04 must authenticate the
 upgrade, call `openConnection`, deliver returned envelopes, and extend the
 alarm handler with live-socket broadcasting without duplicating lease logic.
 
-2026-08-06: Slice 04 WebSocket synchronization is staged for the atomic
-`feat(coordination): synchronize authoritative state` commit. Commands passed
+2026-08-06: Slice 04 WebSocket synchronization committed as `a8dc482`
+(`feat(coordination): synchronize authoritative state`). Commands passed
 from `Tools/CoordinationServer`: `npm run typecheck`,
 `npm test -- tests/websocket` (11), `npm test` (75), and
 `npx wrangler deploy --dry-run`. The authenticated
