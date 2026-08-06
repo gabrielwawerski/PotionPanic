@@ -74,6 +74,20 @@ authentication but remain persisted until Slice 03 implements the program's
 authoritative expiry and pruning behavior. Slice 04 remains responsible for
 closing a revoked developer's live sockets.
 
+2026-08-06: Slice 03 authoritative state committed as
+`74661d4` (`feat(coordination): implement authoritative lease state`). Commands
+passed from `Tools/CoordinationServer`: `npm run typecheck`,
+`npm test -- tests/state` (9), and `npm test` (64). The Durable Object now owns
+connections, presence, editing leases, persistent reservations, replay records,
+expiry pruning, and nearest-expiry alarms. A reservation remains persisted while
+its owner edits the same path, then becomes the effective reservation again on
+lease release or connection close; at most one effective editing or reserved
+lease exists for a canonical lower-invariant path. Transitions return requester
+and state-change envelopes only. They do not accept a client state version or
+hold, send, or broadcast through a WebSocket. Slice 04 must authenticate the
+upgrade, call `openConnection`, deliver returned envelopes, and extend the
+alarm handler with live-socket broadcasting without duplicating lease logic.
+
 ## Definition of Done
 
 - [ ] Acceptance criteria met
