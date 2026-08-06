@@ -121,3 +121,11 @@ InitTestScene*.unity*
 /Docs/.vitepress/cache/
 /Docs/.vitepress/dist/
 /.worktrees/
+
+# Coordination local credentials, runtime state, and tooling output
+/Tools/CoordinationServer/.dev.vars
+/Tools/CoordinationServer/.wrangler/
+/Tools/CoordinationServer/*.log
+/Tools/CoordinationServer/coverage/
+/UserSettings/PotionPanic/coordination.local.json
+/UserSettings/PotionPanic/coordination-lease-state.json
