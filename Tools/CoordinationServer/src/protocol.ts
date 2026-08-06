@@ -47,9 +47,14 @@ export interface PathEnvelope extends ClientEnvelopeBase {
 }
 
 export type ClientEnvelope =
-  | (PathContextEnvelope & { type: 'presence.open' | 'lease.acquire' | 'lease.reserve' | 'lease.override' })
-  | (PathEnvelope & { type: 'presence.close' | 'lease.release' })
-  | (ClientEnvelopeBase & { type: 'heartbeat' | 'snapshot.request' });
+  | (PathContextEnvelope & { type: 'presence.open' })
+  | (PathEnvelope & { type: 'presence.close' })
+  | (PathContextEnvelope & { type: 'lease.acquire' })
+  | (PathEnvelope & { type: 'lease.release' })
+  | (PathContextEnvelope & { type: 'lease.reserve' })
+  | (PathContextEnvelope & { type: 'lease.override' })
+  | (ClientEnvelopeBase & { type: 'heartbeat' })
+  | (ClientEnvelopeBase & { type: 'snapshot.request' });
 
 export interface PresenceRecord {
   path: string;

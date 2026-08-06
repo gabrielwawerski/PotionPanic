@@ -39,7 +39,14 @@ describe('developer administration', () => {
     }));
 
     expect(persisted.tables.map(({ name }) => name)).toEqual([
-      'coordination_state', 'developers', 'sessions'
+      'connections',
+      'coordination_state',
+      'developers',
+      'leases',
+      'presence',
+      'replay_records',
+      'reservations',
+      'sessions'
     ]);
     expect(persisted.stateVersion).toEqual({ value: 0 });
     expect(persisted.developers).toEqual(expect.arrayContaining([
