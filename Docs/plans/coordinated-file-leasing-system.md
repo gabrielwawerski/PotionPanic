@@ -88,6 +88,89 @@ PotionPanic/
 - Add prefab rules only after confirming actual paths; begin with exact
   allowlisted paths rather than `Assets/**/*.prefab`.
 
+## Protocol v1 contract
+
+Use flat JSON envelopes that Unity can deserialize without another JSON package.
+The endpoint and authenticated session, never client payload fields, determine
+the project, developer, and connection.
+
+```text
+POST /v1/projects/{projectId}/sessions
+Authorization: Bearer <developer-token>
+
+GET /v1/projects/{projectId}/connect
+Authorization: Bearer <session-token>
+Upgrade: websocket
+```
+
+The session response contains `developerId`, `displayName`, `serverTime`,
+`connectionId`, `leaseTtlSeconds`, `reservationTtlSeconds`, and `stateVersion`.
+
+Every client-to-server envelope contains these fields:
+
+```json
+{
+  "protocolVersion": 1,
+  "type": "lease.acquire",
+  "requestId": "a UUID v4 string"
+}
+```
+
+`requestId` is mandatory for every client message, including `snapshot.request`.
+The server records replay results only for mutating messages. Client envelopes
+must not contain `projectId`, `developerId`, or `connectionId`.
+
+| Client message | Required additional fields | Meaning |
+| --- | --- | --- |
+| `presence.open` | `path`, `branch`, `task` | Publish non-exclusive viewing presence. |
+| `presence.close` | `path` | Remove this connection's viewing presence. |
+| `lease.acquire` | `path`, `branch`, `task` | Claim an unclaimed path for editing. |
+| `lease.release` | `path` | Release this developer's editing lease. |
+| `lease.reserve` | `path`, `branch`, `task` | Reserve an unclaimed path. |
+| `lease.override` | `path`, `branch`, `task` | Transfer a remotely owned lease deliberately. |
+| `heartbeat` | none | Extend only this connection's presence and editing leases. |
+| `snapshot.request` | none | Request the complete current state; no history replay exists. |
+
+`path` is the submitted display path. The server normalizes separators and
+Unicode, rejects control characters, leading separators, drive prefixes, `.`
+and `..` segments, and derives a lower-invariant canonical key. It preserves the
+normalized submitted casing as `displayPath`. A path is at most 1,024 UTF-16
+code units; `branch` and `task` are each at most 256 UTF-16 code units. The
+serialized UTF-8 envelope is at most 16 KiB.
+
+Every server-to-client envelope contains `protocolVersion: 1`, `type`, and the
+current monotonic `stateVersion`. A response to a request also contains that
+request's `requestId`. The client applies a state-carrying envelope only when
+its `stateVersion` is not older than the greatest version already applied.
+
+| Server message | Required additional fields |
+| --- | --- |
+| `session.ready` | `developerId`, `displayName`, `serverTime`, `connectionId`, `leaseTtlSeconds`, `reservationTtlSeconds` |
+| `snapshot` | `presence`, `leases`, `serverTime` |
+| `presence.updated` | `presence` |
+| `presence.removed` | `path`, `connectionId` |
+| `lease.granted` | `path`, `lease` |
+| `lease.denied` | `path`, `code`, `currentLease` |
+| `lease.updated` | `lease` |
+| `lease.released` | `path`, `leaseId` |
+| `lease.overridden` | `path`, `previousDeveloperId`, `lease` |
+| `error` | `code`, `message` |
+
+`presence` is an array of presence records; each record contains `path`,
+`displayPath`, `developerId`, `displayName`, `connectionId`, `branch`, `task`,
+and `expiresAt`. `leases` is an array of lease records; each record contains
+`leaseId`, `path`, `displayPath`, `mode` (`editing` or `reserved`),
+`developerId`, `displayName`, `branch`, `task`, `expiresAt`, and `connectionId`
+only for editing leases. A `lease.denied` response uses `currentLease: null`
+when the path became unavailable without a lease record.
+
+One canonical path has at most one editing or reserved lease, while presence may
+contain multiple connections. Replay records are scoped to developer and request
+ID, contain a payload hash, return the earlier result only for an identical
+payload for five minutes, and reject mismatched reuse. The server accepts a
+heartbeat from its authenticated owning connection even if unrelated state has
+advanced; stale server state is rejected by the client at apply time.
+
 ## Dependency graph
 
 ```text

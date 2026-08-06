@@ -38,10 +38,11 @@ backend checks without deployment credentials.
   slash direction and Unicode paths, honor a local untracked endpoint override,
   and match `**/` against zero or more directories. Disabled rules must never
   match.
-- Define flat protocol envelopes with protocol version `1`, UUID request IDs
-  for mutations, canonical path fields, state-version fields, and the message
-  names listed in the program page. Reject control characters, traversal,
-  drive prefixes, leading separators, oversized messages, and invalid versions.
+- Define the exact flat protocol envelopes in the program page's `Protocol v1
+  contract`, including every listed message name and field. Enforce protocol
+  version `1`, UUID request IDs, field length limits, canonical path rules, and
+  the 16 KiB UTF-8 envelope limit. Reject invalid inbound state versions and
+  ignore server state older than the newest version already applied.
 - Scaffold a strict Worker package with the SQLite Durable Object migration
   binding and Vitest Workers integration. The Worker may return a deliberate
   not-yet-authenticated response in this slice; do not implement auth or state.
@@ -53,6 +54,9 @@ backend checks without deployment credentials.
 - Unity Test Runner: run the Coordination EditMode tests and confirm rule
   matching covers the root scene, nested scenes, disabled rules, invalid paths,
   and local override precedence.
+- TypeScript and Unity protocol tests: verify every v1 message DTO, required
+  field, rejected client identity field, invalid path, oversize envelope, and
+  older server `stateVersion` handling.
 - Backend: from `Tools/CoordinationServer`, run `npm ci`, `npm run typecheck`,
   `npm test`, and `npx wrangler deploy --dry-run`.
 - Repository: run `npm test` and `npm run docs:build`; both must pass.
