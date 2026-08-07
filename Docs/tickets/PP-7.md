@@ -107,7 +107,7 @@ alarm expiry broadcasts, and older server-version rejection. Remaining risk:
 deployment and two-machine Unity client acceptance remain deferred to later
 slices; no live Worker was deployed by this slice.
 
-2026-08-07: Slice 05 Unity connection service committed as `7bc67e6`
+2026-08-07: Slice 05 Unity connection service committed as `7a9a4f8`
 (`feat(coordination): add secure Unity connection service`). The editor service
 keeps developer tokens only in Windows Credential Manager at
 `PotionPanic/Coordination/<projectId>/developer-token`; opaque sessions remain
