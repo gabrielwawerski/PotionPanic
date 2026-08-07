@@ -107,6 +107,23 @@ alarm expiry broadcasts, and older server-version rejection. Remaining risk:
 deployment and two-machine Unity client acceptance remain deferred to later
 slices; no live Worker was deployed by this slice.
 
+2026-08-07: Slice 05 Unity connection service committed as `7a9a4f8`
+(`feat(coordination): add secure Unity connection service`). The editor service
+keeps developer tokens only in Windows Credential Manager at
+`PotionPanic/Coordination/<projectId>/developer-token`; opaque sessions remain
+in memory. It exposes connection states, authenticated session and WebSocket
+transport, one-time credential prompting, reconnect/session refresh, Git branch
+and local task context, main-thread event dispatch, and explicit offline mutation
+rejection. `CoordinationCredentialWindow` is the limited token-entry and forget
+surface before Slice 08. Unity EditMode focused service tests passed 9/9;
+the full Coordination suite compiled and ran 40 tests with 39 passing. The
+remaining failure predates Slice 05: `CoordinationProtocolTests.
+AcceptsEveryV1ServerMessageWithItsRequiredFields` rejects the valid
+`lease.denied` envelope with `currentLease: null` in the Slice 01 parser.
+No scene, prefab, package, or project-setting files changed. Handoff: Slice 06
+may subscribe to `CoordinationService` events and its `Try*` protocol methods,
+without changing authentication or transport behavior.
+
 ## Definition of Done
 
 - [ ] Acceptance criteria met
