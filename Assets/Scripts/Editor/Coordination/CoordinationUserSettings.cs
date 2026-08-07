@@ -47,9 +47,10 @@ namespace PotionPanic.Editor.Coordination
           return false;
         }
 
+        string overrideUrl = null;
         if (!string.IsNullOrWhiteSpace(parsed.serverBaseUrlOverride)
           && !CoordinationConfig.TryNormalizeServerBaseUrl(parsed.serverBaseUrlOverride,
-            out var overrideUrl))
+            out overrideUrl))
         {
           error = "Settings contain an invalid endpoint override.";
           return false;
