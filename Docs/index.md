@@ -12,11 +12,11 @@ hero:
       text: Start Here
       link: /site-map
     - theme: alt
-      text: Board
-      link: /board
-    - theme: alt
       text: Plans
       link: /plans/
+    - theme: alt
+      text: Board
+      link: /board
 
 features:
   - title: Game Documentation
