@@ -62,7 +62,14 @@ namespace PotionPanic.Editor.Coordination
 #if UNITY_EDITOR_WIN
       if (!CredRead(target, GenericCredential, 0, out var credential))
       {
-        return Marshal.GetLastWin32Error() == NotFoundError ? false : false;
+        var error = Marshal.GetLastWin32Error();
+        if (error == NotFoundError)
+        {
+          return false;
+        }
+
+        throw new InvalidOperationException(
+          "Windows Credential Manager could not read the developer token (" + error + ").");
       }
 
       try

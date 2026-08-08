@@ -82,6 +82,17 @@ namespace PotionPanic.Editor.Coordination
         return false;
       }
 
+      return TryApplyServerEnvelope(envelope, out error);
+    }
+
+    public bool TryApplyServerEnvelope(CoordinationServerEnvelope envelope, out string error)
+    {
+      if (envelope == null)
+      {
+        error = "The server envelope is missing.";
+        return false;
+      }
+
       if (envelope.stateVersion < NewestAppliedStateVersion)
       {
         error = "Received an older server state version.";
@@ -89,6 +100,7 @@ namespace PotionPanic.Editor.Coordination
       }
 
       NewestAppliedStateVersion = envelope.stateVersion;
+      error = null;
       return true;
     }
   }
@@ -231,7 +243,7 @@ namespace PotionPanic.Editor.Coordination
           return HasStrings(envelope.path) && IsLeaseRecord(envelope.lease);
         case "lease.denied":
           return HasStrings(envelope.path, envelope.code) && HasJsonField(json, "currentLease")
-            && (envelope.currentLease == null || IsLeaseRecord(envelope.currentLease));
+            && (IsJsonNullField(json, "currentLease") || IsLeaseRecord(envelope.currentLease));
         case "lease.updated":
           return IsLeaseRecord(envelope.lease);
         case "lease.released":
@@ -270,7 +282,13 @@ namespace PotionPanic.Editor.Coordination
 
     private static bool HasJsonField(string json, string field)
     {
-      return Regex.IsMatch(json, "\\\"" + Regex.Escape(field) + "\\\"\\s*:",
+      return Regex.IsMatch(json, "\"" + Regex.Escape(field) + "\"\\s*:",
+        RegexOptions.CultureInvariant);
+    }
+
+    private static bool IsJsonNullField(string json, string field)
+    {
+      return Regex.IsMatch(json, "\"" + Regex.Escape(field) + "\"\\s*:\\s*null(?:\\s*[,}])",
         RegexOptions.CultureInvariant);
     }
 
