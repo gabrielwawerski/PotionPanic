@@ -1,5 +1,6 @@
 ---
 layout: home
+description: Shared project docs and task board for Potion Panic.
 
 hero:
   text: "Potion Panic Docs"
