@@ -11,7 +11,7 @@ export default createDocsConfig(defineDocsProject({
     ["link", {rel: "icon", type: "image/x-icon", href: "/PotionPanic/favicon.ico"}],
     ["link", {rel: "icon", type: "image/png", sizes: "512x512", href: "/PotionPanic/logo.png"}],
   ],
-  themeConfig: {logo: "/PotionPanic/favicon.svg"},
+  themeConfig: {logo: "/favicon.svg"},
   title: "Potion Panic",
   description: "Shared project docs and task board for Potion Panic.",
   socialPreview: {
