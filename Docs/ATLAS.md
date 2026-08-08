@@ -1,7 +1,7 @@
 # Documentation Atlas
 
 Use this map to find the current owner for project knowledge. It is a routing
-map, not a complete file inventory.
+map, not a complete inventory.
 
 ## Entry Points
 
