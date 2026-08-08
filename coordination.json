@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "projectId": "potion-panic",
-  "serverBaseUrl": "https://potion-panic-coordination.example.workers.dev",
+  "serverBaseUrl": "https://potion-panic-coordination.gabriel-wawerski.workers.dev",
   "heartbeatSeconds": 30,
   "rules": [
     {
