@@ -95,6 +95,14 @@ If you are new to the repo, read these in order:
 - [`presentation-workflows.md`](guides/unity/presentation-workflows.md)
   - UI, animation, model, material, and feedback workflow
 
+### `guides/`
+
+- [`coordinated-leasing.md`](guides/coordinated-leasing.md)
+  - Unity Coordination window tutorial
+  - Cloudflare Worker mental model
+  - developer-token setup
+  - outage and operator workflows
+
 ### Task And Planning Areas
 
 - [`board.md`](board.md)
@@ -127,6 +135,7 @@ Use one primary doc per topic:
 | MVP scope and milestone order | [`project/mvp-scope.md`](project/mvp-scope.md) |
 | Runtime architecture | [`project/technical-architecture.md`](project/technical-architecture.md) |
 | Unity implementation guidance | [`guides/unity/index.md`](guides/unity/index.md) and its linked guide pages |
+| Coordinated leasing usage | [`guides/coordinated-leasing.md`](guides/coordinated-leasing.md) |
 | Tasks and active plan history | [`board.md`](board.md), [`plans/index.md`](plans/index.md), `tickets/`, [`milestones/index.md`](milestones/index.md), [`archive/index.md`](archive/index.md) |
 
 Research and reference guides are advisory. In particular,

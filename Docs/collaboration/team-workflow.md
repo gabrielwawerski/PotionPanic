@@ -166,25 +166,25 @@ only after server health is restored.
 
 ### Using Coordination actions
 
-The current editor window does not select a path from its state rows. For a
-manual action, enter the canonical project-relative path in `Asset path`, for
-example `Assets/Scenes/SampleScene.unity`. The action buttons then enable only
-when the connection, path rule, and authoritative ownership state permit the
-operation.
+Open `Window > Potion Panic > Coordination` before editing a coordinated scene.
+The current window supports row selection, active-stage selection, Project
+selection, an advanced manual path, reserve, release, reservation cancellation,
+override, path copy, reconnect, and credential removal. The action buttons
+enable only when the connection, path rule, and authoritative ownership state
+permit the operation.
 
-- `Reserve` creates a 30-minute pre-edit reservation when the path is free.
-- `Release` releases a locally owned editing lease. Closing the coordinated
-  stage normally releases its unreserved editing lease automatically.
-- `Override` transfers a remotely owned claim after an explicit operator
-  choice.
-- `Copy canonical path` copies the normalized value from `Asset path`.
+Use [`../guides/coordinated-leasing.md`](../guides/coordinated-leasing.md) for
+the full tutorial, Cloudflare operator notes, outage workflow, and token rules.
+The short version:
 
-Presence, editing-lease, and reservation entries are currently display-only;
-clicking them does not populate `Asset path` or expose row actions. The current
-protocol has no manual reservation-cancellation operation. A reservation ends
-through expiry, override, or developer revocation. Do not create a reservation
-unless that lifetime is acceptable, and continue using the manual announcement
-workflow.
+- `Reserve` creates a pre-edit reservation when the path is free.
+- `Release editing lease` releases your local editing claim.
+- `Cancel reservation` cancels your local reservation.
+- `Override...` transfers a remotely owned claim after explicit confirmation.
+- `Copy path` copies the selected normalized project path.
+
+The Coordination window supports the announcement workflow. It does not replace
+it.
 
 Before starting work, post:
 
