@@ -12,7 +12,29 @@ publish stable operating guidance and close the program.
 **Produces:** A release-ready coordination system with evidence recorded in
 `PP-7`, updated evergreen docs, and an archived program plan.
 
-**Current step:** Implement the 2026-08-08 hardening review before deployment.
+**Current step:** External acceptance deferred after production deployment and
+Machine A provisioning. Machine B on a different network remains unavailable.
+
+## Current release state
+
+- Production deployment, required Worker secrets, endpoint health, and Machine
+  A authentication are verified in `PP-7`.
+- Coordination is project-owned editor code in the `PotionPanic.Editor`
+  assembly, not a separately packaged Unity or UPM plugin. There is no distinct
+  plugin publish action. Its release gate combines the committed editor code,
+  manually deployed Worker, provisioned credentials, external acceptance, and
+  documentation handoff.
+- Machine B provisioning, every two-machine acceptance row, and filtered live
+  tail evidence remain incomplete. Do not infer them from Machine A.
+- The current Coordination window requires a manually typed asset path for
+  Reserve, Release, Override, and Copy actions. Presence, editing-lease, and
+  reservation rows are display-only.
+- Release currently means releasing a locally owned editing lease. There is no
+  manual reservation-cancellation interaction or protocol operation; a
+  reservation remains until expiry, override, or revocation.
+- Row selection, contextual row actions, and reservation cancellation require a
+  separately approved implementation slice. They are not part of the deferred
+  acceptance evidence.
 
 ## Pre-deployment hardening
 

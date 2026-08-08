@@ -164,6 +164,28 @@ unhealthy, select the local `Disabled` switch. This preserves local work. Use
 the manual collaboration fallback for every protected-file edit and reconnect
 only after server health is restored.
 
+### Using Coordination actions
+
+The current editor window does not select a path from its state rows. For a
+manual action, enter the canonical project-relative path in `Asset path`, for
+example `Assets/Scenes/SampleScene.unity`. The action buttons then enable only
+when the connection, path rule, and authoritative ownership state permit the
+operation.
+
+- `Reserve` creates a 30-minute pre-edit reservation when the path is free.
+- `Release` releases a locally owned editing lease. Closing the coordinated
+  stage normally releases its unreserved editing lease automatically.
+- `Override` transfers a remotely owned claim after an explicit operator
+  choice.
+- `Copy canonical path` copies the normalized value from `Asset path`.
+
+Presence, editing-lease, and reservation entries are currently display-only;
+clicking them does not populate `Asset path` or expose row actions. The current
+protocol has no manual reservation-cancellation operation. A reservation ends
+through expiry, override, or developer revocation. Do not create a reservation
+unless that lifetime is acceptable, and continue using the manual announcement
+workflow.
+
 Before starting work, post:
 
 ```text

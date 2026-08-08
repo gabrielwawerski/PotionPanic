@@ -22,8 +22,8 @@ superseded plans into [`../archive/completed/index.md`](../archive/completed/ind
 - [Coordinated Leasing 07: Conflict-Safe Save Guard](./coordinated-file-leasing-07-save-guard.md)
 - [Coordinated Leasing 08: Coordination Window and Lifecycle](./coordinated-file-leasing-08-ui-lifecycle.md)
 - [Coordinated File Leasing Hardening and Release Plan](./coordinated-file-leasing-hardening-and-release.md)
-- [Coordinated Leasing 09: Release Acceptance and Documentation Handoff](./coordinated-file-leasing-09-release-handoff.md)
 - [Coordinated File Leasing Remaining Hardening Implementation Plan](./coordinated-file-leasing-remaining-hardening.md)
+- [Coordinated Leasing 09: Release Acceptance and Documentation Handoff](./coordinated-file-leasing-09-release-handoff.md)
 ## Writing Rules
 
 - Docboard regenerates the Active Plans links from each plan's frontmatter

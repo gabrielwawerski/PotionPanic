@@ -2,14 +2,25 @@
 
 ## Summary
 
-Verdict: **NEEDS WORK before deployment.** The architecture is appropriate for a small Unity team, and all available automated gates pass:
+Status on 2026-08-08: **Deployment complete; external release acceptance
+deferred.** Production secrets, the deployed endpoint, health, and Machine A
+authentication are verified in `PP-7`. Machine B and every two-machine
+acceptance row remain incomplete.
+
+The original pre-deployment review found the architecture appropriate for a
+small Unity team, with these automated gates passing at that checkpoint:
 
 - Worker typecheck, security audit, deployment dry run, and 77/77 tests.
 - Unity 6000.5.1f1 Coordination EditMode suite: 140/140.
 - Documentation tests: 11/11; VitePress build passes.
 - Clean `master` at `d9792d7`, matching `origin/master`.
 
-Slice 09 remains incomplete. [coordination.json](C:/Dev/PotionPanic/coordination.json:4) contains a placeholder endpoint, Wrangler is unauthenticated, and no live two-machine evidence exists.
+Slice 09 remains incomplete because no live two-machine evidence exists. The
+earlier placeholder endpoint and Wrangler-authentication blockers are resolved.
+The current editor UI also requires manual asset-path entry for lease actions,
+renders state rows without interactions, and cannot manually cancel a
+reservation. Those UX and protocol gaps require separate approval and do not
+count as completed acceptance behavior.
 
 ## Required Hardening
 

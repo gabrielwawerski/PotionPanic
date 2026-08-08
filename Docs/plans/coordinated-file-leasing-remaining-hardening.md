@@ -849,7 +849,7 @@ function Invoke-CoordinationEditMode {
   acceptance criteria were observed, or a PP-7 blocker stating exactly which
   external action failed.
 
-- [ ] **Step 1: Authenticate and deploy manually.**
+- [x] **Step 1: Authenticate and deploy manually.**
 
   From `Tools/CoordinationServer`, an authorized operator follows the README's
   hidden-prompt procedure: `npx wrangler login`, `npx wrangler whoami`, account
@@ -862,7 +862,7 @@ function Invoke-CoordinationEditMode {
   Do not run this through GitHub Actions and do not paste either secret into a
   Markdown file, shell history, or PP-7.
 
-- [ ] **Step 2: Verify the deployed endpoint before changing client config.**
+- [x] **Step 2: Verify the deployed endpoint before changing client config.**
 
   Store the exact emitted base URL in a current PowerShell variable and verify
   it before client configuration:
@@ -880,6 +880,9 @@ function Invoke-CoordinationEditMode {
   PP-7; do not claim a deployment.
 
 - [ ] **Step 3: Issue and provision one developer token per machine.**
+
+  Machine A is provisioned and connected. Machine B is deferred, so this step
+  remains incomplete.
 
   Use the secure issue-token procedure from the server README once for each
   developer. Deliver each output to its owner once. On each Windows machine,

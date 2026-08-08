@@ -437,6 +437,19 @@ A bounded 25-second `npx wrangler tail --format json` observation returned no
 event. Machine B has not been issued or provisioned, and no two-machine
 acceptance row is complete.
 
+2026-08-08: The operator deferred Machine B provisioning and the external
+acceptance matrix. Task 6 remains open at that boundary; no result is inferred
+from the single-machine connection.
+
+The Machine A run also exposed a Coordination-window workflow gap. Manual
+actions depend on a separately typed `Asset path`, while presence, editing
+lease, and reservation rows are passive and cannot select or act on their path.
+The visible `Release` action applies only to a locally owned editing lease. The
+current client and server do not provide a manual reservation-cancellation
+action; reservations remain until expiry, override, or revocation. Treat row
+selection, context actions, and reservation cancellation as explicit follow-up
+design and protocol work rather than completed release behavior.
+
 ## Definition of Done
 
 - [ ] Acceptance criteria met

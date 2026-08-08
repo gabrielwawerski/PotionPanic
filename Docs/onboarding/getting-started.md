@@ -139,6 +139,10 @@ The repository endpoint is configured in `coordination.json`. Developer tokens
 belong only in the Unity credential window and Windows Credential Manager.
 Never put a token in local settings, Git, a URL, a ticket, or a log.
 
+For the current manual `Asset path`, Reserve, Release, Override, and row
+interaction behavior, follow
+[`../collaboration/team-workflow.md#using-coordination-actions`](../collaboration/team-workflow.md#using-coordination-actions).
+
 ## Know which files need coordination
 
 Always announce before editing:
