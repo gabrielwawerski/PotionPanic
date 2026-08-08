@@ -178,6 +178,45 @@ Both stabilization gates are green. Slice 06 remains intentionally paused and
 was not started in this scope. Remaining risk: the Worker has only a deployment
 dry run and the two-machine Slice 09 acceptance is still outstanding.
 
+2026-08-08: Slice 06 scene and selected-prefab tracking committed as
+`df4a9197d5a67b139f5d15fe0b8d876407bb3bae`
+(`feat(coordination): track coordinated scenes and prefabs`). The editor-only
+lifecycle adapter inventories loaded and additive scenes plus the selected
+Prefab Stage, suppresses duplicate transitions, and supports clean teardown and
+domain-reload-style reconstruction. It tracks Unity scene-handle identity
+independently of asset path, opens coordination when an untitled scene receives
+its first valid `Assets/...` save, and reconciles Save As by closing the old
+coordinated path before opening the new path. The tracker evaluates every valid
+stage against enabled rules, publishes presence for coordinated stages,
+acquires editing leases only for dirty exclusive stages, republishes presence
+after `session.ready`, and reacquires only dirty exclusive stages. Close removes
+presence and releases only a locally owned editing lease. A correlated grant
+that arrives after close is released immediately. Acquire request handles are
+associated with the stage activation that issued them, so reopening the same
+path clean cannot retain an old activation's late grant. A correlated
+`RequestSendFailed` event now removes failed acquire handles from this transient
+tracker bookkeeping. The tracker never requests a post-ready snapshot and
+never creates `lease.reserve` during close.
+
+`CoordinationService.PresenceReceived` changed from
+`Action<CoordinationPresenceRecord[]>` to
+`Action<CoordinationServerEnvelope>`, preserving `stateVersion` for the local
+authoritative store. The tracker forwards current session-ready, snapshot,
+presence update/removal, lease result, and correlated completion envelopes.
+Stale replay completions complete their request without mutating local state.
+The current unchanged allowlist contains one enabled exclusive rule,
+`Assets/Scenes/**/*.unity`. Selected prefab stages are observed by lifecycle
+tracking but cause no service mutation because no prefab rule exists.
+
+Unity 6000.5.1f1 verification passed the combined focused lifecycle-adapter and
+tracker-integration fixtures 23/23 and the full Coordination EditMode suite
+95/95. Both runs had 0 failed, 0 skipped, 0 inconclusive, and no C# compiler
+errors or warnings in their final logs. This slice did not observe a live Prefab
+Stage, deploy the Worker, run two-machine acceptance, install the Slice 08
+editor bootstrap/UI lifecycle, or implement the Slice 07 save interception,
+authorization, or offline-confirmation behavior. Those items remain required
+before PP-7 can be completed.
+
 ## Definition of Done
 
 - [ ] Acceptance criteria met
