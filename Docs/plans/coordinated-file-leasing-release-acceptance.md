@@ -26,8 +26,12 @@ implementation history is archived in
 - Worker deployment, required secret names, and unauthenticated `/health`
   checks are recorded in [`../tickets/PP-7.md`](../tickets/PP-7.md).
 - Machine A provisioning and connection have partial evidence in PP-7.
-- Machine B provisioning, every two-machine row, credentialed tail evidence,
-  and a current interactive single-machine smoke remain incomplete.
+- An operator-reported two-machine run exercised save denial, the non-saving
+  Cancel save and Keep working choices, lease override, and the displaced
+  client's next save conflict. The evidence lacks the machine roles, network
+  conditions, and timestamps required for a completed acceptance-matrix row.
+- Remaining work includes the complete documented two-machine matrix,
+  credentialed tail evidence, and a current interactive single-machine smoke.
 - Do not mark PP-7 complete, archive the program plan, or describe release
   acceptance as complete until the remaining evidence is recorded.
 
@@ -45,10 +49,11 @@ implementation history is archived in
    one credentialed connection or lease operation. Exclude authorization
    headers, developer tokens, session tokens, secrets, Credential Manager
    contents, and raw local settings.
-5. Provision Machine B through the approved secret channel and run the
-   two-machine different-network matrix: presence, reservation, reservation
-   cancellation, simultaneous acquire, denial, conflict cancel, explicit
-   override, displacement, clean close, abrupt termination with 120-150 second
+5. Record the machine roles, different-network conditions, timestamps, Unity
+   versions, and redacted screenshots or logs for the observed denial, cancel,
+   keep-working, override, and displacement flow. Then run the remaining
+   two-machine matrix: presence, reservation, reservation cancellation,
+   simultaneous acquire, clean close, abrupt termination with 120-150 second
    expiry, outage fallback, reconnect, hibernation restoration, 24-hour session
    recreation, and revocation.
 6. Append dated commands, versions, machine roles, network conditions, observed

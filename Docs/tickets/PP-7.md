@@ -609,6 +609,18 @@ complete the interactive single-machine smoke, filtered credentialed tail
 evidence, developer provisioning, or the two-machine different-network
 acceptance matrix. PP-7 remains open.
 
+2026-08-08: The operator reported a successful two-remote-machine save-conflict
+workflow for `Assets/Scenes/SampleScene.unity`. The client identified as Gabro
+was denied while Patro owned the editing lease. Both `Cancel save` and `Keep
+working` left the local scene values unsaved and intact. Gabro then overrode
+Patro's lease successfully; the Editing leases row showed `Gabro (local)` and
+the displaced client subsequently received the conflict dialog naming Gabro as
+the last known owner. The supplied screenshots are transient task evidence and
+do not record machine roles, network conditions, Unity versions, or a full
+timestamped acceptance log. Record those details before counting this as a
+completed different-network acceptance-matrix row. The remaining matrix rows
+and filtered Worker-tail evidence are still open.
+
 ## Definition of Done
 
 - [ ] Acceptance criteria met

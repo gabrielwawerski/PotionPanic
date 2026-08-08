@@ -128,8 +128,10 @@ If another connection owns a coordinated scene when you save, Unity shows a
 conflict dialog.
 
 - Choose Override and save only after deliberate agreement or an accepted emergency.
-- Choose Cancel save when you do not want to save now.
-- Choose Keep working when you need to inspect or copy local changes first.
+- Choose Cancel save to stop the current save attempt. It leaves the scene's
+  local changes unsaved and intact.
+- Choose Keep working when you need to inspect or copy those local changes
+  first. It also leaves the scene's local changes unsaved and intact.
 
 During an outage or reconnect problem, Unity can offer Save locally without
 coordination. It requires confirmation and records a local warning. It does not
