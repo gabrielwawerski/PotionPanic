@@ -121,3 +121,9 @@ UserSettings/, then check .gitignore.
 
 Open [Daily Workflow](../collaboration/team-workflow.md), confirm the current
 milestone, and choose a small task from To Do.
+
+## Related pages
+
+- [Daily Workflow](../collaboration/team-workflow.md)
+- [Coordinated Leasing](../guides/coordinated-leasing.md)
+- [Project Overview](../project/)

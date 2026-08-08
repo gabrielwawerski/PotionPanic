@@ -1,7 +1,9 @@
-# Unity Coding And Implementation Guide
+# Unity coding and implementation
 
 Use this guide when turning a feature into code, tests, and a safe delivery
-sequence.
+sequence. It owns implementation habits and local verification; use
+[Daily Workflow](../../collaboration/team-workflow.md) for the full task,
+review, and handoff process.
 
 ## Start With The Smallest Playable Loop
 
@@ -154,7 +156,7 @@ Before calling work complete:
 4. check the Console
 5. run the relevant test suite if gameplay code or tests changed
 
-## Final Implementation Rule
+## Handoff checklist
 
 A feature is not done because the code exists.
 
@@ -165,3 +167,9 @@ It is done when:
 - the Console stays clean for the task
 - the implementation fits the current milestone
 - the other collaborator can understand the change
+
+## Related pages
+
+- [Unity Architecture Primer](runtime-architecture.md)
+- [Editor Safety](editor-safety.md)
+- [Daily Workflow](../../collaboration/team-workflow.md)

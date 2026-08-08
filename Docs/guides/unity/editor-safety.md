@@ -1,7 +1,9 @@
-# Unity Editor Safety Guide
+# Unity editor safety
 
 Use this guide before changing scenes, prefabs, project settings, layers, tags,
-or inspector references.
+or inspector references. It owns Unity asset-safety checks; use
+[Coordinated Leasing](../coordinated-leasing.md) for Coordination window
+actions, claims, outages, and manual fallback.
 
 ## Scene Safety
 
@@ -145,14 +147,12 @@ Announce before making broad structural changes such as:
 Small visual polish changes are usually safer. Structural changes need
 coordination.
 
-The Unity Coordination window provides advisory leases for protected files.
-These leases do not replace a pre-edit announcement. If its server is missing,
-invalid, or unhealthy, select the local `Disabled` switch. Disabling
-coordination does not delete local work. Preserve changes, announce the edit
-through the manual collaboration fallback, and reconnect after health is
-restored.
+For coordinated scenes, the Coordination window adds advisory leases but never
+replaces a pre-edit announcement. Follow
+[Coordinated Leasing](../coordinated-leasing.md) for the exact reserve,
+override, outage, and manual-fallback workflow.
 
-## Done Means Safe
+## Safe handoff checklist
 
 A Unity-side task is done only when:
 
@@ -164,3 +164,9 @@ A Unity-side task is done only when:
 - the commit contains only relevant files
 
 Looking correct once is not enough.
+
+## Related pages
+
+- [Coordinated Leasing](../coordinated-leasing.md)
+- [Daily Workflow](../../collaboration/team-workflow.md)
+- [Presentation Workflows](presentation-workflows.md)

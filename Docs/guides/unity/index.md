@@ -1,33 +1,29 @@
-# Unity Guides
+# Unity guides
 
-These guides are reusable working notes for building Potion Panic safely in
-Unity. They are not milestone plans.
+Use these guides for reusable Unity working methods. They do not define Potion
+Panic's binding game behavior, MVP scope, or component contract; open the
+[Project Overview](../../project/) for those decisions.
 
-## Which Guide To Use
+## Choose by task
 
-- [`runtime-architecture.md`](runtime-architecture.md)
-  - use when deciding component boundaries, ownership, data flow, and scene
-    architecture
+| If you need to... | Open |
+| --- | --- |
+| Decide component boundaries, state ownership, lifecycle use, or event flow | [Unity Architecture Primer](runtime-architecture.md) |
+| Turn a feature into a small playable slice and verify it | [Coding and Implementation](coding-and-implementation.md) |
+| Change scenes, prefabs, ProjectSettings, layers, tags, or inspector wiring | [Editor Safety](editor-safety.md) |
+| Work on UI, layout, animation, models, materials, VFX, or audio placement | [Presentation Workflows](presentation-workflows.md) |
 
-- [`coding-and-implementation.md`](coding-and-implementation.md)
-  - use when turning a feature into small implementation steps, tests, and
-    validation checks
+## Project truth versus working guidance
 
-- [`editor-safety.md`](editor-safety.md)
-  - use before changing scenes, prefabs, project settings, layers, tags, or
-    inspector wiring
+| Need | Owner |
+| --- | --- |
+| Player experience and content intent | [Game Design](../../project/game-design.md) |
+| Locked MVP behavior, tuning, and delivery order | [MVP Scope](../../project/mvp-scope.md) |
+| Potion Panic data assets, components, and system boundaries | [Runtime Contract](../../project/technical-architecture.md) |
+| General Unity decision-making and implementation habits | This guide section |
 
-- [`presentation-workflows.md`](presentation-workflows.md)
-  - use for UI, layout, models, materials, animation, VFX, and visual feedback
+## Related pages
 
-## How These Fit With The Project Docs
-
-- [`../../project/game-design.md`](../../project/game-design.md) explains what
-  the player should experience.
-- [`../../project/mvp-scope.md`](../../project/mvp-scope.md) explains what the
-  MVP includes and what stays out of scope.
-- [`../../project/technical-architecture.md`](../../project/technical-architecture.md)
-  explains the intended runtime structure for Potion Panic specifically.
-
-Use the Unity guides when you need general working guidance. Use the `project/`
-docs when you need Potion Panic truth.
+- [Guides](../)
+- [Daily Workflow](../../collaboration/team-workflow.md)
+- [Documentation Atlas](../../ATLAS.md)

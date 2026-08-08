@@ -1,22 +1,29 @@
-# Technical Architecture
+# Potion Panic Runtime Contract
 
 Version: 1.0
 Target engine: Unity
 Target platform: PC
 
-Use this document for runtime structure, data ownership, and implementation
-boundaries. Use [`game-design.md`](game-design.md) for player-facing intent and
-[`mvp-scope.md`](mvp-scope.md) for milestone order and locked MVP rules.
+Use this document for Potion Panic runtime structure, data ownership, and
+implementation boundaries. Use [`game-design.md`](game-design.md) for
+player-facing intent and [`mvp-scope.md`](mvp-scope.md) for milestone order
+and locked MVP rules.
 
-## Purpose
+## What this contract owns
 
-The architecture should stay simple, data-driven, and easy for a small Unity
-team to understand.
+This contract names the specific data assets, runtime components, coordinating
+systems, dependencies, repository locations, and completion criteria that the
+MVP needs. It does not teach general Unity architecture patterns; use the
+[Unity Architecture Primer](../guides/unity/runtime-architecture.md) for that.
 
-The goal is not to create a large framework. The goal is to build one reusable
-gameplay loop that supports the full MVP.
+| Area | Contract |
+| --- | --- |
+| Data | Ingredient, potion, and disaster definitions are ScriptableObjects. |
+| Runtime | Components own movement, interaction, inventory, brewing, disaster behavior, Panic, score, and presentation updates. |
+| Coordination | Managers coordinate systems; they do not absorb individual gameplay rules. |
+| Delivery | Create only the systems needed for the current milestone and retain one reusable disaster loop. |
 
-## Implementation Rule
+## Delivery rule
 
 Do not create every script in this document immediately.
 
@@ -31,65 +38,6 @@ this order:
 
 A playable vertical slice is more valuable than a complete-looking architecture
 with no finished game loop.
-
-## Core Principles
-
-### Build one reusable gameplay loop
-
-All MVP disasters should use the same underlying loop:
-
-1. disaster appears
-2. disaster increases Panic
-3. player identifies the required potion
-4. player gathers the ingredient
-5. player brews the potion
-6. player applies the potion
-7. disaster resolves
-8. score and Panic update
-
-Do not build three unrelated disaster systems.
-
-### Use ScriptableObjects for static data
-
-Static game data should live in ScriptableObjects:
-
-- ingredients
-- potions
-- disasters
-
-Benefits:
-
-- easier balancing
-- cleaner inspector setup
-- less hardcoded logic
-- easier expansion after the MVP
-
-### Keep runtime logic in runtime components
-
-Scene behavior belongs in runtime code under `Assets/Scripts/Runtime`.
-
-That includes:
-
-- movement
-- interaction detection
-- carrying items
-- brewing
-- disaster ticking
-- Panic and score changes
-- UI updates
-
-Avoid placing active gameplay logic inside shared assets.
-
-### Keep managers thin
-
-Managers should coordinate systems, not own all gameplay logic.
-
-Avoid a giant `GameManager` that contains:
-
-- individual disaster behavior
-- brewing rules
-- score math
-- direct UI logic
 
 ## Data Assets
 
@@ -413,3 +361,10 @@ The MVP architecture is sufficient when:
 
 A system is not complete because every planned script exists. It is complete
 when it supports the playable game loop.
+
+## Related pages
+
+- [Project Overview](index.md)
+- [Game Design](game-design.md)
+- [MVP Scope](mvp-scope.md)
+- [Unity Architecture Primer](../guides/unity/runtime-architecture.md)

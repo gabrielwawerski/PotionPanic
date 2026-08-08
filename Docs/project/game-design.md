@@ -1,4 +1,4 @@
-# Game Design
+# Game design
 
 Version: 1.0
 Project Type: Small-scope 3D indie game
@@ -10,6 +10,15 @@ Use this doc for player-facing design, feel, readability, and content intent.
 Use [`mvp-scope.md`](mvp-scope.md) for locked milestone and tuning decisions.
 Use [`technical-architecture.md`](technical-architecture.md) for runtime
 structure.
+
+## Game at a glance
+
+| The player is... | The game asks them to... | The game ends when... |
+| --- | --- | --- |
+| An apprentice alchemist in one chaotic laboratory | identify disasters, gather one matching ingredient, brew its potion, and resolve the threat | the Panic Meter reaches 100% |
+
+The design owns player experience and content intent. It does not set locked
+numbers, milestone order, or runtime component boundaries.
 
 ## Elevator Pitch
 
@@ -130,7 +139,7 @@ Benefits:
 The player challenge should come from gameplay pressure, not from camera
 management.
 
-## Player Systems
+## Player interaction
 
 ### Movement
 
@@ -164,7 +173,9 @@ The player cannot carry both at the same time.
 This keeps the focus on movement, prioritization, brewing, and disaster
 response.
 
-## Laboratory Layout
+## Content and space
+
+### Laboratory layout
 
 The entire game takes place in one room.
 
@@ -177,7 +188,7 @@ Main areas:
 
 The room should be readable from the fixed top-down camera at all times.
 
-## Ingredient and Potion Set
+### Ingredient and potion set
 
 | Ingredient | Potion | Solves |
 | --- | --- | --- |
@@ -197,7 +208,7 @@ The room should be readable from the fixed top-down camera at all times.
 - Slime Dissolver: green
 - Purification Potion: purple
 
-## Brewing
+### Brewing
 
 Brewing should be quick. The challenge should be responding to emergencies, not
 remembering recipes.
@@ -215,7 +226,9 @@ Not part of MVP:
 - multi-ingredient brewing
 - brewing minigames
 
-## Disaster Design Rules
+## Pressure and reward
+
+### Disaster design rules
 
 Every disaster should follow three rules:
 
@@ -241,14 +254,14 @@ Every disaster should follow three rules:
 - solution: Purification Potion
 - stretch escalation: active expansion behavior
 
-## Panic Meter
+### Panic meter
 
 The Panic Meter represents overall laboratory stability on a `0-100` scale.
 
 Panic should rise because of unresolved disasters, escalations, and wrong
 solutions. It should drop when the player resolves disasters correctly.
 
-## Scoring Intent
+### Scoring intent
 
 Scoring exists to reward efficient crisis management and replayability.
 
@@ -261,7 +274,9 @@ The design intent is:
 
 See [`mvp-scope.md`](mvp-scope.md) for the locked numbers.
 
-## Art Direction
+## Presentation intent
+
+### Art direction
 
 Style target:
 
@@ -280,7 +295,7 @@ Visual goals:
 - clear silhouettes
 - instantly readable disasters
 
-## Audio Direction
+### Audio direction
 
 Every major system should have readable feedback.
 
@@ -307,3 +322,10 @@ Do not let the design drift into:
 
 If a new idea does not help the current milestone become playable, put it on
 the [board](../board.md) instead of expanding the MVP.
+
+## Related pages
+
+- [MVP Scope](mvp-scope.md)
+- [Potion Panic Runtime Contract](technical-architecture.md)
+- [Unity Presentation Workflows](../guides/unity/presentation-workflows.md)
+- [Design Research](../research/game-design-and-psychology.md)

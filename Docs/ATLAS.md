@@ -21,18 +21,20 @@ map, not a complete file inventory.
 
 ## Project Truth
 
+- [`project/index.md`](project/index.md): Project Overview and reading order
+  for binding game, scope, and runtime decisions.
 - [`project/game-design.md`](project/game-design.md): player-facing design,
   core loop, content themes, disasters, scoring intent, art, and audio.
 - [`project/mvp-scope.md`](project/mvp-scope.md): locked MVP decisions,
   milestone sequence, hard scope boundaries, and definition of done.
 - [`project/technical-architecture.md`](project/technical-architecture.md):
-  runtime ownership, data assets, component responsibilities, and dependency
-  rules.
-- [`milestones/index.md`](milestones/index.md): milestone pages that are still
-  active or worth browsing from the docs site.
+  Potion Panic Runtime Contract for data assets, component responsibilities,
+  dependencies, and completion criteria.
 
 ## Unity Working Guides
 
+- [`guides/index.md`](guides/index.md): task-based guide directory. Open this
+  when you know what kind of work you are doing but not which guide applies.
 - [`guides/unity/index.md`](guides/unity/index.md): which Unity guide to open.
 - [`guides/unity/runtime-architecture.md`](guides/unity/runtime-architecture.md):
   Unity mental model, composition, state ownership, and scene boundaries.
@@ -75,9 +77,8 @@ map, not a complete file inventory.
 ## Research
 
 - [`research/game-design-and-psychology.md`](research/game-design-and-psychology.md):
-  advisory research on player motivation, game feel, engagement, market risk,
-  and playtest framing. It does not override the project design, scope, or
-  architecture docs.
+  advisory research on engagement, ethics, game feel, market presentation,
+  and validation. It does not override project design, scope, or architecture.
 
 ## Update Rules
 

@@ -1,7 +1,11 @@
-# MVP Scope
+# MVP scope
 
 Use this document for locked MVP decisions, milestone sequencing, and hard
 scope boundaries.
+
+It owns binding MVP scope, tuning, and delivery order. It does not replace
+task acceptance criteria, implementation plans, or the player-experience
+intent in [Game Design](game-design.md).
 
 ## Current Repo Note
 
@@ -103,6 +107,24 @@ Additional rules:
 - basic sounds
 - basic particles
 - basic animations
+
+## Delivery map
+
+| Milestone | Outcome |
+| --- | --- |
+| 1 | Movement, camera, collision, and a laboratory blockout. |
+| 2 | One reusable interaction pattern. |
+| 3 | One ingredient-to-potion loop. |
+| 4 | One complete disaster. |
+| 5 | A repeatable vertical slice from start to failure. |
+| 6 | The remaining MVP content on the same systems. |
+| 7 | Difficulty pressure and scoring. |
+| 8 | Menus and complete run flow. |
+| 9 | Audio and visual feedback. |
+| 10 | Polish, balancing, and bug fixing. |
+
+The detailed milestones below preserve the delivery commitments for each
+stage. Use the board for current task status.
 
 ## Milestones
 
@@ -247,3 +269,10 @@ Potion Panic is complete when a player can:
 - restart and play again
 
 without gameplay-breaking bugs.
+
+## Related pages
+
+- [Game Design](game-design.md)
+- [Potion Panic Runtime Contract](technical-architecture.md)
+- [Daily Workflow](../collaboration/team-workflow.md)
+- [Active Plans](../plans/)

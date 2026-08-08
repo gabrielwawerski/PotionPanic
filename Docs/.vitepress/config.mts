@@ -20,9 +20,70 @@ export default createDocsConfig(defineDocsProject({
   nav: [
     {text: "Home", link: "/"},
     {text: "Board", link: "/board"},
-    {text: "Plans", link: "/plans/"},
+    {
+      text: "Work",
+      items: [
+        {text: "Project Setup", link: "/onboarding/getting-started"},
+        {text: "Daily Workflow", link: "/collaboration/team-workflow"},
+        {text: "Active Plans", link: "/plans/"},
+      ],
+    },
+    {
+      text: "Project",
+      items: [
+        {text: "Project Overview", link: "/project/"},
+        {text: "Game Design", link: "/project/game-design"},
+        {text: "MVP Scope", link: "/project/mvp-scope"},
+        {text: "Runtime Contract", link: "/project/technical-architecture"},
+      ],
+    },
+    {
+      text: "Guides",
+      items: [
+        {text: "Guide Index", link: "/guides/"},
+        {text: "Coordinated Leasing", link: "/guides/coordinated-leasing"},
+        {text: "Unity Guides", link: "/guides/unity/"},
+        {text: "Design Research", link: "/research/game-design-and-psychology"},
+      ],
+    },
     {text: "Archive", link: "/archive/board"},
   ],
+  sidebar: {
+    autoDiscover: true,
+    sections: [
+      {
+        text: "Start Here",
+        includeDirs: ["onboarding", "collaboration"],
+        items: [
+          {text: "Project Setup", link: "/onboarding/getting-started"},
+          {text: "Daily Workflow", link: "/collaboration/team-workflow"},
+        ],
+      },
+      {
+        text: "Project",
+        includeDirs: ["project"],
+        items: [{text: "Project Overview", link: "/project/"}],
+      },
+      {
+        text: "Guides",
+        includeDirs: ["guides"],
+        items: [{text: "Guide Index", link: "/guides/"}],
+      },
+      {
+        text: "Research",
+        includeDirs: ["research"],
+        items: [{
+          text: "Design Research",
+          link: "/research/game-design-and-psychology",
+        }],
+      },
+      {
+        text: "Active Work",
+        includeDirs: ["plans"],
+        items: [{text: "Active Plans", link: "/plans/"}],
+      },
+    ],
+  },
   plans: {
     activeDir: "plans",
     activeIndex: "plans/index.md",

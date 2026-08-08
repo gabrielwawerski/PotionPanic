@@ -202,6 +202,12 @@ UserSettings/PotionPanic/coordination.local.json may contain a task context, the
 Disabled choice, and an operator-directed endpoint override; it must never
 contain a token or secret.
 
+## Related pages
+
+- [Project Setup](../onboarding/getting-started.md)
+- [Daily Workflow](../collaboration/team-workflow.md)
+- [Editor Safety](unity/editor-safety.md)
+
 ## For Operators
 
 Use the [Coordination Server README](https://github.com/gabrielwawerski/PotionPanic/blob/master/Tools/CoordinationServer/README.md)

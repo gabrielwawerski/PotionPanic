@@ -1,7 +1,8 @@
-# Unity Presentation Workflows
+# Unity presentation workflows
 
 Use this guide for UI, layout, models, animation, materials, VFX, and other
-presentation work.
+presentation work. It owns presentation-side working methods; use
+[Editor Safety](editor-safety.md) before structural asset or reference changes.
 
 ## Main Responsibility Areas
 
@@ -154,7 +155,7 @@ Shared responsibility:
 - layers and tags
 - interaction readability
 
-## Final Presentation Rule
+## Presentation handoff checklist
 
 Your work should make the game clearer, more readable, and more usable without
 making the project harder to maintain.
@@ -168,3 +169,9 @@ Aim for:
 - simple animations
 - readable UI
 - minimal accidental changes
+
+## Related pages
+
+- [Editor Safety](editor-safety.md)
+- [Game Design](../../project/game-design.md)
+- [Daily Workflow](../../collaboration/team-workflow.md)

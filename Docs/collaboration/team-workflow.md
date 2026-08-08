@@ -207,3 +207,10 @@ If several of these conditions are false:
 3. Fix compiler errors first, broken scenes second, and broken core gameplay
    third.
 4. Merge only after the project runs again.
+
+## Related pages
+
+- [Project Setup](../onboarding/getting-started.md)
+- [Coordinated Leasing](../guides/coordinated-leasing.md)
+- [Project Overview](../project/)
+- [Active Plans](../plans/)

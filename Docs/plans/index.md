@@ -22,3 +22,9 @@ superseded plans into [`archive/index.md`](archive/index.md).
   here.
 - Promote stable guidance into the evergreen docs when it stops being plan
   specific.
+
+## Related pages
+
+- [Board](../board.md)
+- [Daily Workflow](../collaboration/team-workflow.md)
+- [Project Overview](../project/)

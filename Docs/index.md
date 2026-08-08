@@ -27,10 +27,10 @@ features:
     link: /collaboration/team-workflow
   - title: Game Truth
     details: Read the design, MVP scope, and technical architecture that define the current project.
-    link: /project/game-design
-  - title: Unity Guides
-    details: Find practical guidance for runtime structure, editor safety, implementation, and presentation work.
-    link: /guides/unity/
+    link: /project/
+  - title: Working Guides
+    details: Choose practical guidance for coordination, Unity architecture, implementation, editor safety, presentation, and design research.
+    link: /guides/
   - title: Active Work
     details: Browse current implementation plans and use the board to track task progress.
     link: /plans/

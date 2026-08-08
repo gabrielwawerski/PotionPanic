@@ -35,6 +35,16 @@ For authoritative Potion Panic decisions, use:
 Recommendations in this guide are heuristics, not mandatory rules. Test them
 against the project, audience, team, budget, and current market.
 
+## Choose by question
+
+| If you need to evaluate... | Start here |
+| --- | --- |
+| Motivation, attention, and sustainable engagement | [Human psychology and game engagement](#human-psychology-and-game-engagement) |
+| Ethical boundaries and risky retention mechanics | [Healthy and compulsive engagement](#healthy-and-compulsive-engagement) |
+| Responsiveness, clarity, impact, and feedback | [Game feel and feedback](#game-feel-and-feedback) |
+| Genre positioning, market communication, and small-team risk | [Genre and market considerations](#genre-and-market-considerations) |
+| Playtests, prototype questions, and evidence quality | [Prototype validation](#prototype-validation) |
+
 ## How to Use This Guide
 
 The document uses several kinds of statements:
@@ -100,7 +110,19 @@ consequences [2].
 | Small-team viability | Systemic replayability often scales better than content-heavy production. | Favor reusable interactions over large bespoke libraries. |
 | Story | Story is efficient when it reinforces the loop and fantasy. | Use narrative to add meaning, not to compensate for weak interaction. |
 
+## Practical summary
+
+For a small team, validate the core interaction before producing large amounts
+of content. Give players clear goals, readable threats, immediate feedback,
+fair challenge, and room to improve. Prefer replayability based on mastery,
+curiosity, expression, and variation over pressure, obligation, or confusing
+rewards. Test whether people understand and enjoy the loop before making market
+or retention claims.
+
 ## Human Psychology and Game Engagement
+
+**Practical implication:** give players clear goals, readable cause and effect,
+and frequent chances to correct mistakes.
 
 ### Attention as an Active Loop
 
@@ -202,6 +224,9 @@ experiences when the stress feels chosen, bounded, and meaningful.
 
 ## Healthy and Compulsive Engagement
 
+**Practical implication:** evaluate replay systems for player value and freedom
+to stop, not only for time spent.
+
 ### The Core Difference
 
 Healthy engagement generally means:
@@ -279,6 +304,9 @@ Lower-risk retention can come from:
 
 ## Retention Loops
 
+**Practical implication:** use layered goals to create satisfying sessions,
+then test whether they feel motivating rather than coercive.
+
 | Time scale | Player question | Common design tools |
 | --- | --- | --- |
 | Moment-to-moment | "Does acting feel good and clear?" | controls, sound, impact, animation, readable state changes |
@@ -341,6 +369,9 @@ extensive bespoke animation, deep competitive balance, large rosters, or
 expensive localization.
 
 ## Game Feel and Feedback
+
+**Practical implication:** test responsiveness and feedback early because they
+shape the perceived quality of every gameplay system.
 
 ### Why Game Feel Matters
 
@@ -425,6 +456,9 @@ team strength and narrative strengthens decisions, repetition, or progression.
 Do not apply a universal percentage split.
 
 ## Genre and Market Considerations
+
+**Practical implication:** communicate the player fantasy, main action, and
+stakes quickly enough that potential players can understand the game in motion.
 
 > **Review date: July 2026.** This section is directional research, not a
 > permanent forecast. Revalidate genre demand, saturation, platform visibility,
@@ -624,6 +658,9 @@ Before treating an idea as commercially promising, ask:
 
 ## Prototype Validation
 
+**Practical implication:** separate fun, usability, and market questions so a
+single playtest does not claim to prove more than it observed.
+
 Praise is useful but weak evidence. Behavior is more reliable.
 
 ### Fun Validation
@@ -710,6 +747,13 @@ design:
 
 A strong ethical game should make players feel capable, curious, expressive,
 challenged, respected, free to stop, and interested enough to return.
+
+## Related pages
+
+- [Game Design](../project/game-design.md)
+- [MVP Scope](../project/mvp-scope.md)
+- [Guides](../guides/)
+- [Documentation Atlas](../ATLAS.md)
 
 ## Sources
 

@@ -23,10 +23,9 @@ Read these in order:
 2. `Docs/onboarding/getting-started.md` for Project Setup on a new machine
 3. `Docs/collaboration/team-workflow.md` for Daily Workflow
 4. `Docs/board.md`
-5. `Docs/ATLAS.md` when you need to route a recurring question
-6. `Docs/project/game-design.md`
-7. `Docs/project/mvp-scope.md`
-8. `Docs/project/technical-architecture.md`
+5. `Docs/project/index.md` for binding project decisions
+6. `Docs/guides/index.md` for task-focused guidance
+7. `Docs/ATLAS.md` when you need to route a recurring question
 
 ## First Day Commands
 
@@ -51,12 +50,14 @@ work completes.
   contributor.
 - `Docs/collaboration/team-workflow.md` owns Daily Workflow, including task
   execution, testing, handoff, and shared-file safety.
+- `Docs/project/index.md` routes binding game, scope, and runtime decisions.
 - `Docs/project/game-design.md` owns player-facing design.
 - `Docs/project/mvp-scope.md` owns locked MVP scope, milestone order, and
   definition of done.
 - `Docs/project/technical-architecture.md` owns runtime structure.
 - `Docs/guides/coordinated-leasing.md` owns Unity Coordination window usage,
   claim states, save conflicts, and manual fallback.
+- `Docs/guides/index.md` routes task-focused working guidance and research.
 - `Tools/CoordinationServer/README.md` owns coordination Worker operations.
 
 ## Docs Commands
