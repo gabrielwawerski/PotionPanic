@@ -93,7 +93,8 @@ export type ServerEnvelope =
     connectionId: string; leaseTtlSeconds: number; reservationTtlSeconds: number;
   })
   | (ServerEnvelopeBase & {
-    type: 'snapshot'; presence: PresenceRecord[]; leases: LeaseRecord[]; serverTime: string;
+    type: 'snapshot'; snapshotId: string; chunkIndex: number; chunkCount: number;
+    presence: PresenceRecord[]; leases: LeaseRecord[]; serverTime: string;
   })
   | (ServerEnvelopeBase & { type: 'presence.updated'; presence: PresenceRecord[] })
   | (ServerEnvelopeBase & { type: 'presence.removed'; path: string; connectionId: string })
@@ -198,10 +199,14 @@ export function parseServerEnvelope(input: unknown): ProtocolValidationResult<Se
           connectionId: value.connectionId, leaseTtlSeconds: value.leaseTtlSeconds,
           reservationTtlSeconds: value.reservationTtlSeconds } as ServerEnvelope) : fail('invalid_envelope');
     case 'snapshot':
-      return Array.isArray(value.presence) && value.presence.every(isPresenceRecord)
+      return isUuidV4(value.snapshotId) && isNonNegativeInteger(value.chunkIndex)
+        && isPositiveInteger(value.chunkCount) && value.chunkIndex < value.chunkCount
+        && Array.isArray(value.presence) && value.presence.every(isPresenceRecord)
         && Array.isArray(value.leases) && value.leases.every(isLeaseRecord) && isString(value.serverTime)
-        ? success<ServerEnvelope>({ ...base, type: value.type, presence: value.presence as PresenceRecord[],
-          leases: value.leases as LeaseRecord[], serverTime: value.serverTime } as ServerEnvelope) : fail('invalid_envelope');
+        ? success<ServerEnvelope>({ ...base, type: value.type, snapshotId: value.snapshotId,
+          chunkIndex: value.chunkIndex, chunkCount: value.chunkCount,
+          presence: value.presence as PresenceRecord[], leases: value.leases as LeaseRecord[],
+          serverTime: value.serverTime } as ServerEnvelope) : fail('invalid_envelope');
     case 'presence.updated':
       return Array.isArray(value.presence) && value.presence.every(isPresenceRecord)
         ? success<ServerEnvelope>({ ...base, type: value.type, presence: value.presence as PresenceRecord[] } as ServerEnvelope)
@@ -271,6 +276,13 @@ export function normalizePath(path: unknown): string | null {
   return segments.join('/');
 }
 
+export function canonicalPathKey(path: unknown): string | null {
+  const normalized = normalizePath(path);
+  return normalized === null ? null : normalized.replace(/[A-Z]/g, (character) => {
+    return String.fromCharCode(character.charCodeAt(0) + 32);
+  });
+}
+
 function parseInput(input: unknown): ProtocolValidationResult<unknown> {
   if (typeof input !== 'string') {
     return { ok: true, value: input };
@@ -310,6 +322,10 @@ function isStateVersion(value: unknown): value is number {
 
 function isPositiveInteger(value: unknown): value is number {
   return typeof value === 'number' && Number.isSafeInteger(value) && value > 0;
+}
+
+function isNonNegativeInteger(value: unknown): value is number {
+  return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
 }
 
 function isString(value: unknown): value is string {

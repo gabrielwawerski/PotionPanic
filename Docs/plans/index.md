@@ -11,6 +11,8 @@ superseded plans into [`../archive/completed/index.md`](../archive/completed/ind
 
 ## Active Plans
 
+- [Coordinated File Leasing Remaining Hardening Implementation Plan](./coordinated-file-leasing-remaining-hardening.md)
+- [Coordinated Leasing 09: Release Acceptance and Documentation Handoff](./coordinated-file-leasing-09-release-handoff.md)
 - [Coordinated Leasing 08: Coordination Window and Lifecycle](./coordinated-file-leasing-08-ui-lifecycle.md)
 - [Coordinated Leasing 07: Conflict-Safe Save Guard](./coordinated-file-leasing-07-save-guard.md)
 - [Coordinated File Leasing Program](./coordinated-file-leasing-system.md)
@@ -20,7 +22,6 @@ superseded plans into [`../archive/completed/index.md`](../archive/completed/ind
 - [Coordinated Leasing 01: Foundations, Configuration, and Protocol](./coordinated-file-leasing-01-foundations.md)
 - [Coordinated Leasing 04: Hibernating WebSocket Synchronization](./coordinated-file-leasing-04-websocket-sync.md)
 - [Coordinated Leasing 03: Authoritative State and Expiry](./coordinated-file-leasing-03-authoritative-state.md)
-- [Coordinated Leasing 09: Release Acceptance and Documentation Handoff](./coordinated-file-leasing-09-release-handoff.md)
 - [Coordinated Leasing 05: Unity Authentication and Connection Service](./coordinated-file-leasing-05-unity-connection.md)
 ## Writing Rules
 

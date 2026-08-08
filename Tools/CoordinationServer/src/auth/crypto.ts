@@ -30,6 +30,14 @@ export function createSessionTokenDigest(
   return createDigest(hmacKey, SessionTokenDomain, sessionToken, developerId, expiresAt);
 }
 
+export async function createTokenLookup(token: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', Encoder.encode(token));
+  return Array.from(
+    new Uint8Array(digest),
+    (byte) => byte.toString(16).padStart(2, '0')
+  ).join('');
+}
+
 export function constantTimeEquals(left: string, right: string): boolean {
   const leftBytes = Encoder.encode(left);
   const rightBytes = Encoder.encode(right);

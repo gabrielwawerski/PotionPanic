@@ -4,6 +4,7 @@ import {
   constantTimeEquals,
   createDeveloperTokenDigest,
   createSessionTokenDigest,
+  createTokenLookup,
   generateOpaqueToken
 } from './auth/crypto';
 import {
@@ -13,6 +14,8 @@ import {
   sessionExpiry
 } from './auth/session';
 import {
+  canonicalPathKey,
+  MaximumEnvelopeBytes,
   normalizePath,
   parseClientEnvelope,
   ProtocolVersion,
@@ -23,11 +26,17 @@ import {
 } from './protocol';
 
 const ReplayTtlMilliseconds = 5 * 60 * 1000;
+const MaximumSnapshotDataBytes = 256 * 1024;
+const CapacitySnapshotId = '00000000-0000-4000-8000-000000000000';
+const CapacityRequestId = 'ffffffff-ffff-4fff-bfff-ffffffffffff';
+const CapacityServerTime = '9999-12-31T23:59:59.999Z';
+const CapacityStateVersion = Number.MAX_SAFE_INTEGER;
 
 interface DeveloperRow extends Record<string, string> {
   developer_id: string;
   display_name: string;
   token_digest: string;
+  token_lookup: string;
 }
 
 interface SessionRow extends Record<string, string> {
@@ -35,6 +44,7 @@ interface SessionRow extends Record<string, string> {
   developer_id: string;
   display_name: string;
   token_digest: string;
+  token_lookup: string;
   expires_at: string;
 }
 
@@ -93,7 +103,7 @@ export interface AuthenticatedSession {
 }
 
 export interface StateTransition {
-  requester: ServerEnvelope | null;
+  requester: ServerEnvelope | ServerEnvelope[] | null;
   stateChanges: ServerEnvelope[];
   stateVersion: number;
   connectionClosures: ConnectionClosure[];
@@ -161,9 +171,10 @@ export class CoordinationObject {
     this.broadcast(opened.stateChanges);
     this.closeSockets(expiredSockets);
     const ready = opened.requester;
-    if (ready === null || ready.type !== 'session.ready') {
+    if (ready === null || Array.isArray(ready) || ready.type !== 'session.ready') {
       throw new Error('Opening a connection did not return session readiness.');
     }
+    const snapshot = await this.currentSnapshot();
 
     const [client, server] = Object.values(new WebSocketPair());
     const attachment: SocketAttachment = {
@@ -176,8 +187,10 @@ export class CoordinationObject {
     server.serializeAttachment(attachment);
     this.state.acceptWebSocket(server);
     this.sockets.set(server, attachment);
-    server.send(JSON.stringify(ready));
-    server.send(JSON.stringify(await this.currentSnapshot()));
+    this.send(server, ready);
+    for (const envelope of snapshot) {
+      this.send(server, envelope);
+    }
 
     return new Response(null, { status: 101, webSocket: client });
   }
@@ -224,9 +237,9 @@ export class CoordinationObject {
     return transition;
   }
 
-  async currentSnapshot(now = new Date()): Promise<ServerEnvelope> {
+  async currentSnapshot(now = new Date()): Promise<ServerEnvelope[]> {
     await this.initialized;
-    return this.snapshotEnvelope(undefined, now, this.stateVersion());
+    return this.snapshotEnvelopes(undefined, now, this.stateVersion());
   }
 
   async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer): Promise<void> {
@@ -293,35 +306,66 @@ export class CoordinationObject {
   ): Promise<StateTransition> {
     await this.initialized;
     const payloadHash = message.type === 'snapshot.request' ? null : await hashPayload(message);
-    const transition = this.state.storage.transactionSync(() => {
-      const pruned = this.pruneExpiredInTransaction(now);
-      const connection = this.connection(connectionId);
-      if (connection === null) {
-        return this.prepend(pruned, this.error(message.requestId, 'connection_not_found', now));
-      }
-
-      if (message.type === 'snapshot.request') {
-        return this.prepend(pruned, this.snapshot(message.requestId, now));
-      }
-
-      const replay = this.replay(connection.developer_id, message.requestId);
-      if (replay !== null) {
-        if (replay.payload_hash !== payloadHash) {
-          return this.prepend(pruned, this.error(message.requestId, 'replay_payload_mismatch', now));
+    let transition: StateTransition;
+    try {
+      transition = this.state.storage.transactionSync(() => {
+        const pruned = this.pruneExpiredInTransaction(now);
+        const connection = this.connection(connectionId);
+        if (connection === null) {
+          return this.prepend(pruned, this.error(message.requestId, 'connection_not_found', now));
         }
-        const replayed = JSON.parse(replay.result_json) as StateTransition;
-        return {
-          requester: replayed.requester,
-          stateChanges: pruned.stateChanges,
-          stateVersion: pruned.stateVersion,
-          connectionClosures: pruned.connectionClosures
-        };
-      }
 
-      const applied = this.applyMessage(connection, message, now);
-      this.storeReplay(connection.developer_id, message.requestId, payloadHash as string, applied, now);
-      return this.prepend(pruned, applied);
-    });
+        if (message.type === 'snapshot.request') {
+          return this.prepend(pruned, this.snapshot(message.requestId, now));
+        }
+
+        const replay = this.replay(connection.developer_id, message.requestId);
+        if (replay !== null) {
+          if (replay.payload_hash !== payloadHash) {
+            return this.prepend(pruned, this.error(message.requestId, 'replay_payload_mismatch', now));
+          }
+          const replayed = JSON.parse(replay.result_json) as StateTransition;
+          return {
+            requester: replayed.requester,
+            stateChanges: pruned.stateChanges,
+            stateVersion: pruned.stateVersion,
+            connectionClosures: pruned.connectionClosures
+          };
+        }
+
+        const beforeBytes = this.snapshotCapacityBytes();
+        const applied = this.applyMessage(connection, message, now);
+        if (!transitionEnvelopesFit(applied)) {
+          throw new StateCapacityExceededError();
+        }
+        const afterBytes = this.snapshotCapacityBytes();
+        if (afterBytes > MaximumSnapshotDataBytes && afterBytes > beforeBytes) {
+          throw new StateCapacityExceededError();
+        }
+        this.storeReplay(connection.developer_id, message.requestId, payloadHash as string, applied, now);
+        return this.prepend(pruned, applied);
+      });
+    } catch (error) {
+      if (!(error instanceof StateCapacityExceededError) || message.type === 'snapshot.request') {
+        throw error;
+      }
+      transition = this.state.storage.transactionSync(() => {
+        const pruned = this.pruneExpiredInTransaction(now);
+        const connection = this.connection(connectionId);
+        if (connection === null) {
+          return this.prepend(pruned, this.error(message.requestId, 'connection_not_found', now));
+        }
+        const rejected = this.error(message.requestId, 'state_capacity_exceeded', now);
+        this.storeReplay(
+          connection.developer_id,
+          message.requestId,
+          payloadHash as string,
+          rejected,
+          now
+        );
+        return this.prepend(pruned, rejected);
+      });
+    }
     await this.scheduleNextAlarm();
     return transition;
   }
@@ -443,12 +487,13 @@ export class CoordinationObject {
 
   private deliverTransition(ws: WebSocket, transition: StateTransition): void {
     const expiredSockets = this.removeConnectionSockets(transition.connectionClosures);
-    if (
-      transition.requester !== null
-      && !transition.stateChanges.includes(transition.requester)
-      && this.sockets.has(ws)
-    ) {
-      this.send(ws, transition.requester);
+    const requester = transition.requester === null
+      ? []
+      : Array.isArray(transition.requester) ? transition.requester : [transition.requester];
+    for (const envelope of requester) {
+      if (!transition.stateChanges.includes(envelope) && this.sockets.has(ws)) {
+        this.send(ws, envelope);
+      }
     }
     this.broadcast(transition.stateChanges);
     this.closeSockets(expiredSockets);
@@ -488,7 +533,13 @@ export class CoordinationObject {
 
   private send(ws: WebSocket, envelope: ServerEnvelope): void {
     try {
-      ws.send(JSON.stringify(envelope));
+      const json = JSON.stringify(envelope);
+      if (utf8Bytes(json) > MaximumEnvelopeBytes) {
+        this.sockets.delete(ws);
+        ws.close(1011, 'Server envelope exceeds the protocol limit.');
+        return;
+      }
+      ws.send(json);
     } catch {
       this.sockets.delete(ws);
     }
@@ -510,6 +561,7 @@ export class CoordinationObject {
         developer_id TEXT PRIMARY KEY,
         display_name TEXT NOT NULL,
         token_digest TEXT NOT NULL UNIQUE,
+        token_lookup TEXT NOT NULL UNIQUE,
         revoked_at TEXT
       )
     `);
@@ -518,6 +570,8 @@ export class CoordinationObject {
         session_id TEXT PRIMARY KEY,
         developer_id TEXT NOT NULL,
         token_digest TEXT NOT NULL UNIQUE,
+        token_lookup TEXT NOT NULL UNIQUE,
+        created_at TEXT NOT NULL,
         expires_at TEXT NOT NULL,
         FOREIGN KEY (developer_id) REFERENCES developers(developer_id)
       )
@@ -892,7 +946,7 @@ export class CoordinationObject {
       }))
     ];
     return {
-      requester: this.snapshotEnvelope(requestId, now, stateVersion),
+      requester: this.snapshotEnvelopes(requestId, now, stateVersion),
       stateChanges,
       stateVersion,
       connectionClosures: []
@@ -902,27 +956,58 @@ export class CoordinationObject {
   private snapshot(requestId: string, now: Date): StateTransition {
     const stateVersion = this.stateVersion();
     return {
-      requester: this.snapshotEnvelope(requestId, now, stateVersion),
+      requester: this.snapshotEnvelopes(requestId, now, stateVersion),
       stateChanges: [],
       stateVersion,
       connectionClosures: []
     };
   }
 
-  private snapshotEnvelope(
+  private snapshotEnvelopes(
     requestId: string | undefined,
     now: Date,
     stateVersion: number
-  ): ServerEnvelope {
-    return {
-      protocolVersion: ProtocolVersion,
-      type: 'snapshot',
-      stateVersion,
-      ...(requestId === undefined ? {} : { requestId }),
-      presence: this.allPresence(),
-      leases: this.allEffectiveLeases(),
-      serverTime: now.toISOString()
-    };
+  ): ServerEnvelope[] {
+    try {
+      return buildSnapshotChunks({
+        snapshotId: crypto.randomUUID(),
+        stateVersion,
+        requestId,
+        serverTime: now.toISOString(),
+        presence: this.allPresence(),
+        leases: this.allEffectiveLeases()
+      });
+    } catch (error) {
+      if (!(error instanceof SnapshotRecordTooLargeError)) {
+        throw error;
+      }
+      return [{
+        protocolVersion: ProtocolVersion,
+        type: 'error',
+        stateVersion,
+        ...(requestId === undefined ? {} : { requestId }),
+        code: 'snapshot_record_too_large',
+        message: errorMessage('snapshot_record_too_large')
+      }];
+    }
+  }
+
+  private snapshotCapacityBytes(): number {
+    try {
+      return buildSnapshotChunks({
+        snapshotId: CapacitySnapshotId,
+        stateVersion: CapacityStateVersion,
+        requestId: CapacityRequestId,
+        serverTime: CapacityServerTime,
+        presence: this.allPresence(),
+        leases: this.allEffectiveLeases()
+      }).reduce((bytes, envelope) => bytes + serializedEnvelopeBytes(envelope), 0);
+    } catch (error) {
+      if (error instanceof SnapshotRecordTooLargeError) {
+        return Number.POSITIVE_INFINITY;
+      }
+      throw error;
+    }
   }
 
   private denied(
@@ -1259,17 +1344,23 @@ export class CoordinationObject {
 
     const developerId = crypto.randomUUID();
     const developerToken = generateOpaqueToken();
-    const tokenDigest = await createDeveloperTokenDigest(
-      this.env.TOKEN_HMAC_KEY,
-      developerToken,
-      developerId,
-      body.displayName
-    );
+    const [tokenDigest, tokenLookup] = await Promise.all([
+      createDeveloperTokenDigest(
+        this.env.TOKEN_HMAC_KEY,
+        developerToken,
+        developerId,
+        body.displayName
+      ),
+      createTokenLookup(developerToken)
+    ]);
     this.state.storage.sql.exec(
-      'INSERT INTO developers (developer_id, display_name, token_digest, revoked_at) VALUES (?, ?, ?, NULL)',
+      `INSERT INTO developers (
+        developer_id, display_name, token_digest, token_lookup, revoked_at
+      ) VALUES (?, ?, ?, ?, NULL)`,
       developerId,
       body.displayName,
-      tokenDigest
+      tokenDigest,
+      tokenLookup
     );
 
     return Response.json({ developerId, displayName: body.displayName, developerToken }, { status: 201 });
@@ -1284,19 +1375,61 @@ export class CoordinationObject {
     const serverTime = new Date();
     const expiresAt = sessionExpiry(serverTime);
     const sessionToken = generateOpaqueToken();
-    const tokenDigest = await createSessionTokenDigest(
-      this.env.TOKEN_HMAC_KEY,
-      sessionToken,
-      developer.developer_id,
-      expiresAt
-    );
-    this.state.storage.sql.exec(
-      'INSERT INTO sessions (session_id, developer_id, token_digest, expires_at) VALUES (?, ?, ?, ?)',
-      crypto.randomUUID(),
-      developer.developer_id,
-      tokenDigest,
-      expiresAt
-    );
+    const [tokenDigest, tokenLookup] = await Promise.all([
+      createSessionTokenDigest(
+        this.env.TOKEN_HMAC_KEY,
+        sessionToken,
+        developer.developer_id,
+        expiresAt
+      ),
+      createTokenLookup(sessionToken)
+    ]);
+    const created = this.state.storage.transactionSync(() => {
+      const cutoff = serverTime.toISOString();
+      this.state.storage.sql.exec(
+        'DELETE FROM sessions WHERE developer_id = ? AND expires_at <= ?',
+        developer.developer_id,
+        cutoff
+      );
+      let sessions = this.state.storage.sql.exec<SessionRow>(`
+        SELECT session_id, developer_id, token_digest, token_lookup, expires_at
+        FROM sessions WHERE developer_id = ? AND expires_at > ? ORDER BY created_at, session_id
+      `, developer.developer_id, cutoff).toArray();
+      while (sessions.length >= 8) {
+        const oldestDisconnected = first(this.state.storage.sql.exec<{ session_id: string }>(`
+          SELECT sessions.session_id FROM sessions
+          WHERE sessions.developer_id = ? AND sessions.expires_at > ?
+            AND NOT EXISTS (
+              SELECT 1 FROM connections
+              WHERE connections.session_id = sessions.session_id AND connections.expires_at > ?
+            )
+          ORDER BY sessions.created_at, sessions.session_id LIMIT 1
+        `, developer.developer_id, cutoff, cutoff));
+        if (oldestDisconnected === null) {
+          return false;
+        }
+        this.state.storage.sql.exec(
+          'DELETE FROM sessions WHERE session_id = ?',
+          oldestDisconnected.session_id
+        );
+        sessions = sessions.filter(({ session_id }) => session_id !== oldestDisconnected.session_id);
+      }
+      this.state.storage.sql.exec(
+        `INSERT INTO sessions (
+          session_id, developer_id, token_digest, token_lookup, created_at, expires_at
+        ) VALUES (?, ?, ?, ?, ?, ?)`,
+        crypto.randomUUID(),
+        developer.developer_id,
+        tokenDigest,
+        tokenLookup,
+        cutoff,
+        expiresAt
+      );
+      return true;
+    });
+    if (!created) {
+      return new Response('Too many sessions', { status: 429 });
+    }
     await this.scheduleNextAlarm();
 
     return Response.json({
@@ -1331,16 +1464,20 @@ export class CoordinationObject {
         FROM connections WHERE developer_id = ?
       `, developerId).toArray();
       const connectionIds = connections.map(({ connection_id }) => connection_id);
-      const placeholders = connectionIds.map(() => '?').join(', ');
-      const presence = connectionIds.length === 0 ? [] : this.state.storage.sql.exec<PresenceRow>(`
+      const presence = this.state.storage.sql.exec<PresenceRow>(`
         SELECT canonical_path, display_path, developer_id, display_name, connection_id, branch, task, expires_at
-        FROM presence WHERE connection_id IN (${placeholders})
-      `, ...connectionIds).toArray();
-      const leases = connectionIds.length === 0 ? [] : this.state.storage.sql.exec<LeaseRow>(`
+        FROM presence WHERE developer_id = ?
+      `, developerId).toArray();
+      const leases = this.state.storage.sql.exec<LeaseRow>(`
         SELECT lease_id, canonical_path, display_path, developer_id, display_name, branch, task,
           connection_id, expires_at
-        FROM leases WHERE connection_id IN (${placeholders})
-      `, ...connectionIds).toArray();
+        FROM leases WHERE developer_id = ?
+      `, developerId).toArray();
+      const reservations = this.state.storage.sql.exec<ReservationRow>(`
+        SELECT reservation_id, canonical_path, display_path, developer_id, display_name, branch, task,
+          expires_at
+        FROM reservations WHERE developer_id = ?
+      `, developerId).toArray();
 
       this.state.storage.sql.exec(
         'UPDATE developers SET revoked_at = ? WHERE developer_id = ? AND revoked_at IS NULL',
@@ -1348,20 +1485,24 @@ export class CoordinationObject {
         developerId
       );
       this.state.storage.sql.exec('DELETE FROM sessions WHERE developer_id = ?', developerId);
-      if (connectionIds.length === 0) {
-        return { exists: true, transition: pruned };
-      }
-
-      this.state.storage.sql.exec(`DELETE FROM presence WHERE connection_id IN (${placeholders})`, ...connectionIds);
-      this.state.storage.sql.exec(`DELETE FROM leases WHERE connection_id IN (${placeholders})`, ...connectionIds);
-      this.state.storage.sql.exec(`DELETE FROM connections WHERE connection_id IN (${placeholders})`, ...connectionIds);
-      const stateVersion = this.advanceStateVersion();
+      this.state.storage.sql.exec('DELETE FROM presence WHERE developer_id = ?', developerId);
+      this.state.storage.sql.exec('DELETE FROM leases WHERE developer_id = ?', developerId);
+      this.state.storage.sql.exec('DELETE FROM reservations WHERE developer_id = ?', developerId);
+      this.state.storage.sql.exec('DELETE FROM connections WHERE developer_id = ?', developerId);
+      const claimsChanged = presence.length > 0 || leases.length > 0 || reservations.length > 0;
+      const stateVersion = claimsChanged
+        ? this.advanceStateVersion()
+        : this.stateVersion();
+      const stateChanges = claimsChanged
+        ? [
+          ...presence.map((row) => this.presenceRemoved(row, stateVersion)),
+          ...leases.flatMap((row) => this.leaseReleasedChanges(row, stateVersion)),
+          ...reservations.flatMap((row) => this.reservationReleasedChanges(row, stateVersion))
+        ]
+        : [];
       const transition: StateTransition = {
         requester: null,
-        stateChanges: [
-          ...presence.map((row) => this.presenceRemoved(row, stateVersion)),
-          ...leases.flatMap((row) => this.leaseReleasedChanges(row, stateVersion))
-        ],
+        stateChanges,
         stateVersion,
         connectionClosures: connectionIds.map((connectionId) => ({
           connectionId,
@@ -1387,22 +1528,22 @@ export class CoordinationObject {
       return null;
     }
 
-    const developers = this.state.storage.sql.exec<DeveloperRow>(
-      'SELECT developer_id, display_name, token_digest FROM developers WHERE revoked_at IS NULL'
-    ).toArray();
-    for (const developer of developers) {
-      const digest = await createDeveloperTokenDigest(
-        this.env.TOKEN_HMAC_KEY,
-        token,
-        developer.developer_id,
-        developer.display_name
-      );
-      if (constantTimeEquals(digest, developer.token_digest)) {
-        return developer;
-      }
+    const tokenLookup = await createTokenLookup(token);
+    const developer = first(this.state.storage.sql.exec<DeveloperRow>(`
+      SELECT developer_id, display_name, token_digest, token_lookup
+      FROM developers WHERE token_lookup = ? AND revoked_at IS NULL LIMIT 1
+    `, tokenLookup));
+    if (developer === null) {
+      return null;
     }
 
-    return null;
+    const digest = await createDeveloperTokenDigest(
+      this.env.TOKEN_HMAC_KEY,
+      token,
+      developer.developer_id,
+      developer.display_name
+    );
+    return constantTimeEquals(digest, developer.token_digest) ? developer : null;
   }
 
   private async authenticateSession(request: Request): Promise<SessionRow | null> {
@@ -1412,30 +1553,141 @@ export class CoordinationObject {
     }
 
     const serverTime = new Date();
-    const sessions = this.state.storage.sql.exec<SessionRow>(`
+    const tokenLookup = await createTokenLookup(token);
+    const session = first(this.state.storage.sql.exec<SessionRow>(`
       SELECT sessions.session_id, sessions.developer_id, developers.display_name,
-        sessions.token_digest, sessions.expires_at
+        sessions.token_digest, sessions.token_lookup, sessions.expires_at
       FROM sessions INNER JOIN developers ON developers.developer_id = sessions.developer_id
-      WHERE developers.revoked_at IS NULL
-    `).toArray();
-    for (const session of sessions) {
-      if (isExpired(session.expires_at, serverTime)) {
-        continue;
-      }
-
-      const digest = await createSessionTokenDigest(
-        this.env.TOKEN_HMAC_KEY,
-        token,
-        session.developer_id,
-        session.expires_at
-      );
-      if (constantTimeEquals(digest, session.token_digest)) {
-        return session;
-      }
+      WHERE sessions.token_lookup = ? AND developers.revoked_at IS NULL
+        AND sessions.expires_at > ? LIMIT 1
+    `, tokenLookup, serverTime.toISOString()));
+    if (session === null) {
+      return null;
     }
 
-    return null;
+    const digest = await createSessionTokenDigest(
+      this.env.TOKEN_HMAC_KEY,
+      token,
+      session.developer_id,
+      session.expires_at
+    );
+    return constantTimeEquals(digest, session.token_digest) ? session : null;
   }
+}
+
+interface SnapshotSource {
+  snapshotId: string;
+  stateVersion: number;
+  requestId: string | undefined;
+  serverTime: string;
+  presence: PresenceRecord[];
+  leases: LeaseRecord[];
+}
+
+interface SnapshotChunkData {
+  presence: PresenceRecord[];
+  leases: LeaseRecord[];
+}
+
+type SnapshotItem =
+  | { kind: 'presence'; value: PresenceRecord }
+  | { kind: 'lease'; value: LeaseRecord };
+
+class StateCapacityExceededError extends Error {}
+
+class SnapshotRecordTooLargeError extends Error {}
+
+function buildSnapshotChunks(source: SnapshotSource): ServerEnvelope[] {
+  const items: SnapshotItem[] = [
+    ...source.presence.map((value): SnapshotItem => ({ kind: 'presence', value })),
+    ...source.leases.map((value): SnapshotItem => ({ kind: 'lease', value }))
+  ];
+  let chunkCount = 1;
+  for (let attempt = 0; attempt <= items.length + 2; attempt += 1) {
+    const chunks = packSnapshotItems(source, items, chunkCount);
+    if (chunks.length === chunkCount) {
+      return chunks.map((chunk, chunkIndex) => snapshotChunk(
+        source,
+        chunk,
+        chunkIndex,
+        chunkCount
+      ));
+    }
+    chunkCount = chunks.length;
+  }
+  throw new Error('Snapshot chunk count did not converge.');
+}
+
+function packSnapshotItems(
+  source: SnapshotSource,
+  items: SnapshotItem[],
+  chunkCount: number
+): SnapshotChunkData[] {
+  const chunks: SnapshotChunkData[] = [];
+  let current: SnapshotChunkData = { presence: [], leases: [] };
+  for (const item of items) {
+    const candidate: SnapshotChunkData = item.kind === 'presence'
+      ? { presence: [...current.presence, item.value], leases: current.leases }
+      : { presence: current.presence, leases: [...current.leases, item.value] };
+    if (snapshotChunkBytes(source, candidate, chunks.length, chunkCount) <= MaximumEnvelopeBytes) {
+      current = candidate;
+      continue;
+    }
+    if (current.presence.length === 0 && current.leases.length === 0) {
+      throw new SnapshotRecordTooLargeError();
+    }
+    chunks.push(current);
+    current = item.kind === 'presence'
+      ? { presence: [item.value], leases: [] }
+      : { presence: [], leases: [item.value] };
+    if (snapshotChunkBytes(source, current, chunks.length, chunkCount) > MaximumEnvelopeBytes) {
+      throw new SnapshotRecordTooLargeError();
+    }
+  }
+  chunks.push(current);
+  return chunks;
+}
+
+function snapshotChunk(
+  source: SnapshotSource,
+  data: SnapshotChunkData,
+  chunkIndex: number,
+  chunkCount: number
+): Extract<ServerEnvelope, { type: 'snapshot' }> {
+  return {
+    protocolVersion: ProtocolVersion,
+    type: 'snapshot',
+    stateVersion: source.stateVersion,
+    ...(source.requestId === undefined ? {} : { requestId: source.requestId }),
+    snapshotId: source.snapshotId,
+    chunkIndex,
+    chunkCount,
+    presence: data.presence,
+    leases: data.leases,
+    serverTime: source.serverTime
+  };
+}
+
+function snapshotChunkBytes(
+  source: SnapshotSource,
+  data: SnapshotChunkData,
+  chunkIndex: number,
+  chunkCount: number
+): number {
+  return serializedEnvelopeBytes(snapshotChunk(source, data, chunkIndex, chunkCount));
+}
+
+function transitionEnvelopesFit(transition: StateTransition): boolean {
+  const requester = transition.requester === null
+    ? []
+    : Array.isArray(transition.requester) ? transition.requester : [transition.requester];
+  return [...requester, ...transition.stateChanges].every((envelope) => {
+    return serializedEnvelopeBytes(envelope) <= MaximumEnvelopeBytes;
+  });
+}
+
+function serializedEnvelopeBytes(envelope: ServerEnvelope): number {
+  return utf8Bytes(JSON.stringify(envelope));
 }
 
 interface PathDetails {
@@ -1517,7 +1769,8 @@ function parseRoute(pathname: string): Route | null {
 
 function pathDetails(path: string): PathDetails | null {
   const display = normalizePath(path);
-  return display === null ? null : { canonical: display.toLowerCase(), display };
+  const canonical = canonicalPathKey(path);
+  return display === null || canonical === null ? null : { canonical, display };
 }
 
 function expiry(now: Date, seconds: number): string {
@@ -1534,6 +1787,10 @@ function errorMessage(code: string): string {
       return 'The connection has no presence for this path.';
     case 'invalid_path':
       return 'The path is invalid.';
+    case 'state_capacity_exceeded':
+      return 'The project coordination state exceeds its capacity.';
+    case 'snapshot_record_too_large':
+      return 'A snapshot record exceeds the protocol envelope limit.';
     default:
       return 'The request could not be completed.';
   }
@@ -1554,6 +1811,10 @@ function stableJson(value: unknown): string {
   }
   const record = value as Record<string, unknown>;
   return `{${Object.keys(record).sort().map((key) => `${JSON.stringify(key)}:${stableJson(record[key])}`).join(',')}}`;
+}
+
+function utf8Bytes(value: string): number {
+  return new TextEncoder().encode(value).byteLength;
 }
 
 async function readJson(request: Request): Promise<Record<string, unknown> | null> {

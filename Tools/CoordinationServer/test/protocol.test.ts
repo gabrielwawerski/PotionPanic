@@ -2,12 +2,14 @@ import {
   ClientMessageTypes,
   ServerMessageTypes,
   VersionedServerState,
+  canonicalPathKey,
   parseClientEnvelope,
   parseServerEnvelope
 } from '../src/protocol';
 import { describe, expect, it } from 'vitest';
 
 const requestId = '123e4567-e89b-42d3-a456-426614174000';
+const snapshotId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const lease = {
   leaseId: 'lease-1',
   path: 'assets/scenes/a.unity',
@@ -33,6 +35,15 @@ const presence = {
 };
 
 describe('protocol v1 client envelopes', () => {
+  it.each([
+    ['Assets\\Scenes\\Ä\\İ.unity', 'assets/scenes/Ä/İ.unity'],
+    ['ASSETS/MiXeD.unity', 'assets/mixed.unity'],
+    ['Assets/Scenes/Cafe\u0301.unity', 'assets/scenes/café.unity'],
+    ['Assets/Scenes/Café.unity', 'assets/scenes/café.unity']
+  ])('creates NFC, slash-normalized, ASCII-folded canonical keys for %s', (path, expected) => {
+    expect(canonicalPathKey(path)).toBe(expected);
+  });
+
   it('lists every client and server message defined by the v1 contract', () => {
     expect(ClientMessageTypes).toEqual([
       'presence.open', 'presence.close', 'lease.acquire', 'lease.release',
@@ -125,8 +136,8 @@ describe('protocol v1 server envelopes', () => {
     [{ protocolVersion: 1, type: 'session.ready', stateVersion: 1,
       developerId: 'dev-1', displayName: 'Rin', serverTime: '2026-08-06T00:00:00Z',
       connectionId: 'conn-1', leaseTtlSeconds: 120, reservationTtlSeconds: 1800 }],
-    [{ protocolVersion: 1, type: 'snapshot', stateVersion: 1, presence: [presence], leases: [lease],
-      serverTime: '2026-08-06T00:00:00Z' }],
+    [{ protocolVersion: 1, type: 'snapshot', stateVersion: 1, snapshotId, chunkIndex: 0,
+      chunkCount: 1, presence: [presence], leases: [lease], serverTime: '2026-08-06T00:00:00Z' }],
     [{ protocolVersion: 1, type: 'presence.updated', stateVersion: 1, presence: [presence] }],
     [{ protocolVersion: 1, type: 'presence.removed', stateVersion: 1, path: 'Assets/Scenes/A.unity',
       connectionId: 'conn-1' }],
@@ -149,8 +160,28 @@ describe('protocol v1 server envelopes', () => {
       protocolVersion: 1,
       type: 'snapshot',
       stateVersion: 1,
+      snapshotId,
+      chunkIndex: 0,
+      chunkCount: 1,
       presence: [],
       leases: [{ ...lease, mode: 'reserved' }],
+      serverTime: '2026-08-06T00:00:00Z'
+    })).toEqual(expect.objectContaining({ ok: false }));
+  });
+
+  it.each([
+    { snapshotId: 'not-a-uuid', chunkIndex: 0, chunkCount: 1 },
+    { snapshotId, chunkIndex: -1, chunkCount: 1 },
+    { snapshotId, chunkIndex: 0, chunkCount: 0 },
+    { snapshotId, chunkIndex: 1, chunkCount: 1 }
+  ])('rejects invalid snapshot chunk metadata', (chunk) => {
+    expect(parseServerEnvelope({
+      protocolVersion: 1,
+      type: 'snapshot',
+      stateVersion: 1,
+      ...chunk,
+      presence: [],
+      leases: [],
       serverTime: '2026-08-06T00:00:00Z'
     })).toEqual(expect.objectContaining({ ok: false }));
   });
@@ -177,6 +208,9 @@ describe('protocol v1 server envelopes', () => {
       protocolVersion: 1,
       type: 'snapshot',
       stateVersion: 3,
+      snapshotId,
+      chunkIndex: 0,
+      chunkCount: 1,
       presence: [],
       leases: [],
       serverTime: '2026-08-06T00:00:00.000Z'
@@ -185,6 +219,9 @@ describe('protocol v1 server envelopes', () => {
       protocolVersion: 1,
       type: 'snapshot',
       stateVersion: 2,
+      snapshotId,
+      chunkIndex: 0,
+      chunkCount: 1,
       presence: [],
       leases: [],
       serverTime: '2026-08-06T00:00:00.000Z'
@@ -205,7 +242,8 @@ describe('protocol v1 server envelopes', () => {
 
   it.each([
     JSON.stringify({ protocolVersion: 1, type: 'snapshot', stateVersion: 1,
-      presence: [], leases: [], serverTime: 'x'.repeat(16 * 1024) }),
+      snapshotId, chunkIndex: 0, chunkCount: 1, presence: [], leases: [],
+      serverTime: 'x'.repeat(16 * 1024) }),
     JSON.stringify({ protocolVersion: 1, type: 'error', stateVersion: 1,
       code: 'invalid_path', message: 'x'.repeat(16 * 1024) })
   ])('rejects a server envelope over 16 KiB', (json) => {

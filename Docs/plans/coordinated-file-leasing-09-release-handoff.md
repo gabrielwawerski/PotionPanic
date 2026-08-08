@@ -12,18 +12,51 @@ publish stable operating guidance and close the program.
 **Produces:** A release-ready coordination system with evidence recorded in
 `PP-7`, updated evergreen docs, and an archived program plan.
 
+**Current step:** Implement the 2026-08-08 hardening review before deployment.
+
+## Pre-deployment hardening
+
+- Reject every project identifier except `potion-panic` before resolving a
+  Durable Object namespace ID.
+- Split snapshots into envelopes no larger than 16 KiB. Each chunk carries a
+  snapshot ID, zero-based index, chunk count, and a shared state version. The
+  Unity client may buffer at most 256 KiB and applies a snapshot only after all
+  chunks arrive.
+- Reject state-growing requests with correlated `state_capacity_exceeded` when
+  the resulting project snapshot would exceed 256 KiB.
+- Authenticate developer and session tokens through indexed SHA-256 lookup
+  values, then verify the existing HMAC digest. Keep at most eight valid
+  sessions per developer, evict the oldest disconnected session first, and
+  return HTTP 429 if all eight sessions have active connections.
+- Remove and broadcast a revoked developer's reservations with that
+  developer's sessions, presence, editing leases, and connections.
+- Use identical path canonicalization in TypeScript and C#: NFC normalization,
+  slash normalization, and ASCII `A-Z` folding only. Cover non-ASCII and
+  composed/decomposed Unicode vectors.
+- Drain pending Unity request handles exactly once when a socket closes. Limit
+  task context and serialized Git/task metadata to 256 UTF-16 code units, and
+  reconnect immediately after a credential is saved successfully.
+- Declare the Worker Durable Object through Wrangler's declarative `exports`,
+  require `TOKEN_HMAC_KEY` and `ADMIN_TOKEN`, enable `workers.dev`, disable
+  preview URLs, and enable full observability for the initial release. Keep
+  production deployment manual.
+
+Implementation must add regression coverage for each item and leave the live
+endpoint unchanged until Wrangler authentication and an actual deployment
+produce the exact `workers.dev` URL.
+
 ## Files and external state
 
 - Modify `coordination.json` to replace the placeholder endpoint after the
   Worker is deployed.
-- Update `README.md`, `Docs/onboarding/getting-started.md`,
-  `Docs/collaboration/team-workflow.md`, and `Docs/guides/unity/editor-safety.md`.
-- Append deployment, test, and two-machine evidence to `Docs/tickets/PP-7.md`.
+- Update `README.md`, [Docs/onboarding/getting-started.md](../onboarding/getting-started.md),
+  [Docs/collaboration/team-workflow.md](../collaboration/team-workflow.md), and [Docs/guides/unity/editor-safety.md](../guides/unity/editor-safety.md).
+- Append deployment, test, and two-machine evidence to [Docs/tickets/PP-7.md](../tickets/PP-7.md).
 - Create Cloudflare secrets `TOKEN_HMAC_KEY` and `ADMIN_TOKEN`; issue one
   developer token per person without committing any secret.
 - Move the program page and completed slice pages into
   `Docs/archive/completed/` only after acceptance, and update
-  `Docs/archive/completed/index.md` through the existing plan archive flow.
+  [Docs/archive/completed/index.md](../archive/completed/index.md) through the existing plan archive flow.
 
 ## Acceptance run
 

@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { readBearerToken } from '../../src/auth/admin';
 import {
   createDeveloperTokenDigest,
+  createTokenLookup,
   createSessionTokenDigest
 } from '../../src/auth/crypto';
 
@@ -28,8 +29,9 @@ describe('developer administration', () => {
         developer_id: string;
         display_name: string;
         token_digest: string;
+        token_lookup: string;
         revoked_at: string | null;
-      }>('SELECT developer_id, display_name, token_digest, revoked_at FROM developers').toArray(),
+      }>('SELECT developer_id, display_name, token_digest, token_lookup, revoked_at FROM developers').toArray(),
       tables: state.storage.sql.exec<{ name: string }>(
         "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name"
       ).toArray(),
@@ -56,6 +58,7 @@ describe('developer administration', () => {
     expect(JSON.stringify(persisted)).not.toContain(first.developerToken);
     expect(JSON.stringify(persisted)).not.toContain(second.developerToken);
     expect(persisted.developers.every(({ token_digest }) => token_digest.length === 64)).toBe(true);
+    expect(persisted.developers.every(({ token_lookup }) => token_lookup.length === 64)).toBe(true);
   });
 
   it('rejects requests without the independent administrator token', async () => {
@@ -96,10 +99,12 @@ describe('opaque sessions', () => {
     const session = await inspectProject((state) => state.storage.sql.exec<{
       developer_id: string;
       token_digest: string;
+      token_lookup: string;
       expires_at: string;
-    }>('SELECT developer_id, token_digest, expires_at FROM sessions').one());
+    }>('SELECT developer_id, token_digest, token_lookup, expires_at FROM sessions').one());
     expect(session.developer_id).toBe(developer.developerId);
     expect(session.token_digest).toHaveLength(64);
+    expect(session.token_lookup).toHaveLength(64);
     expect(JSON.stringify(session)).not.toContain(sessionToken);
     expect(Date.parse(session.expires_at) - Date.now()).toBeGreaterThan(23 * 60 * 60 * 1000);
     expect(Date.parse(session.expires_at) - Date.now()).toBeLessThanOrEqual(24 * 60 * 60 * 1000);
@@ -119,7 +124,7 @@ describe('opaque sessions', () => {
     const crossProject = await SELF.fetch('https://example.test/v1/projects/other-project/connect', {
       headers: bearerHeaders(session.sessionToken)
     });
-    expect(crossProject.status).toBe(401);
+    expect(crossProject.status).toBe(404);
 
     await inspectProject((state) => {
       state.storage.sql.exec(
@@ -157,6 +162,83 @@ describe('opaque sessions', () => {
     expect(persisted.developer.revoked_at).toEqual(expect.any(String));
     expect(persisted.sessions.count).toBe(0);
   });
+
+  it('evicts the oldest disconnected unexpired session before issuing a ninth', async () => {
+    const developer = await createDeveloper('Rin');
+    const tokens = await Promise.all(Array.from({ length: 8 }, async () => {
+      return (await createSession(developer.developerToken)).sessionToken;
+    }));
+
+    await inspectProject(async (state) => {
+      for (const [index, token] of tokens.entries()) {
+        const lookup = await createTokenLookup(token);
+        const session = state.storage.sql.exec<{ session_id: string }>(
+          'SELECT session_id FROM sessions WHERE token_lookup = ?',
+          lookup
+        ).one();
+        state.storage.sql.exec(
+          'UPDATE sessions SET created_at = ? WHERE session_id = ?',
+          `2026-01-01T00:00:0${index}.000Z`,
+          session.session_id
+        );
+      }
+    });
+
+    const ninth = await SELF.fetch(`${projectUrl}/sessions`, {
+      method: 'POST',
+      headers: bearerHeaders(developer.developerToken)
+    });
+    const persisted = await inspectProject((state) => state.storage.sql.exec<{ count: number }>(
+      'SELECT COUNT(*) AS count FROM sessions WHERE developer_id = ?',
+      developer.developerId
+    ).one());
+    const evicted = await SELF.fetch(`${projectUrl}/connect`, {
+      headers: bearerHeaders(tokens[0])
+    });
+
+    expect(ninth.status).toBe(201);
+    expect(persisted.count).toBe(8);
+    expect(evicted.status).toBe(401);
+  });
+
+  it('rejects a ninth session when every unexpired session is connected', async () => {
+    const developer = await createDeveloper('Rin');
+    const tokens = await Promise.all(Array.from({ length: 8 }, async () => {
+      return (await createSession(developer.developerToken)).sessionToken;
+    }));
+
+    await inspectProject(async (state) => {
+      for (const token of tokens) {
+        const lookup = await createTokenLookup(token);
+        const session = state.storage.sql.exec<{
+          session_id: string;
+          expires_at: string;
+        }>('SELECT session_id, expires_at FROM sessions WHERE token_lookup = ?', lookup).one();
+        state.storage.sql.exec(
+          `INSERT INTO connections (
+            connection_id, session_id, developer_id, display_name, expires_at
+          ) VALUES (?, ?, ?, ?, ?)`,
+          crypto.randomUUID(),
+          session.session_id,
+          developer.developerId,
+          developer.displayName,
+          session.expires_at
+        );
+      }
+    });
+
+    const ninth = await SELF.fetch(`${projectUrl}/sessions`, {
+      method: 'POST',
+      headers: bearerHeaders(developer.developerToken)
+    });
+    const persisted = await inspectProject((state) => state.storage.sql.exec<{ count: number }>(
+      'SELECT COUNT(*) AS count FROM sessions WHERE developer_id = ?',
+      developer.developerId
+    ).one());
+
+    expect(ninth.status).toBe(429);
+    expect(persisted.count).toBe(8);
+  });
 });
 
 describe('credential parsing and digests', () => {
@@ -173,6 +255,12 @@ describe('credential parsing and digests', () => {
     ]);
 
     expect(developerDigest).not.toBe(sessionDigest);
+  });
+
+  it('uses SHA-256 token lookups without reusing HMAC digests', async () => {
+    await expect(createTokenLookup('abc')).resolves.toBe(
+      'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad'
+    );
   });
 });
 

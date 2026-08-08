@@ -14,6 +14,9 @@ export default {
 
     const projectId = projectIdFromPath(url.pathname);
     if (projectId !== null) {
+      if (projectId !== 'potion-panic') {
+        return new Response('Not found', { status: 404 });
+      }
       return env.COORDINATION_OBJECT.get(
         env.COORDINATION_OBJECT.idFromName(projectId)
       ).fetch(request);

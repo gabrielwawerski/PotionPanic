@@ -318,6 +318,19 @@ authenticated/connected populated window states were not exercised against a
 live Worker. Live deployment, real credentials, two-machine acceptance, and
 evergreen documentation remain Slice 09 work.
 
+2026-08-08: Slice 09 pre-deployment review found release-blocking hardening
+gaps despite a clean baseline: backend typecheck, 77/77 Worker tests, dependency
+audit, Wrangler dry run, 11/11 documentation tests, VitePress build, and
+140/140 Unity Coordination EditMode tests passed. Implementation started on
+`fix/coordination-release-hardening`. The approved scope covers project routing,
+bounded snapshot chunks and project state, indexed token authentication and
+session limits, complete revocation cleanup, cross-runtime Unicode path keys,
+Unity request cleanup and metadata limits, credential-triggered reconnect,
+Wrangler secret/export declarations, and release documentation. Wrangler is
+not authenticated on this machine, so deployment, the exact production URL,
+issued developer credentials, and two-machine acceptance remain external
+release blockers. PP-7 stays open until those steps have recorded evidence.
+
 ## Definition of Done
 
 - [ ] Acceptance criteria met

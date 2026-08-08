@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -125,7 +126,10 @@ namespace PotionPanic.Editor.Coordination
     private readonly Action requestCredentials;
     private readonly ICoordinationDelay delay;
     private readonly Func<TimeSpan, TimeSpan> reconnectJitter;
+    private readonly object socketMessageGateLock = new object();
     private readonly CoordinationProtocolState protocolState = new CoordinationProtocolState();
+    private readonly CoordinationSnapshotAssembler snapshotAssembler
+      = new CoordinationSnapshotAssembler();
     private readonly Dictionary<string, CoordinationRequestHandle> pendingRequests
       = new Dictionary<string, CoordinationRequestHandle>();
     private readonly HashSet<Task> sendTasks = new HashSet<Task>();
@@ -140,6 +144,8 @@ namespace PotionPanic.Editor.Coordination
     private bool hasPromptedForCredentials;
     private bool credentialUnavailable;
     private bool shutdown;
+    private bool socketMessagesAccepted;
+    private int socketMessageGeneration;
     private string currentConnectionId = string.Empty;
 
     public CoordinationConnectionState State { get; private set; }
@@ -225,6 +231,7 @@ namespace PotionPanic.Editor.Coordination
 
     public async Task ForgetCredentialsAsync()
     {
+      InvalidateSocketMessagesAndResetSnapshot();
       credentialUnavailable = true;
       hasPromptedForCredentials = false;
       session = null;
@@ -268,6 +275,7 @@ namespace PotionPanic.Editor.Coordination
         return;
       }
 
+      InvalidateSocketMessagesAndResetSnapshot();
       session = null;
       currentConnectionId = string.Empty;
       CancelConnectionWork();
@@ -293,6 +301,7 @@ namespace PotionPanic.Editor.Coordination
       }
 
       shutdown = true;
+      InvalidateSocketMessagesAndResetSnapshot();
       CancelConnectionWork();
       try
       {
@@ -469,13 +478,23 @@ namespace PotionPanic.Editor.Coordination
 
       try
       {
+        var replacingConnection = InvalidateSocketMessagesAndResetSnapshot();
+        if (replacingConnection)
+        {
+          await CloseSocketAsync();
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+        EnableSocketMessages();
         await webSocketClient.ConnectAsync(WebSocketUri(), session.SessionToken, cancellationToken);
       }
       catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
       {
+        InvalidateSocketMessagesAndResetSnapshot();
       }
       catch (Exception exception)
       {
+        InvalidateSocketMessagesAndResetSnapshot();
         session = null;
         HandleConnectionFailure("connection_failed", exception.Message);
       }
@@ -675,7 +694,27 @@ namespace PotionPanic.Editor.Coordination
 
     private void OnSocketMessage(string json)
     {
-      dispatcher.Post(() => ApplySocketMessage(json));
+      int generation;
+      lock (socketMessageGateLock)
+      {
+        if (!socketMessagesAccepted)
+        {
+          return;
+        }
+
+        generation = socketMessageGeneration;
+      }
+
+      dispatcher.Post(() =>
+      {
+        lock (socketMessageGateLock)
+        {
+          if (socketMessagesAccepted && generation == socketMessageGeneration)
+          {
+            ApplySocketMessage(json);
+          }
+        }
+      });
     }
 
     private void ApplySocketMessage(string json)
@@ -684,6 +723,25 @@ namespace PotionPanic.Editor.Coordination
       {
         PublishTransportError("invalid_server_message", error);
         return;
+      }
+
+      if (envelope.type == "snapshot")
+      {
+        var serializedUtf8Bytes = Encoding.UTF8.GetByteCount(json);
+        var status = snapshotAssembler.TryAdd(
+          envelope, serializedUtf8Bytes, out var completed, out var assemblyError);
+        if (status == CoordinationSnapshotAssemblyStatus.Rejected)
+        {
+          PublishTransportError(assemblyError, assemblyError);
+          return;
+        }
+
+        if (status != CoordinationSnapshotAssemblyStatus.Completed)
+        {
+          return;
+        }
+
+        envelope = completed;
       }
 
       if (envelope.stateVersion < protocolState.NewestAppliedStateVersion)
@@ -752,6 +810,7 @@ namespace PotionPanic.Editor.Coordination
 
     private void OnSocketClosed(int statusCode, string reason)
     {
+      InvalidateSocketMessagesAndResetSnapshot();
       dispatcher.Post(() =>
       {
         session = null;
@@ -786,6 +845,26 @@ namespace PotionPanic.Editor.Coordination
 
         StartReconnectLoop();
       });
+    }
+
+    private bool InvalidateSocketMessagesAndResetSnapshot()
+    {
+      lock (socketMessageGateLock)
+      {
+        var wasAcceptingMessages = socketMessagesAccepted;
+        socketMessagesAccepted = false;
+        socketMessageGeneration++;
+        snapshotAssembler.Reset();
+        return wasAcceptingMessages;
+      }
+    }
+
+    private void EnableSocketMessages()
+    {
+      lock (socketMessageGateLock)
+      {
+        socketMessagesAccepted = true;
+      }
     }
 
     private void EnsureConnectionCancellation()

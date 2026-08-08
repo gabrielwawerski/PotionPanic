@@ -7,11 +7,21 @@ import {
   runInDurableObject
 } from 'cloudflare:test';
 import { afterEach, describe, expect, it } from 'vitest';
-import { VersionedServerState, type ServerEnvelope } from '../../src/protocol';
+import {
+  MaximumEnvelopeBytes,
+  VersionedServerState,
+  type ServerEnvelope
+} from '../../src/protocol';
 
 const projectId = 'potion-panic';
 const projectUrl = `https://example.test/v1/projects/${projectId}`;
 const adminToken = 'test-admin-token';
+
+type SnapshotChunk = Extract<ServerEnvelope, { type: 'snapshot' }> & {
+  snapshotId: string;
+  chunkIndex: number;
+  chunkCount: number;
+};
 
 afterEach(async () => {
   await reset();
@@ -70,8 +80,94 @@ describe('coordination WebSocket synchronization', () => {
       leaseTtlSeconds: 120,
       reservationTtlSeconds: 1800
     });
-    expect(messages[1]).toMatchObject({ presence: [], leases: [] });
+    expect(messages[1]).toMatchObject({
+      snapshotId: expect.stringMatching(/^[0-9a-f-]{36}$/i),
+      chunkIndex: 0,
+      chunkCount: 1,
+      presence: [],
+      leases: []
+    });
     expect(messages[1].stateVersion).toBe(messages[0].stateVersion);
+  });
+
+  it('chunks every snapshot path and replays a heartbeat chunk sequence exactly', async () => {
+    const rin = await createDeveloper('Rin');
+    const sol = await createDeveloper('Sol');
+    await seedReservations(rin, 48);
+    const socket = await connect(rin.developerToken);
+    const solSocket = await connect(sol.developerToken);
+    const initial = collectSnapshotExchange(socket, true);
+    const solInitial = collectSnapshotExchange(solSocket, true);
+    socket.accept();
+    solSocket.accept();
+
+    const initialMessages = await initial;
+    await solInitial;
+    expect(initialMessages[0]?.type).toBe('session.ready');
+    assertSnapshotChunks(initialMessages.slice(1), undefined, 48);
+
+    const snapshotRequestId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+    const requested = collectSnapshotExchange(socket);
+    socket.send(JSON.stringify({
+      protocolVersion: 1,
+      type: 'snapshot.request',
+      requestId: snapshotRequestId
+    }));
+    assertSnapshotChunks(await requested, snapshotRequestId, 48);
+
+    const presenceRequest = JSON.stringify({
+      protocolVersion: 1,
+      type: 'presence.open',
+      requestId: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
+      path: 'Assets/Scenes/Active.unity',
+      branch: 'feature/test',
+      task: 'PP-7'
+    });
+    const rinPresence = collectMessages(socket, 1);
+    const solPresence = collectMessages(solSocket, 1);
+    socket.send(presenceRequest);
+    await Promise.all([rinPresence, solPresence]);
+
+    const leaseRequest = JSON.stringify({
+      protocolVersion: 1,
+      type: 'lease.acquire',
+      requestId: 'ffffffff-ffff-4fff-8fff-ffffffffffff',
+      path: 'Assets/Scenes/Active.unity',
+      branch: 'feature/test',
+      task: 'PP-7'
+    });
+    const rinLease = collectMessages(socket, 1);
+    const solLease = collectMessages(solSocket, 1);
+    socket.send(leaseRequest);
+    await Promise.all([rinLease, solLease]);
+
+    const heartbeatRequest = JSON.stringify({
+      protocolVersion: 1,
+      type: 'heartbeat',
+      requestId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
+    });
+    const firstHeartbeat = collectHeartbeatExchange(socket, 2);
+    const solHeartbeat = collectMessages(solSocket, 2);
+    socket.send(heartbeatRequest);
+    const [firstHeartbeatMessages, solBroadcasts] = await Promise.all([
+      firstHeartbeat,
+      solHeartbeat
+    ]);
+    const chunkCount = (firstHeartbeatMessages[0] as SnapshotChunk).chunkCount;
+    const firstHeartbeatChunks = firstHeartbeatMessages.slice(0, chunkCount);
+    const firstBroadcasts = firstHeartbeatMessages.slice(chunkCount);
+    assertSnapshotChunks(firstHeartbeatChunks, 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 49, 1);
+    expect(firstBroadcasts.map(({ type }) => type)).toEqual([
+      'presence.updated',
+      'lease.updated'
+    ]);
+    expect(solBroadcasts).toEqual(firstBroadcasts);
+
+    const replayedHeartbeat = collectSnapshotExchange(socket);
+    const solReplay = collectMessages(solSocket, 1);
+    socket.send(heartbeatRequest);
+    expect(await replayedHeartbeat).toEqual(firstHeartbeatChunks);
+    expect(await solReplay).toEqual([]);
   });
 
   it('routes a client mutation without a client state version and broadcasts the transition', async () => {
@@ -302,6 +398,9 @@ describe('coordination WebSocket synchronization', () => {
       protocolVersion: 1,
       type: 'snapshot',
       stateVersion: 2,
+      snapshotId: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+      chunkIndex: 0,
+      chunkCount: 1,
       presence: [],
       leases: [],
       serverTime: '2026-08-06T00:00:00.000Z'
@@ -352,6 +451,59 @@ describe('coordination WebSocket synchronization', () => {
     })]);
     expect(solSocket.readyState).toBe(WebSocket.OPEN);
     expect(solReady.connectionId).not.toBe(rinReady.connectionId);
+  });
+
+  it('revokes a developer reservation, broadcasts its release, and advances shared state', async () => {
+    const rin = await createDeveloper('Rin');
+    const sol = await createDeveloper('Sol');
+    const rinSocket = await connect(rin.developerToken);
+    const solSocket = await connect(sol.developerToken);
+    const rinInitial = collectMessages(rinSocket, 2);
+    const solInitial = collectMessages(solSocket, 2);
+    rinSocket.accept();
+    solSocket.accept();
+    await Promise.all([rinInitial, solInitial]);
+
+    const rinReserved = collectMessages(rinSocket, 1);
+    const solReserved = collectMessages(solSocket, 1);
+    rinSocket.send(JSON.stringify({
+      protocolVersion: 1,
+      type: 'lease.reserve',
+      requestId: '99999999-9999-4999-8999-999999999999',
+      path: 'Assets/Scenes/Reserved.unity',
+      branch: 'feature/test',
+      task: 'PP-7'
+    }));
+    await Promise.all([rinReserved, solReserved]);
+    const before = await runInDurableObject(projectObject(), (_instance, state) => {
+      return state.storage.sql.exec<{ value: number }>(
+        "SELECT value FROM coordination_state WHERE key = 'state_version'"
+      ).one().value;
+    });
+
+    const rinClosed = collectClose(rinSocket);
+    const solRelease = collectMessages(solSocket, 1);
+    const response = await SELF.fetch(`${projectUrl}/developers/${rin.developerId}`, {
+      method: 'DELETE',
+      headers: { authorization: `Bearer ${adminToken}` }
+    });
+    const after = await runInDurableObject(projectObject(), (_instance, state) => ({
+      reservations: state.storage.sql.exec<{ count: number }>(
+        'SELECT COUNT(*) AS count FROM reservations WHERE developer_id = ?',
+        rin.developerId
+      ).one().count,
+      stateVersion: state.storage.sql.exec<{ value: number }>(
+        "SELECT value FROM coordination_state WHERE key = 'state_version'"
+      ).one().value
+    }));
+
+    expect(response.status).toBe(204);
+    expect(await rinClosed).toMatchObject({ code: 4003 });
+    expect(await solRelease).toEqual([expect.objectContaining({
+      type: 'lease.released',
+      path: 'assets/scenes/reserved.unity'
+    })]);
+    expect(after).toEqual({ reservations: 0, stateVersion: before + 1 });
   });
 });
 
@@ -416,6 +568,115 @@ function collectMessages(socket: WebSocket, expectedCount: number): Promise<Serv
       }
     });
   });
+}
+
+function collectSnapshotExchange(
+  socket: WebSocket,
+  includesReady = false
+): Promise<ServerEnvelope[]> {
+  return new Promise((resolve) => {
+    const messages: ServerEnvelope[] = [];
+    const finish = (): void => {
+      clearTimeout(timeout);
+      socket.removeEventListener('message', onMessage);
+      resolve([...messages]);
+    };
+    const onMessage = (event: MessageEvent): void => {
+      const message = JSON.parse(event.data as string) as ServerEnvelope;
+      messages.push(message);
+      const chunks = messages.filter(({ type }) => type === 'snapshot') as SnapshotChunk[];
+      if (
+        chunks.length > 0
+        && chunks[0].chunkCount !== undefined
+        && chunks.length === chunks[0].chunkCount
+        && (!includesReady || messages[0]?.type === 'session.ready')
+      ) {
+        finish();
+      }
+    };
+    const timeout = setTimeout(finish, 250);
+    socket.addEventListener('message', onMessage);
+  });
+}
+
+function assertSnapshotChunks(
+  messages: ServerEnvelope[],
+  requestId: string | undefined,
+  expectedLeaseCount: number,
+  expectedPresenceCount = 0
+): void {
+  const chunks = messages as SnapshotChunk[];
+  expect(chunks.length).toBeGreaterThan(1);
+  const first = chunks[0];
+  expect(first).toBeDefined();
+  expect(chunks.map(({ type }) => type)).toEqual(chunks.map(() => 'snapshot'));
+  expect(chunks.map(({ chunkIndex }) => chunkIndex)).toEqual(
+    Array.from({ length: chunks.length }, (_, index) => index)
+  );
+  expect(chunks.every(({ chunkCount }) => chunkCount === chunks.length)).toBe(true);
+  expect(chunks.every(({ snapshotId }) => snapshotId === first.snapshotId)).toBe(true);
+  expect(chunks.every(({ stateVersion }) => stateVersion === first.stateVersion)).toBe(true);
+  expect(chunks.every(({ serverTime }) => serverTime === first.serverTime)).toBe(true);
+  expect(chunks.every((chunk) => chunk.requestId === requestId)).toBe(true);
+  expect(chunks.every((chunk) => utf8Bytes(JSON.stringify(chunk)) <= MaximumEnvelopeBytes)).toBe(true);
+  expect(chunks.flatMap(({ presence }) => presence)).toHaveLength(expectedPresenceCount);
+  expect(chunks.flatMap(({ leases }) => leases)).toHaveLength(expectedLeaseCount);
+}
+
+function collectHeartbeatExchange(
+  socket: WebSocket,
+  expectedBroadcastCount: number
+): Promise<ServerEnvelope[]> {
+  return new Promise((resolve) => {
+    const messages: ServerEnvelope[] = [];
+    const finish = (): void => {
+      clearTimeout(timeout);
+      socket.removeEventListener('message', onMessage);
+      resolve([...messages]);
+    };
+    const onMessage = (event: MessageEvent): void => {
+      messages.push(JSON.parse(event.data as string) as ServerEnvelope);
+      const first = messages[0] as SnapshotChunk | undefined;
+      if (
+        first?.type === 'snapshot'
+        && messages.length === first.chunkCount + expectedBroadcastCount
+      ) {
+        finish();
+      }
+    };
+    const timeout = setTimeout(finish, 250);
+    socket.addEventListener('message', onMessage);
+  });
+}
+
+async function seedReservations(
+  developer: { developerId: string },
+  count: number
+): Promise<void> {
+  await runInDurableObject(projectObject(), (_instance, state) => {
+    for (let index = 0; index < count; index += 1) {
+      const path = `assets/scenes/chunk-${index.toString().padStart(3, '0')}.unity`;
+      state.storage.sql.exec(`
+        INSERT INTO reservations (
+          reservation_id, canonical_path, display_path, developer_id, display_name, branch, task,
+          created_at, expires_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      crypto.randomUUID(),
+      path,
+      path,
+      developer.developerId,
+      'Rin',
+      `feature/${'b'.repeat(240)}`,
+      't'.repeat(256),
+      '2026-08-08T00:00:00.000Z',
+      '2099-08-08T00:00:00.000Z');
+    }
+  });
+}
+
+function utf8Bytes(value: string): number {
+  return new TextEncoder().encode(value).byteLength;
 }
 
 function collectClose(socket: WebSocket): Promise<CloseEvent | undefined> {

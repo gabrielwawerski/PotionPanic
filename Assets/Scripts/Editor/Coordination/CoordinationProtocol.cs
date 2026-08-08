@@ -51,6 +51,9 @@ namespace PotionPanic.Editor.Coordination
     public string type;
     public long stateVersion;
     public string requestId;
+    public string snapshotId;
+    public int chunkIndex;
+    public int chunkCount;
     public string developerId;
     public string displayName;
     public string serverTime;
@@ -200,8 +203,8 @@ namespace PotionPanic.Editor.Coordination
       {
         var parsed = JsonUtility.FromJson<CoordinationServerEnvelope>(json);
         if (parsed == null || parsed.protocolVersion != Version || !Contains(ServerMessageTypes, parsed.type)
-          || parsed.stateVersion < 0 || !HasJsonField(json, "stateVersion")
-          || (HasJsonField(json, "requestId") && !IsUuidV4(parsed.requestId)))
+          || parsed.stateVersion < 0 || !HasTopLevelJsonField(json, "stateVersion")
+          || (HasTopLevelJsonField(json, "requestId") && !IsUuidV4(parsed.requestId)))
         {
           error = "Server envelope has invalid required envelope fields.";
           return false;
@@ -233,7 +236,10 @@ namespace PotionPanic.Editor.Coordination
               envelope.connectionId)
             && envelope.leaseTtlSeconds > 0 && envelope.reservationTtlSeconds > 0;
         case "snapshot":
-          return HasPresenceRecords(envelope.presence) && HasLeaseRecords(envelope.leases)
+          return IsUuidV4(envelope.snapshotId) && HasTopLevelJsonField(json, "chunkIndex")
+            && HasTopLevelJsonField(json, "chunkCount") && envelope.chunkIndex >= 0
+            && envelope.chunkCount > 0 && envelope.chunkIndex < envelope.chunkCount
+            && HasPresenceRecords(envelope.presence) && HasLeaseRecords(envelope.leases)
             && HasStrings(envelope.serverTime);
         case "presence.updated":
           return HasPresenceRecords(envelope.presence);
@@ -242,8 +248,10 @@ namespace PotionPanic.Editor.Coordination
         case "lease.granted":
           return HasStrings(envelope.path) && IsLeaseRecord(envelope.lease);
         case "lease.denied":
-          return HasStrings(envelope.path, envelope.code) && HasJsonField(json, "currentLease")
-            && (IsJsonNullField(json, "currentLease") || IsLeaseRecord(envelope.currentLease));
+          return HasStrings(envelope.path, envelope.code)
+            && HasTopLevelJsonField(json, "currentLease")
+            && (IsTopLevelJsonNullField(json, "currentLease")
+              || IsLeaseRecord(envelope.currentLease));
         case "lease.updated":
           return IsLeaseRecord(envelope.lease);
         case "lease.released":
@@ -280,16 +288,288 @@ namespace PotionPanic.Editor.Coordination
         RegexOptions.CultureInvariant);
     }
 
-    private static bool HasJsonField(string json, string field)
+    private static bool HasTopLevelJsonField(string json, string field)
     {
-      return Regex.IsMatch(json, "\"" + Regex.Escape(field) + "\"\\s*:",
-        RegexOptions.CultureInvariant);
+      return TryFindTopLevelJsonField(json, field, out _);
     }
 
-    private static bool IsJsonNullField(string json, string field)
+    private static bool IsTopLevelJsonNullField(string json, string field)
     {
-      return Regex.IsMatch(json, "\"" + Regex.Escape(field) + "\"\\s*:\\s*null(?:\\s*[,}])",
-        RegexOptions.CultureInvariant);
+      if (!TryFindTopLevelJsonField(json, field, out var valueIndex)
+        || valueIndex + 4 > json.Length
+        || string.CompareOrdinal(json, valueIndex, "null", 0, 4) != 0)
+      {
+        return false;
+      }
+
+      valueIndex += 4;
+      SkipJsonWhitespace(json, ref valueIndex);
+      return valueIndex < json.Length
+        && (json[valueIndex] == ',' || json[valueIndex] == '}');
+    }
+
+    private static bool TryFindTopLevelJsonField(
+      string json,
+      string field,
+      out int valueIndex)
+    {
+      valueIndex = -1;
+      var index = 0;
+      SkipJsonWhitespace(json, ref index);
+      if (index >= json.Length || json[index] != '{')
+      {
+        return false;
+      }
+
+      index++;
+      while (index < json.Length)
+      {
+        SkipJsonWhitespace(json, ref index);
+        if (index < json.Length && json[index] == '}')
+        {
+          return false;
+        }
+
+        if (!TryReadJsonString(json, ref index, out var propertyName))
+        {
+          return false;
+        }
+
+        SkipJsonWhitespace(json, ref index);
+        if (index >= json.Length || json[index] != ':')
+        {
+          return false;
+        }
+
+        index++;
+        SkipJsonWhitespace(json, ref index);
+        if (string.Equals(propertyName, field, StringComparison.Ordinal))
+        {
+          valueIndex = index;
+          return true;
+        }
+
+        if (!TrySkipJsonValue(json, ref index))
+        {
+          return false;
+        }
+
+        SkipJsonWhitespace(json, ref index);
+        if (index >= json.Length || json[index] == '}')
+        {
+          return false;
+        }
+
+        if (json[index] != ',')
+        {
+          return false;
+        }
+
+        index++;
+      }
+
+      return false;
+    }
+
+    private static bool TryReadJsonString(string json, ref int index, out string value)
+    {
+      value = null;
+      if (index >= json.Length || json[index] != '"')
+      {
+        return false;
+      }
+
+      index++;
+      var segmentStart = index;
+      StringBuilder builder = null;
+      while (index < json.Length)
+      {
+        var character = json[index];
+        if (character == '"')
+        {
+          if (builder == null)
+          {
+            value = json.Substring(segmentStart, index - segmentStart);
+          }
+          else
+          {
+            builder.Append(json, segmentStart, index - segmentStart);
+            value = builder.ToString();
+          }
+
+          index++;
+          return true;
+        }
+
+        if (character != '\\')
+        {
+          index++;
+          continue;
+        }
+
+        if (builder == null)
+        {
+          builder = new StringBuilder();
+        }
+        builder.Append(json, segmentStart, index - segmentStart);
+        index++;
+        if (index >= json.Length || !TryAppendJsonEscape(json, ref index, builder))
+        {
+          return false;
+        }
+        segmentStart = index;
+      }
+
+      return false;
+    }
+
+    private static bool TryAppendJsonEscape(
+      string json,
+      ref int index,
+      StringBuilder builder)
+    {
+      var escape = json[index++];
+      switch (escape)
+      {
+        case '"':
+        case '\\':
+        case '/':
+          builder.Append(escape);
+          return true;
+        case 'b':
+          builder.Append('\b');
+          return true;
+        case 'f':
+          builder.Append('\f');
+          return true;
+        case 'n':
+          builder.Append('\n');
+          return true;
+        case 'r':
+          builder.Append('\r');
+          return true;
+        case 't':
+          builder.Append('\t');
+          return true;
+        case 'u':
+          return TryAppendJsonUnicodeEscape(json, ref index, builder);
+        default:
+          return false;
+      }
+    }
+
+    private static bool TryAppendJsonUnicodeEscape(
+      string json,
+      ref int index,
+      StringBuilder builder)
+    {
+      if (index + 4 > json.Length)
+      {
+        return false;
+      }
+
+      var codeUnit = 0;
+      for (var offset = 0; offset < 4; offset++)
+      {
+        var value = HexValue(json[index + offset]);
+        if (value < 0)
+        {
+          return false;
+        }
+
+        codeUnit = codeUnit * 16 + value;
+      }
+
+      builder.Append((char)codeUnit);
+      index += 4;
+      return true;
+    }
+
+    private static int HexValue(char value)
+    {
+      if (value >= '0' && value <= '9')
+      {
+        return value - '0';
+      }
+      if (value >= 'a' && value <= 'f')
+      {
+        return value - 'a' + 10;
+      }
+      if (value >= 'A' && value <= 'F')
+      {
+        return value - 'A' + 10;
+      }
+      return -1;
+    }
+
+    private static bool TrySkipJsonValue(string json, ref int index)
+    {
+      if (index >= json.Length)
+      {
+        return false;
+      }
+
+      if (json[index] == '"')
+      {
+        return TryReadJsonString(json, ref index, out _);
+      }
+
+      if (json[index] == '{' || json[index] == '[')
+      {
+        return TrySkipJsonComposite(json, ref index);
+      }
+
+      var start = index;
+      while (index < json.Length && json[index] != ',' && json[index] != '}'
+        && json[index] != ']')
+      {
+        index++;
+      }
+      return index > start;
+    }
+
+    private static bool TrySkipJsonComposite(string json, ref int index)
+    {
+      var depth = 0;
+      while (index < json.Length)
+      {
+        if (json[index] == '"')
+        {
+          if (!TryReadJsonString(json, ref index, out _))
+          {
+            return false;
+          }
+          continue;
+        }
+
+        if (json[index] == '{' || json[index] == '[')
+        {
+          depth++;
+        }
+        else if (json[index] == '}' || json[index] == ']')
+        {
+          depth--;
+          index++;
+          if (depth == 0)
+          {
+            return true;
+          }
+          continue;
+        }
+
+        index++;
+      }
+
+      return false;
+    }
+
+    private static void SkipJsonWhitespace(string json, ref int index)
+    {
+      while (index < json.Length && (json[index] == ' ' || json[index] == '\t'
+        || json[index] == '\r' || json[index] == '\n'))
+      {
+        index++;
+      }
     }
 
     private static bool IsUuidV4(string requestId)

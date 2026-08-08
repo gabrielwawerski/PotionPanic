@@ -9,6 +9,8 @@ namespace PotionPanic.Tests.EditMode.Coordination
 {
   public sealed class CoordinationServiceTests
   {
+    private const string SnapshotId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    private const string OtherSnapshotId = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
     private static readonly CoordinationConfig Configuration = new CoordinationConfig
     {
       schemaVersion = 1,
@@ -343,12 +345,501 @@ namespace PotionPanic.Tests.EditMode.Coordination
       await service.ShutdownAsync();
     }
 
+    [Test]
+    public async Task CorrelatedSnapshotAppliesAtomicallyAndCompletesOnlyOnce()
+    {
+      var socket = new FakeWebSocketClient();
+      var service = CreateService(Credentials(), new FakeHttpClient(), socket);
+      var snapshots = 0;
+      var completions = 0;
+      var presenceUpdates = 0;
+      CoordinationServerEnvelope received = null;
+      service.SnapshotReceived += envelope =>
+      {
+        snapshots++;
+        received = envelope;
+      };
+      service.PresenceReceived += _ => presenceUpdates++;
+      service.RequestCompleted += _ => completions++;
+
+      await service.ConnectAsync();
+      RaiseReady(socket, 5);
+      Assert.That(service.TryRequestSnapshot(out var request), Is.True);
+
+      var second = SnapshotChunkJson(SnapshotId, 1, 2, 8, request.RequestId);
+      var first = SnapshotChunkJson(SnapshotId, 0, 2, 8, request.RequestId);
+      socket.RaiseMessage(second);
+
+      Assert.That(snapshots, Is.Zero);
+      Assert.That(completions, Is.Zero);
+      socket.RaiseMessage(PresenceUpdateJson(6));
+      Assert.That(presenceUpdates, Is.EqualTo(1));
+
+      socket.RaiseMessage(first);
+
+      Assert.That(snapshots, Is.EqualTo(1));
+      Assert.That(completions, Is.EqualTo(1));
+      Assert.That(received.presence, Has.Length.EqualTo(2));
+      Assert.That(received.presence[0].path, Is.EqualTo("assets/chunk-0.asset"));
+      Assert.That(received.presence[1].path, Is.EqualTo("assets/chunk-1.asset"));
+      socket.RaiseMessage(PresenceUpdateJson(7));
+      Assert.That(presenceUpdates, Is.EqualTo(1));
+
+      socket.RaiseMessage(second);
+      socket.RaiseMessage(first);
+
+      Assert.That(completions, Is.EqualTo(1));
+      await service.ShutdownAsync();
+    }
+
+    [Test]
+    public async Task IncompleteSnapshotDoesNotPublishApplyOrComplete()
+    {
+      var socket = new FakeWebSocketClient();
+      var service = CreateService(Credentials(), new FakeHttpClient(), socket);
+      var snapshots = 0;
+      var completions = 0;
+      var presenceUpdates = 0;
+      service.SnapshotReceived += _ => snapshots++;
+      service.RequestCompleted += _ => completions++;
+      service.PresenceReceived += _ => presenceUpdates++;
+
+      await service.ConnectAsync();
+      RaiseReady(socket, 5);
+      Assert.That(service.TryRequestSnapshot(out var request), Is.True);
+
+      socket.RaiseMessage(SnapshotChunkJson(SnapshotId, 0, 2, 8, request.RequestId));
+
+      Assert.That(snapshots, Is.Zero);
+      Assert.That(completions, Is.Zero);
+      socket.RaiseMessage(PresenceUpdateJson(6));
+      Assert.That(presenceUpdates, Is.EqualTo(1));
+      await service.ShutdownAsync();
+    }
+
+    [Test]
+    public async Task StaleCompletedSnapshotCompletesOnceWithoutPublishingState()
+    {
+      var socket = new FakeWebSocketClient();
+      var service = CreateService(Credentials(), new FakeHttpClient(), socket);
+      var snapshots = 0;
+      var presenceUpdates = 0;
+      var completions = new List<CoordinationRequestCompletion>();
+      service.SnapshotReceived += _ => snapshots++;
+      service.PresenceReceived += _ => presenceUpdates++;
+      service.RequestCompleted += completions.Add;
+
+      await service.ConnectAsync();
+      RaiseReady(socket, 8);
+      Assert.That(service.TryRequestSnapshot(out var request), Is.True);
+      var first = SnapshotChunkJson(SnapshotId, 0, 2, 7, request.RequestId);
+      var second = SnapshotChunkJson(SnapshotId, 1, 2, 7, request.RequestId);
+
+      socket.RaiseMessage(second);
+      socket.RaiseMessage(first);
+
+      Assert.That(snapshots, Is.Zero);
+      Assert.That(completions, Has.Count.EqualTo(1));
+      Assert.That(completions[0].IsStaleReplay, Is.True);
+      socket.RaiseMessage(PresenceUpdateJson(7));
+      Assert.That(presenceUpdates, Is.Zero);
+
+      socket.RaiseMessage(second);
+      socket.RaiseMessage(first);
+
+      Assert.That(completions, Has.Count.EqualTo(1));
+      await service.ShutdownAsync();
+    }
+
+    [Test]
+    public async Task UnrelatedStateMessageDoesNotDiscardAPartialSnapshot()
+    {
+      var socket = new FakeWebSocketClient();
+      var service = CreateService(Credentials(), new FakeHttpClient(), socket);
+      var snapshots = 0;
+      var presenceUpdates = 0;
+      service.SnapshotReceived += _ => snapshots++;
+      service.PresenceReceived += _ => presenceUpdates++;
+
+      await service.ConnectAsync();
+      RaiseReady(socket, 5);
+      socket.RaiseMessage(SnapshotChunkJson(SnapshotId, 0, 2, 8, null));
+      socket.RaiseMessage(PresenceUpdateJson(6));
+      socket.RaiseMessage(SnapshotChunkJson(SnapshotId, 1, 2, 8, null));
+
+      Assert.That(snapshots, Is.EqualTo(1));
+      Assert.That(presenceUpdates, Is.EqualTo(1));
+      socket.RaiseMessage(PresenceUpdateJson(7));
+      Assert.That(presenceUpdates, Is.EqualTo(1));
+      await service.ShutdownAsync();
+    }
+
+    [Test]
+    public async Task RejectedSnapshotPublishesTheAssemblerErrorWithoutApplyingState()
+    {
+      var socket = new FakeWebSocketClient();
+      var service = CreateService(Credentials(), new FakeHttpClient(), socket);
+      var errors = new List<CoordinationServerEnvelope>();
+      var snapshots = 0;
+      var presenceUpdates = 0;
+      service.ErrorReceived += errors.Add;
+      service.SnapshotReceived += _ => snapshots++;
+      service.PresenceReceived += _ => presenceUpdates++;
+
+      await service.ConnectAsync();
+      RaiseReady(socket, 5);
+      socket.RaiseMessage(SnapshotChunkJson(SnapshotId, 0, 2, 8, null, "first"));
+      socket.RaiseMessage(SnapshotChunkJson(SnapshotId, 0, 2, 8, null, "conflict"));
+
+      Assert.That(errors, Has.Exactly(1).Matches<CoordinationServerEnvelope>(
+        envelope => envelope.code == "snapshot_duplicate_inconsistent"));
+      Assert.That(snapshots, Is.Zero);
+      socket.RaiseMessage(PresenceUpdateJson(6));
+      Assert.That(presenceUpdates, Is.EqualTo(1));
+      await service.ShutdownAsync();
+    }
+
+    [Test]
+    public async Task SocketCloseDiscardsAPartialSnapshot()
+    {
+      var socket = new FakeWebSocketClient();
+      var service = CreateService(Credentials(), new FakeHttpClient(), socket);
+      var snapshots = 0;
+      service.SnapshotReceived += _ => snapshots++;
+
+      await service.ConnectAsync();
+      RaiseReady(socket, 5);
+      socket.RaiseMessage(SnapshotChunkJson(SnapshotId, 0, 2, 8, null));
+      socket.RaiseClosed(4003, "revoked");
+      socket.RaiseMessage(SnapshotChunkJson(SnapshotId, 1, 2, 8, null));
+
+      Assert.That(snapshots, Is.Zero);
+      await service.ShutdownAsync();
+    }
+
+    [Test]
+    public async Task CredentialRemovalDiscardsAPartialSnapshot()
+    {
+      var socket = new FakeWebSocketClient();
+      var service = CreateService(Credentials(), new FakeHttpClient(), socket);
+      var snapshots = 0;
+      service.SnapshotReceived += _ => snapshots++;
+
+      await service.ConnectAsync();
+      RaiseReady(socket, 5);
+      socket.RaiseMessage(SnapshotChunkJson(SnapshotId, 0, 2, 8, null));
+      await service.ForgetCredentialsAsync();
+      socket.RaiseMessage(SnapshotChunkJson(SnapshotId, 1, 2, 8, null));
+
+      Assert.That(snapshots, Is.Zero);
+      await service.ShutdownAsync();
+    }
+
+    [Test]
+    public async Task DisablingTheServiceDiscardsAPartialSnapshot()
+    {
+      var socket = new FakeWebSocketClient();
+      var service = CreateService(Credentials(), new FakeHttpClient(), socket);
+      var snapshots = 0;
+      service.SnapshotReceived += _ => snapshots++;
+
+      await service.ConnectAsync();
+      RaiseReady(socket, 5);
+      socket.RaiseMessage(SnapshotChunkJson(SnapshotId, 0, 2, 8, null));
+      await service.SetDisabledAsync(true);
+      socket.RaiseMessage(SnapshotChunkJson(SnapshotId, 1, 2, 8, null));
+
+      Assert.That(snapshots, Is.Zero);
+      await service.ShutdownAsync();
+    }
+
+    [Test]
+    public async Task ShutdownDiscardsAPartialSnapshotBeforeQueuedMessagesApply()
+    {
+      var dispatcher = new QueuedMainThreadDispatcher();
+      var socket = new FakeWebSocketClient();
+      var service = CreateService(Credentials(), new FakeHttpClient(), socket,
+        dispatcher: dispatcher);
+      var snapshots = 0;
+      service.SnapshotReceived += _ => snapshots++;
+
+      await service.ConnectAsync();
+      RaiseReady(socket, 5);
+      dispatcher.ExecutePending();
+      socket.RaiseMessage(SnapshotChunkJson(SnapshotId, 0, 2, 8, null));
+      dispatcher.ExecutePending();
+      socket.RaiseMessage(SnapshotChunkJson(SnapshotId, 1, 2, 8, null));
+
+      await service.ShutdownAsync();
+      dispatcher.ExecutePending();
+
+      Assert.That(snapshots, Is.Zero);
+    }
+
+    [TestCase("socket-close")]
+    [TestCase("credential-removal")]
+    [TestCase("disable")]
+    [TestCase("shutdown")]
+    public async Task LifecycleInvalidationDropsAllQueuedSnapshotChunks(string transition)
+    {
+      var dispatcher = new QueuedMainThreadDispatcher();
+      var socket = new FakeWebSocketClient();
+      var service = CreateService(Credentials(), new FakeHttpClient(), socket,
+        dispatcher: dispatcher);
+      var snapshots = 0;
+      var completions = 0;
+      service.SnapshotReceived += _ => snapshots++;
+      service.RequestCompleted += _ => completions++;
+
+      await service.ConnectAsync();
+      RaiseReady(socket, 5);
+      dispatcher.ExecutePending();
+      Assert.That(service.TryRequestSnapshot(out var request), Is.True);
+      socket.RaiseMessage(SnapshotChunkJson(SnapshotId, 0, 2, 8, request.RequestId));
+      socket.RaiseMessage(SnapshotChunkJson(SnapshotId, 1, 2, 8, request.RequestId));
+
+      switch (transition)
+      {
+        case "socket-close":
+          socket.RaiseClosed(4003, "revoked");
+          break;
+        case "credential-removal":
+          await service.ForgetCredentialsAsync();
+          break;
+        case "disable":
+          await service.SetDisabledAsync(true);
+          break;
+        case "shutdown":
+          await service.ShutdownAsync();
+          break;
+      }
+      dispatcher.ExecutePending();
+
+      Assert.That(snapshots, Is.Zero, transition);
+      Assert.That(completions, Is.Zero, transition);
+      await service.ShutdownAsync();
+    }
+
+    [Test]
+    public async Task CurrentGenerationProcessesSnapshotsAfterReconnect()
+    {
+      var dispatcher = new QueuedMainThreadDispatcher();
+      var socket = new FakeWebSocketClient();
+      var service = CreateService(Credentials(), new FakeHttpClient(), socket,
+        dispatcher: dispatcher);
+      var snapshots = 0;
+      var completions = new List<CoordinationRequestCompletion>();
+      service.SnapshotReceived += _ => snapshots++;
+      service.RequestCompleted += completions.Add;
+
+      await service.ConnectAsync();
+      RaiseReady(socket, 5);
+      dispatcher.ExecutePending();
+      Assert.That(service.TryRequestSnapshot(out var staleRequest), Is.True);
+      socket.RaiseMessage(SnapshotChunkJson(
+        SnapshotId, 0, 2, 8, staleRequest.RequestId));
+      socket.RaiseMessage(SnapshotChunkJson(
+        SnapshotId, 1, 2, 8, staleRequest.RequestId));
+      socket.RaiseClosed(4001, "expired");
+      dispatcher.ExecutePending();
+      await Task.Yield();
+
+      Assert.That(snapshots, Is.Zero);
+      Assert.That(completions, Is.Empty);
+      RaiseReady(socket, 9);
+      dispatcher.ExecutePending();
+      Assert.That(service.TryRequestSnapshot(out var currentRequest), Is.True);
+      socket.RaiseMessage(SnapshotChunkJson(
+        OtherSnapshotId, 1, 2, 10, currentRequest.RequestId));
+      socket.RaiseMessage(SnapshotChunkJson(
+        OtherSnapshotId, 0, 2, 10, currentRequest.RequestId));
+      dispatcher.ExecutePending();
+
+      Assert.That(snapshots, Is.EqualTo(1));
+      Assert.That(completions, Has.Count.EqualTo(1));
+      Assert.That(completions[0].Request, Is.SameAs(currentRequest));
+      await service.ShutdownAsync();
+    }
+
+    [TestCase("credential-removal")]
+    [TestCase("disable")]
+    [TestCase("shutdown")]
+    public async Task MessagesReceivedWhileLifecycleCloseIsPendingAreDropped(
+      string transition)
+    {
+      var dispatcher = new QueuedMainThreadDispatcher();
+      var socket = new FakeWebSocketClient { HoldClose = true };
+      var service = CreateService(Credentials(), new FakeHttpClient(), socket,
+        dispatcher: dispatcher);
+      var snapshots = 0;
+      var completions = 0;
+      service.SnapshotReceived += _ => snapshots++;
+      service.RequestCompleted += _ => completions++;
+
+      await service.ConnectAsync();
+      RaiseReady(socket, 5);
+      dispatcher.ExecutePending();
+      Assert.That(service.TryRequestSnapshot(out var request), Is.True);
+      QueueSnapshot(socket, SnapshotId, 8, request.RequestId);
+
+      Task transitionTask;
+      switch (transition)
+      {
+        case "credential-removal":
+          transitionTask = service.ForgetCredentialsAsync();
+          break;
+        case "disable":
+          transitionTask = service.SetDisabledAsync(true);
+          break;
+        default:
+          transitionTask = service.ShutdownAsync();
+          break;
+      }
+      await socket.CloseStarted.Task;
+
+      QueueSnapshot(socket, OtherSnapshotId, 9, request.RequestId);
+      dispatcher.ExecutePending();
+
+      Assert.That(snapshots, Is.Zero, transition);
+      Assert.That(completions, Is.Zero, transition);
+      socket.ReleaseClose();
+      await transitionTask;
+      await service.ShutdownAsync();
+    }
+
+    [Test]
+    public async Task MessagesReceivedAfterSpontaneousCloseAreDroppedBeforeReconnect()
+    {
+      var dispatcher = new QueuedMainThreadDispatcher();
+      var socket = new FakeWebSocketClient();
+      var service = CreateService(Credentials(), new FakeHttpClient(), socket,
+        dispatcher: dispatcher);
+      var snapshots = 0;
+      var completions = 0;
+      service.SnapshotReceived += _ => snapshots++;
+      service.RequestCompleted += _ => completions++;
+
+      await service.ConnectAsync();
+      RaiseReady(socket, 5);
+      dispatcher.ExecutePending();
+      Assert.That(service.TryRequestSnapshot(out var request), Is.True);
+      QueueSnapshot(socket, SnapshotId, 8, request.RequestId);
+      socket.RaiseClosed(4003, "revoked");
+      QueueSnapshot(socket, OtherSnapshotId, 9, request.RequestId);
+
+      dispatcher.ExecutePending();
+
+      Assert.That(snapshots, Is.Zero);
+      Assert.That(completions, Is.Zero);
+      await service.ShutdownAsync();
+    }
+
+    [Test]
+    public async Task FailedConnectionDisablesSocketMessageAcceptance()
+    {
+      var dispatcher = new QueuedMainThreadDispatcher();
+      var socket = new FakeWebSocketClient
+      {
+        ConnectException = new InvalidOperationException("connect failed")
+      };
+      var service = CreateService(Credentials(), new FakeHttpClient(), socket,
+        dispatcher: dispatcher, delay: new ControlledDelay());
+      var snapshots = 0;
+      service.SnapshotReceived += _ => snapshots++;
+
+      await service.ConnectAsync();
+      socket.RaiseMessage(SnapshotChunkJson(SnapshotId, 0, 1, 8, null));
+      dispatcher.ExecutePending();
+
+      Assert.That(snapshots, Is.Zero);
+      await service.ShutdownAsync();
+    }
+
+    [Test]
+    public async Task ReplacementConnectionRejectsMessagesUntilPriorCloseCompletes()
+    {
+      var dispatcher = new QueuedMainThreadDispatcher();
+      var socket = new FakeWebSocketClient();
+      var service = CreateService(Credentials(), new FakeHttpClient(), socket,
+        dispatcher: dispatcher);
+      var snapshots = 0;
+      var completions = new List<CoordinationRequestCompletion>();
+      service.SnapshotReceived += _ => snapshots++;
+      service.RequestCompleted += completions.Add;
+
+      await service.ConnectAsync();
+      RaiseReady(socket, 5);
+      dispatcher.ExecutePending();
+      Assert.That(service.TryRequestSnapshot(out var oldRequest), Is.True);
+      QueueSnapshot(socket, SnapshotId, 8, oldRequest.RequestId);
+      socket.HoldClose = true;
+
+      var reconnect = service.ConnectAsync();
+      await socket.CloseStarted.Task;
+      QueueSnapshot(socket, OtherSnapshotId, 9, oldRequest.RequestId);
+      dispatcher.ExecutePending();
+
+      Assert.That(snapshots, Is.Zero);
+      Assert.That(completions, Is.Empty);
+      socket.ReleaseClose();
+      await reconnect;
+      RaiseReady(socket, 9);
+      dispatcher.ExecutePending();
+      Assert.That(service.TryRequestSnapshot(out var currentRequest), Is.True);
+      QueueSnapshot(socket, OtherSnapshotId, 10, currentRequest.RequestId);
+      dispatcher.ExecutePending();
+
+      Assert.That(snapshots, Is.EqualTo(1));
+      Assert.That(completions, Has.Count.EqualTo(1));
+      Assert.That(completions[0].Request, Is.SameAs(currentRequest));
+      await service.ShutdownAsync();
+    }
+
     private static MemoryCredentialStore Credentials()
     {
       var credentials = new MemoryCredentialStore();
       credentials.Write(CoordinationCredentialStore.GetDeveloperTokenTarget("potion-panic"),
         "developer-token");
       return credentials;
+    }
+
+    private static string SnapshotChunkJson(
+      string snapshotId,
+      int chunkIndex,
+      int chunkCount,
+      long stateVersion,
+      string requestId,
+      string marker = null)
+    {
+      var suffix = marker ?? chunkIndex.ToString();
+      var requestField = requestId == null
+        ? string.Empty
+        : ",\"requestId\":\"" + requestId + "\"";
+      return "{\"protocolVersion\":1,\"type\":\"snapshot\",\"snapshotId\":\""
+        + snapshotId + "\",\"chunkIndex\":" + chunkIndex + ",\"chunkCount\":"
+        + chunkCount + ",\"stateVersion\":" + stateVersion + requestField
+        + ",\"serverTime\":\"2026-08-08T00:00:00Z\",\"presence\":[{"
+        + "\"path\":\"assets/chunk-"
+        + suffix + ".asset\",\"displayPath\":\"Assets/Chunk-" + suffix
+        + ".asset\",\"developerId\":\"dev-1\",\"displayName\":\"Rin\","
+        + "\"connectionId\":\"connection-1\",\"branch\":\"feature/chunks\","
+        + "\"task\":\"PP-7\",\"expiresAt\":\"2026-08-08T00:02:00Z\"}],\"leases\":[]}";
+    }
+
+    private static string PresenceUpdateJson(long stateVersion)
+    {
+      return "{\"protocolVersion\":1,\"type\":\"presence.updated\",\"stateVersion\":"
+        + stateVersion + ",\"presence\":[]}";
+    }
+
+    private static void QueueSnapshot(
+      FakeWebSocketClient socket,
+      string snapshotId,
+      long stateVersion,
+      string requestId)
+    {
+      socket.RaiseMessage(SnapshotChunkJson(snapshotId, 0, 2, stateVersion, requestId));
+      socket.RaiseMessage(SnapshotChunkJson(snapshotId, 1, 2, stateVersion, requestId));
     }
 
     private static void RaiseReady(FakeWebSocketClient socket, long stateVersion)
@@ -437,11 +928,30 @@ namespace PotionPanic.Tests.EditMode.Coordination
       public int ConnectCalls { get; private set; }
       public int CloseCalls { get; private set; }
       public Exception SendException;
+      public Exception ConnectException;
+      public bool HoldClose;
+      public TaskCompletionSource<bool> CloseStarted { get; }
+        = new TaskCompletionSource<bool>();
+      private readonly TaskCompletionSource<bool> closeCompletion
+        = new TaskCompletionSource<bool>();
 
-      public Task ConnectAsync(Uri uri, string sessionToken, CancellationToken cancellationToken)
+      public async Task ConnectAsync(
+        Uri uri,
+        string sessionToken,
+        CancellationToken cancellationToken)
       {
         ConnectCalls++;
-        return Task.CompletedTask;
+        if (IsConnected)
+        {
+          await CloseAsync(cancellationToken);
+        }
+
+        if (ConnectException != null)
+        {
+          throw ConnectException;
+        }
+
+        IsConnected = true;
       }
 
       public Task SendAsync(string message, CancellationToken cancellationToken)
@@ -456,12 +966,26 @@ namespace PotionPanic.Tests.EditMode.Coordination
 
       public Task CloseAsync(CancellationToken cancellationToken)
       {
+        IsConnected = false;
         CloseCalls++;
-        return Task.CompletedTask;
+        CloseStarted.TrySetResult(true);
+        return HoldClose ? closeCompletion.Task : Task.CompletedTask;
+      }
+
+      public void ReleaseClose()
+      {
+        HoldClose = false;
+        closeCompletion.TrySetResult(true);
       }
 
       public void RaiseMessage(string message) => MessageReceived?.Invoke(message);
-      public void RaiseClosed(int statusCode, string reason) => Closed?.Invoke(statusCode, reason);
+      public void RaiseClosed(int statusCode, string reason)
+      {
+        IsConnected = false;
+        Closed?.Invoke(statusCode, reason);
+      }
+
+      private bool IsConnected { get; set; }
     }
 
     private sealed class ControlledDelay : ICoordinationDelay
