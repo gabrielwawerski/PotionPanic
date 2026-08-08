@@ -12,11 +12,12 @@ map, not a complete file inventory.
 
 ## Setup And Workflow
 
-- [`onboarding/getting-started.md`](onboarding/getting-started.md): first
-  machine setup, Unity smoke test, docs board startup, and collaboration safety.
-- [`collaboration/team-workflow.md`](collaboration/team-workflow.md): daily
-  workflow, Git rules, Unity protected-file coordination, testing, and
-  documentation ownership.
+- [`onboarding/getting-started.md`](onboarding/getting-started.md): Project
+  Setup for a new machine, including the board, Unity, Rider, smoke test, and
+  Coordination login. Open this before taking a first task.
+- [`collaboration/team-workflow.md`](collaboration/team-workflow.md): Daily
+  Workflow for choosing, executing, testing, reviewing, and handing off work.
+  Open this after Project Setup and before a normal work session.
 
 ## Project Truth
 
@@ -44,12 +45,13 @@ map, not a complete file inventory.
 
 ## Coordination
 
-- [`guides/coordinated-leasing.md`](guides/coordinated-leasing.md): how to use
-  the Unity Coordination window, read lease states, handle outages, and perform
-  operator tasks.
-- `Tools/CoordinationServer/README.md`: Worker verification, local development,
-  manual deployment, token operations, monitoring, outage handling, and secret
-  rotation.
+- [`guides/coordinated-leasing.md`](guides/coordinated-leasing.md): developer
+  tutorial for the Unity Coordination window, its actions and claim states,
+  save conflicts, and the manual fallback. Open this before editing a
+  coordinated scene or when the window needs explanation.
+- [Coordination Server README](https://github.com/gabrielwawerski/PotionPanic/blob/master/Tools/CoordinationServer/README.md): operator-only Worker verification,
+  local development, manual deployment, token operations, monitoring, outage
+  handling, and secret rotation.
 - [`plans/coordinated-file-leasing-system.md`](plans/coordinated-file-leasing-system.md):
   Protocol v1 and durable coordination program contract.
 - [`plans/coordinated-file-leasing-release-acceptance.md`](plans/coordinated-file-leasing-release-acceptance.md):

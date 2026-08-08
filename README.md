@@ -20,10 +20,10 @@ Published read-only docs site:
 Read these in order:
 
 1. `Docs/index.md`
-2. `Docs/ATLAS.md`
-3. `Docs/onboarding/getting-started.md`
-4. `Docs/collaboration/team-workflow.md`
-5. `Docs/board.md`
+2. `Docs/onboarding/getting-started.md` for Project Setup on a new machine
+3. `Docs/collaboration/team-workflow.md` for Daily Workflow
+4. `Docs/board.md`
+5. `Docs/ATLAS.md` when you need to route a recurring question
 6. `Docs/project/game-design.md`
 7. `Docs/project/mvp-scope.md`
 8. `Docs/project/technical-architecture.md`
@@ -47,14 +47,16 @@ work completes.
 ## Documentation Owners
 
 - `Docs/ATLAS.md` routes recurring questions to the owning document.
-- `Docs/onboarding/getting-started.md` owns detailed setup instructions.
-- `Docs/collaboration/team-workflow.md` owns day-to-day process and protected
-  Unity edit coordination.
+- `Docs/onboarding/getting-started.md` owns Project Setup for a first-time
+  contributor.
+- `Docs/collaboration/team-workflow.md` owns Daily Workflow, including task
+  execution, testing, handoff, and shared-file safety.
 - `Docs/project/game-design.md` owns player-facing design.
 - `Docs/project/mvp-scope.md` owns locked MVP scope, milestone order, and
   definition of done.
 - `Docs/project/technical-architecture.md` owns runtime structure.
-- `Docs/guides/coordinated-leasing.md` owns Unity Coordination window usage.
+- `Docs/guides/coordinated-leasing.md` owns Unity Coordination window usage,
+  claim states, save conflicts, and manual fallback.
 - `Tools/CoordinationServer/README.md` owns coordination Worker operations.
 
 ## Docs Commands

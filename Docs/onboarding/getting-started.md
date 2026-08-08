@@ -1,204 +1,123 @@
-# Getting Started
+# Project Setup
 
-This guide is for a first-time collaborator who is new to Unity, Rider, or
-both.
+Complete this guide once on a new machine. You are ready to take work only
+after the final checklist passes. For recurring work after setup, use
+[Daily Workflow](../collaboration/team-workflow.md).
 
-## Install the tools
+## Install the Tools
 
 Install these once on each machine:
 
 - Unity Hub
-- Unity Editor `6000.5.1f1`
+- Unity Editor 6000.5.1f1
 - JetBrains Rider
-- Git
-- Git LFS
+- Git and Git LFS
 - Node.js and npm
 
-## Clone and prep the repo
+## Clone and Prepare the Repository
 
-```powershell
-git clone <repo-url>
-cd PotionPanic
-git lfs install
-git status
-```
+    git clone <repo-url>
+    cd PotionPanic
+    git lfs install
+    git status
 
-Expected result:
+Git status should be clean after the clone. Generated Unity folders such as
+Library/, Temp/, and Logs/ must be absent or ignored.
 
-- `git status` is clean after the clone.
-- Generated folders such as `Library/`, `Temp/`, and `Logs/` are absent or
-  ignored.
+## Open the Docs Board
 
-## Open the project in Unity
+The local board is where the team picks, updates, and tracks tasks.
 
-1. Open Unity Hub.
-2. Add the repo root folder.
-3. Open it with Unity `6000.5.1f1`.
-4. Wait for package import and script compilation to finish.
-5. Confirm the Console has no new compile errors.
+    npm install
+    npm run docs:ui
 
-Repo truth today:
+If the browser does not open, use http://127.0.0.1:6420/PotionPanic/board. The
+published docs site is read-only and suitable for browsing and sharing. See the
+repository [README](https://github.com/gabrielwawerski/PotionPanic/blob/master/README.md)
+for manual server commands and optional Windows startup management.
 
-- The current shared prototype scene is `Assets/Scenes/SampleScene.unity`.
-- `Assets/Scenes/testscene.unity` exists, but do not treat it as the shared
-  milestone scene unless the task says so.
-- `Laboratory.unity` is the planned canonical gameplay scene after
-  Milestone 1.
+## Open the Project in Unity
 
-## Open the code in Rider
+1. Open Unity Hub and add the repository root folder.
+2. Open it with Unity 6000.5.1f1.
+3. Wait for package import and script compilation to finish.
+4. Confirm that the Console has no new compile errors.
 
-1. Open `PotionPanic.sln` in Rider.
-2. If Rider does not pick up Unity context, set Rider as the External Script
-   Editor in Unity.
-3. If the solution looks stale, use Unity's `Open C# Project` action to
-   regenerate project files.
+The current shared prototype scene is Assets/Scenes/SampleScene.unity.
+Assets/Scenes/testscene.unity is not the shared milestone scene unless a task
+explicitly says so. Laboratory.unity is the planned canonical gameplay scene
+after Milestone 1.
 
-Good first checks:
+## Open the Code in Rider
 
-- Rider shows the Unity project without unresolved core references.
-- Changes made in Rider appear back in Unity after focus returns.
+1. Open PotionPanic.sln in Rider.
+2. If Rider lacks Unity context, set Rider as Unity's External Script Editor.
+3. If the solution looks stale, use Unity's Open C# Project action.
 
-## Do a first smoke test
+Rider should show the Unity project without unresolved core references, and
+changes made in Rider should return to Unity after focus changes.
 
-1. In Unity, open `Assets/Scenes/SampleScene.unity`.
-2. Press Play.
-3. Let the scene run long enough to confirm the editor entered Play Mode.
-4. Open the Console and check for new errors.
-5. Stop Play Mode.
+## Run a First Smoke Test
 
-If this fails, do not start feature work yet.
+1. In Unity, open Assets/Scenes/SampleScene.unity.
+2. Press Play and confirm that Play Mode starts cleanly.
+3. Check the Console for new errors.
+4. Stop Play Mode.
 
-## Open the docs board
+Do not start feature work if this fails.
 
-The board is the default place to pick, update, and track tasks. The reusable
-board, sidebar, ticket, plan, and theme tooling comes from the private
-`@gabrielwawerski/docboard` package. PotionPanic owns the `Docs/` markdown
-content, board frontmatter, and thin VitePress adapters.
+## Set Up Collaboration Safety
 
-For human use:
+The Coordination window adds advisory presence and leases for protected scenes.
+It supports the announcement workflow; it does not replace it.
 
-```powershell
-npm install
-npm run docs:ui
-```
+1. Open Window > Potion Panic > Coordination.
+2. Get a developer token from the operator through the approved secret channel.
+3. Enter it only in Unity's credential prompt.
+4. Confirm Connection becomes Connected.
+5. Enter a short Task context.
 
-`npm install` links `@gabrielwawerski/docboard` from the sibling `../Docboard`
-checkout. `npm run docs:ui` uses that package CLI to start the docs server when
-needed and open the editable PotionPanic board.
+Never put a token in local settings, Git, a URL, a ticket, or a log. Follow the
+[Coordinated Leasing Guide](../guides/coordinated-leasing.md) before editing a
+scene and whenever a Coordination control or warning is unfamiliar.
 
-Equivalent manual command:
+If the service is unavailable, use the local Disabled switch only after the
+team agrees to a manual collaboration fallback. Preserve local work, announce
+the protected-file edit, and reconnect after service health is restored.
 
-```powershell
-npm run docs:dev
-```
+## Ready-to-Work Checklist
 
-Open `http://127.0.0.1:6420/PotionPanic/board` if the browser does not open
-automatically.
+You are ready to take a task when:
 
-Published read-only docs site:
+- Unity uses 6000.5.1f1 and opens the project without relevant Console errors.
+- Rider opens PotionPanic.sln with Unity context.
+- Assets/Scenes/SampleScene.unity enters Play Mode cleanly.
+- Git LFS is installed and git status is understood.
+- The local docs board opens.
+- The Coordination window connects with your own credential.
+- You know that scenes, prefabs, ProjectSettings, and package files need an
+  announcement before editing.
 
-- `https://gabrielwawerski.github.io/PotionPanic/`
-- Use it for browsing and sharing the current docs state.
-- Do not expect board or plan edits there to write back to markdown.
-
-If you want Windows sign-in to start the local docs server without opening a
-browser:
-
-```powershell
-npm run docs:startup:install
-```
-
-This installs a per-user Startup shortcut that runs the LAN-accessible server
-with `npm run docs:dev`. Remove it later with:
-
-```powershell
-npm run docs:stop
-npm run docs:startup:uninstall
-```
-
-Use `npm run docs:stop` whenever you want to shut down the background docs
-server without hunting for the process manually.
-
-If you add or rename a Markdown page under the normal docs folders while
-`npm run docs:dev` is running, the auto-generated sidebar should refresh
-without a manual server restart. The top navigation bar is still manually
-curated.
-
-## Configure collaboration safety
-
-The Coordination window provides advisory leases for protected files. Open it
-from `Window > Potion Panic > Coordination`. Advisory leases support the
-existing announcement workflow; they do not replace pre-edit announcements.
-
-If the server is unavailable or invalid, use the local `Disabled` switch. It
-does not delete local work. Preserve your changes, use the manual collaboration
-fallback to announce protected-file edits, and reconnect only after the server
-health check succeeds.
-
-The repository endpoint is configured in `coordination.json`. Developer tokens
-belong only in the Unity credential window and Windows Credential Manager.
-Never put a token in local settings, Git, a URL, a ticket, or a log.
-
-For the step-by-step tutorial, normal usage, outage handling, and Cloudflare
-operator notes, follow
-[`../guides/coordinated-leasing.md`](../guides/coordinated-leasing.md).
-
-## Know which files need coordination
-
-Always announce before editing:
-
-- `Assets/Scenes/*.unity`
-- `Assets/**/*.prefab`
-- `ProjectSettings/*`
-- `Packages/manifest.json`
-- `Packages/packages-lock.json`
-
-These files are easy to conflict and hard to merge.
-
-## Run tests and checks
-
-Use this minimum verification loop before handing work off:
-
-1. Wait for Unity compilation to finish.
-2. Open the scene affected by the task.
-3. Press Play.
-4. Check the Console.
-5. If the task changes tests or gameplay code, open
-   `Window > General > Test Runner` and run the relevant `EditMode` or
-   `PlayMode` suite.
-6. In Git, review `git status` before committing.
-
-## Common first-day problems
+## Common Setup Problems
 
 ### Wrong Unity version
 
-If Unity Hub opens the project with a different editor version, install and use
-`6000.5.1f1`.
+Install and use 6000.5.1f1 when Unity Hub selects another editor version.
 
-### Rider project looks broken or stale
+### Rider looks broken or stale
 
-Open the project from Unity again after setting Rider as the external editor.
+Set Rider as the External Script Editor and run Unity's Open C# Project.
 
-### `npm` is missing
+### npm is missing
 
-Install Node.js and npm, then rerun `npm install`.
+Install Node.js and npm, then rerun npm install.
 
 ### Generated folders appear in Git
 
-Do not add them. Check `.gitignore` and confirm the path is one of
-`Library/`, `Temp/`, `obj/`, `Logs/`, or `UserSettings/`.
+Do not add them. Confirm the path is one of Library/, Temp/, obj/, Logs/, or
+UserSettings/, then check .gitignore.
 
-### Scene names do not match every doc yet
+## Next Step
 
-The repo still uses `SampleScene.unity` today. `Laboratory.unity` is the
-planned canonical scene name after Milestone 1.
-
-## Before you pick a task
-
-1. Read [`../collaboration/team-workflow.md`](../collaboration/team-workflow.md).
-2. Confirm the current milestone in
-   [`../project/mvp-scope.md`](../project/mvp-scope.md).
-3. Open the board and pick a small task from `To Do`.
-4. Tell the other collaborator which files, scenes, or prefabs you expect to
-   touch.
-5. Create a short-lived feature branch.
+Open [Daily Workflow](../collaboration/team-workflow.md), confirm the current
+milestone, and choose a small task from To Do.

@@ -3,35 +3,41 @@ layout: home
 
 hero:
   text: "Potion Panic Docs"
-  tagline: Shared project docs, implementation plans, and task board for the Potion Panic MVP
+  tagline: Set up your machine, run daily work safely, and find the current project truth.
   image:
     src: /logo.png
     alt: "Potion Panic Logo"
   actions:
     - theme: brand
-      text: Start Here
-      link: /ATLAS
+      text: Project Setup
+      link: /onboarding/getting-started
     - theme: alt
-      text: Plans
-      link: /plans/
+      text: Daily Workflow
+      link: /collaboration/team-workflow
     - theme: alt
       text: Board
       link: /board
 
 features:
-  - title: Game Documentation
-    details: Game design, MVP scope, technical architecture, and Unity implementation guidance for the Potion Panic project.
-    link: /project/game-design
-  - title: Collaboration
-    details: Onboarding guides, tool installation, environment configuration, and repository setup instructions for new team members.
+  - title: Project Setup
+    details: Prepare a new machine with the repository, Unity, Rider, the docs board, and Coordination access.
     link: /onboarding/getting-started
-  - title: Team Workflow
-    details: Onboarding, collaboration rules, Git workflow, Unity file safety, and day-to-day development process.
+  - title: Daily Workflow
+    details: Choose a task, coordinate shared files, build a small slice, test it, and hand it off safely.
     link: /collaboration/team-workflow
-  - title: Archive
-    details: Completed or superseded planning history, archived board state, and historical project records.
-    link: /archive/board
+  - title: Game Truth
+    details: Read the design, MVP scope, and technical architecture that define the current project.
+    link: /project/game-design
+  - title: Unity Guides
+    details: Find practical guidance for runtime structure, editor safety, implementation, and presentation work.
+    link: /guides/unity/
+  - title: Active Work
+    details: Browse current implementation plans and use the board to track task progress.
+    link: /plans/
   - title: Atlas
-    details: Routing map for setup, workflow, project truth, coordination, active work, and archived history.
+    details: Route a recurring question to the document that owns the current answer.
     link: /ATLAS
+  - title: Archive
+    details: Browse completed plans, historical board state, and superseded records.
+    link: /archive/board
 ---

@@ -107,6 +107,14 @@ parseable `serverTime`. The repository currently configures
 output and passes the health check. After a future deployment changes the URL,
 update only `serverBaseUrl` after the new endpoint passes this verification.
 
+Record the deployment evidence in the relevant ticket without secrets:
+
+- deployment date and version
+- exact Worker URL
+- health-check result
+- verification commands and test results
+- remaining blockers or manual follow-up
+
 ## Issue and revoke developer tokens
 
 Use the still-valid administrative secret only for the current shell. The

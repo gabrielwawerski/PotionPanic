@@ -1,510 +1,209 @@
 # Coordinated Leasing Guide
 
-This guide explains how to use Potion Panic's coordinated leasing system
-without needing deep Unity editor scripting or Cloudflare Workers knowledge.
+Use this guide before editing a coordinated Unity scene. It explains the
+Coordination window, the normal scene-editing flow, and what to do when a claim
+or the service blocks your work.
 
-Use it when you are about to edit a shared Unity scene, when you need to issue
-a developer token, or when the Coordination window is not behaving as expected.
+Coordinated leasing is an advisory safety layer. It makes activity visible and
+makes risky saves deliberate. It does not lock files on disk, replace Git, or
+replace a direct announcement to the team.
 
-## What It Does
+## Before You Start
 
-Coordinated leasing is an advisory safety layer for shared Unity files.
+The current rule coordinates Unity scenes below <code>Assets/Scenes/</code>,
+including <code>Assets/Scenes/SampleScene.unity</code>:
 
-It helps the team answer these questions:
+    Assets/Scenes/**/*.unity
 
-- Who has a coordinated scene open?
-- Who is currently editing it?
-- Has someone reserved it before starting work?
-- Is a save about to overwrite another person's active claim?
-- Is the server unavailable, forcing us back to manual coordination?
+Always announce before editing a scene, prefab, ProjectSettings file, or
+package file. Prefabs, ProjectSettings, and packages still use manual
+coordination unless a verified rule explicitly covers them.
 
-It does not lock files on disk. Git, Unity, Rider, and the filesystem can still
-write files. The system makes conflicts visible and makes risky saves
-deliberate.
+## First-Time Setup
 
-Manual announcements are still required for protected Unity work.
+Complete [Project Setup](../onboarding/getting-started.md) first. Then:
 
-## Current Protection Scope
+1. Pull the latest master and open the project with Unity 6000.5.1f1.
+2. Open Window > Potion Panic > Coordination.
+3. Get a developer token from the operator through the approved secret channel.
+4. Paste it into the credential prompt and confirm Connection is Connected.
+5. Enter a short Task context, such as PP-7 or lab blockout.
 
-The tracked rules live in `coordination.json` at the repository root.
+The task context is local to this machine. It lets others see why you hold a
+claim. If authentication fails, choose Forget credentials, obtain a new token
+through the approved channel, and enter it again. Never put a token in Git, a
+ticket, a URL, a log, or chat.
 
-At the time of writing, the configured coordinated rule is:
+## Edit a Coordinated Scene
 
-```json
-"Assets/Scenes/**/*.unity"
-```
+Use this workflow before editing SampleScene.unity or another coordinated scene.
 
-That means the current Unity client coordinates scene files under
-`Assets/Scenes/`, including `Assets/Scenes/SampleScene.unity`.
+1. Pull the latest master, choose a task, and announce the scene you expect to edit.
+2. Open the Coordination window, confirm Connection is Connected, and set the
+   Task context.
+3. Choose the scene with Use active stage, Use Project selection, a claim row,
+   or Advanced path.
+4. If the target is free, select Reserve before you begin.
+5. Open and edit the scene. Opening it publishes presence; a meaningful change
+   to a dirty scene attempts to obtain an editing lease.
+6. Save normally. If Unity reports another owner, follow [Save conflicts](#save-conflicts).
+7. When finished, close the scene or release your editing lease, cancel an
+   unused reservation, push your branch, and communicate the handoff.
 
-Important prefabs, project settings, packages, and other shared assets still
-need manual announcements. They are not automatically protected until they are
-added to `coordination.json` and verified.
+## Coordination Window
 
-## The Pieces
+Open the window from Window > Potion Panic > Coordination.
 
-### Unity Coordination Window
+### Local Status
 
-Open it from Unity:
+The top of the window shows your identity, Git branch, and connection state.
+Confirm that they represent the right person and branch before claiming a scene.
 
-```text
-Window > Potion Panic > Coordination
-```
+Task context is a short explanation visible with your claims. Keep it focused on
+the task, not a status diary.
 
-This window shows:
+Disabled turns off coordination on this machine. Use it only when the service is
+unavailable or the team has agreed to manual coordination. It does not delete
+local work and does not make later saves coordinated.
 
-- your authenticated identity
-- your current Git branch
-- your local task context
-- the connection state
-- open coordinated assets
-- editing leases
-- reservations
-- uncoordinated-save warnings
+### Claims and Presence
 
-It also gives you actions for the selected path:
+| List | Meaning | What to do |
+| --- | --- | --- |
+| Presence | Someone has the asset open. It is informational and non-exclusive. | Check the owner and communicate before overlapping work. |
+| Editing leases | One connection owns the active edit claim. The save guard checks this claim. | Let the owner finish, or use an agreed override. |
+| Reservations | A developer has announced an intended edit before starting. | Avoid starting the same work; cancel your own unused reservation. |
 
-- `Use active stage`
-- `Use Project selection`
-- `Reserve`
-- `Release editing lease`
-- `Cancel reservation`
-- `Override...`
-- `Copy path`
-- `Forget credentials`
+Rows show the path, owner, branch, task, and expiry. Local means the row is
+yours. Select a row to make it the action target. Local rows offer release or
+cancel actions; remote claims offer Override… after confirmation.
 
-### Cloudflare Worker
+Presence and editing leases expire when a client does not stay connected.
+Reservations last longer because they represent a developer's intent rather
+than one open Unity connection.
 
-The Worker is the public HTTPS and WebSocket endpoint. Unity talks to it through
-the URL in the repository-root `coordination.json`.
+### Action Target and Helper Text
 
-Current configured endpoint:
+The action target is the path affected by the buttons. Choose it from a row,
+the active Unity stage, the Project window selection, or a typed path under
+Assets/.
 
-```text
-https://potion-panic-coordination.gabriel-wawerski.workers.dev
-```
+Read the helper text below the buttons before assuming a button is broken. It
+explains whether the target is outside Assets/, outside the rule, disconnected,
+disabled, already owned, or ready to reserve.
 
-The Worker has a simple health route:
+## Window Actions
 
-```text
-GET /health
-```
-
-That route is unauthenticated. It should return service
-`potion-panic-coordination` and a parseable `serverTime`.
-
-### Durable Object
-
-The Durable Object is the authoritative state holder behind the Worker. For
-this project, think of it as one small server-owned state room for
-`potion-panic`.
-
-It stores:
-
-- developers
-- sessions
-- active WebSocket connections
-- viewing presence
-- editing leases
-- reservations
-- short replay records
-- a monotonic state version
-
-The client does not get to decide the developer ID, connection ID, project ID,
-or state version. The server derives those from the authenticated request.
-
-### Credentials
-
-There are four credential-like values. Do not mix them up.
-
-| Value | Used by | Stored where | Purpose |
+| Control | Purpose and common use case | Effect | Available when |
 | --- | --- | --- | --- |
-| `ADMIN_TOKEN` | operator scripts | Cloudflare secret and current shell only | Issue and revoke developer credentials. |
-| `TOKEN_HMAC_KEY` | Worker | Cloudflare secret only | Hash developer and session tokens before storage. |
-| developer token | each developer | Windows Credential Manager | Lets Unity create 24-hour sessions. |
-| session token | Unity client | memory only | Authenticates the current WebSocket session. |
-
-Never put any token, secret, session value, `Authorization` header, or
-Credential Manager content in Git, a ticket, a URL, a log, or chat.
-
-Unity stores developer tokens under this Windows Credential Manager target:
-
-```text
-PotionPanic/Coordination/potion-panic/developer-token
-```
-
-Local Unity settings live here and must not contain tokens:
-
-```text
-UserSettings/PotionPanic/coordination.local.json
-```
-
-That file is ignored by Git. Its safe shape is:
-
-```json
-{
-  "schemaVersion": 1,
-  "serverBaseUrlOverride": "",
-  "taskContext": "",
-  "disabled": false
-}
-```
-
-## First Setup For A Developer
-
-1. Pull the latest `master`.
-2. Open the project with Unity `6000.5.1f1`.
-3. Open `Window > Potion Panic > Coordination`.
-4. Ask the operator for your one-time developer token through an approved
-   secret channel.
-5. Paste the token into the Coordination credential prompt.
-6. Confirm the Coordination window changes from `Offline` or
-   `AuthenticationFailed` to `Connected`.
-7. Enter a short task context, such as `PP-7`, `lab blockout`, or
-   `ingredient pickup`.
-
-The task context is machine-local. It helps the other person understand why you
-are holding a lease.
-
-If authentication fails, use `Forget credentials`, get a newly issued token,
-and paste it again. Do not reuse a token that may have been copied into an
-unsafe place.
-
-## Normal Scene Editing Workflow
-
-Use this flow before editing `Assets/Scenes/SampleScene.unity` or another
-coordinated scene.
-
-1. Pull the latest `master`.
-2. Announce the work in the team channel.
-3. Open the Coordination window.
-4. Confirm `Connection` is `Connected`.
-5. Set `Task context` to the task or short reason for the edit.
-6. Select the path:
-   - click an existing row, or
-   - click `Use active stage`, or
-   - select the asset in the Project window and click `Use Project selection`,
-     or
-   - use `Advanced path` only when the previous options do not work.
-7. If the path is free, click `Reserve` before you start.
-8. Open the scene and make the edit.
-9. Save normally.
-10. When finished, close the scene or click `Release editing lease` if you own
-    the editing lease.
-11. Push your branch and tell the other developer what changed.
-
-Opening a coordinated scene publishes presence. Making meaningful changes to a
-dirty exclusive scene tries to acquire an editing lease. Reservations last
-longer than editing leases and survive a normal connection closing until they
-expire, are cancelled, are overridden, or the developer is revoked.
-
-## Reading The Window
-
-### Presence
-
-Presence means someone has a coordinated asset open. It is informational and
-non-exclusive.
-
-Presence answers:
-
-```text
-Who is looking at this file right now?
-```
-
-### Editing Lease
-
-An editing lease means one connection currently owns the edit claim for a path.
-For scene files, this is the claim the save guard checks before allowing a
-coordinated save.
-
-Editing leases expire if the client disconnects and does not return. Healthy
-clients heartbeat to keep their own presence and editing leases alive.
-
-### Reservation
-
-A reservation means a developer has claimed the path before editing. It is
-developer-owned, not connection-owned.
-
-Use a reservation when you know you are about to work on a coordinated scene
-and want to tell the other person to avoid starting conflicting work.
-
-Cancel a local reservation when you no longer need it. If `Cancel reservation`
-fails while other actions work, the production Worker may be older than this
-repo's current client. Deploying the updated Worker is a separate operator
-approval gate.
-
-### Override
-
-Override transfers a remote claim to you. Use it only after explicit agreement
-or when the other developer is unreachable and the team accepts the risk.
-
-Override is not a polite "ask". It is a server-side ownership transfer.
-
-## Save Conflicts
-
-If you try to save a coordinated scene while someone else owns the claim, Unity
-should stop and show a conflict dialog.
-
-Choose:
-
-- `Override and save` only after deliberate agreement or an accepted emergency.
-- `Cancel save` if you do not want to save now.
-- `Keep working` if you need to inspect or copy your local changes first.
-
-During an outage or reconnect problem, Unity may offer
-`Save locally without coordination`. That path requires confirmation and records
-a memory-only warning in the Coordination window. It does not write server
-history and it does not make the local save coordinated after the fact.
-
-When in doubt, preserve local work first, then coordinate manually.
-
-## Outage Workflow
-
-Use this when the Worker is down, the endpoint is wrong, the network is down, or
-the Coordination window cannot authenticate.
-
-1. Stop and check whether you are about to edit a protected shared file.
-2. Announce the file and the risk manually.
-3. In the Coordination window, select `Disabled` if the server is unavailable
-   or unhealthy.
-4. Keep working only if the team accepts manual coordination for that file.
-5. Save locally only after the explicit confirmation prompts.
-6. Do not treat the local save as coordinated.
-7. Reconnect only after `/health` succeeds and the window can connect again.
-
-Health check from PowerShell:
-
-```powershell
-$workerBaseUrl = "https://potion-panic-coordination.gabriel-wawerski.workers.dev"
-$health = Invoke-RestMethod -Method Get -Uri "$workerBaseUrl/health"
-$health.service
-$health.serverTime
-```
-
-Expected service:
-
-```text
-potion-panic-coordination
-```
-
-## Running The Worker Locally
-
-Use local Worker mode when testing server changes. Run commands from
-`Tools/CoordinationServer`.
-
-```powershell
-cd Tools/CoordinationServer
-npm ci
-npm run typecheck
-npm test
-npx wrangler deploy --dry-run
-```
-
-The dry run validates the bundle. It does not deploy.
-
-For local development, create local-only secrets and start Wrangler:
-
-```powershell
-Copy-Item .dev.vars.example .dev.vars
-function New-UrlSafeSecret {
-  $bytes = [System.Security.Cryptography.RandomNumberGenerator]::GetBytes(32)
-  try {
-    return [Convert]::ToBase64String($bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_')
-  }
-  finally {
-    [Array]::Clear($bytes, 0, $bytes.Length)
-  }
-}
-$localHmac = New-UrlSafeSecret
-$localAdmin = New-UrlSafeSecret
-@("TOKEN_HMAC_KEY=$localHmac", "ADMIN_TOKEN=$localAdmin") | Set-Content .dev.vars
-Remove-Variable localHmac, localAdmin
-npx wrangler dev --local
-```
-
-Then set the local Unity endpoint override in the ignored user settings file:
-
-```json
-{
-  "schemaVersion": 1,
-  "serverBaseUrlOverride": "http://127.0.0.1:8787",
-  "taskContext": "",
-  "disabled": false
-}
-```
-
-Do not commit `.dev.vars` or `UserSettings/PotionPanic/coordination.local.json`.
-
-## Operator Workflow
-
-Use this section only if you are responsible for Cloudflare operations.
-
-The full operational source is `Tools/CoordinationServer/README.md`. Prefer
-that README for exact deployment and token commands.
-
-### Verify Before Deploying
-
-From `Tools/CoordinationServer`:
-
-```powershell
-npm ci
-npm run typecheck
-npm test
-npm audit --audit-level=moderate
-npx wrangler deploy --dry-run
-```
-
-Also run the root docs checks when documentation changed:
-
-```powershell
-cd ..\..
-npm test
-npm run docs:build
-```
-
-### Deploy Manually
-
-Deployments are manual authenticated operator actions. GitHub Actions is
-verification-only for the coordination server.
-
-Before deploying:
-
-- confirm `npx wrangler whoami`
-- confirm the intended Cloudflare account
-- confirm the required secrets exist
-- never print or save secret values
-
-Required Worker secrets:
-
-```text
-ADMIN_TOKEN
-TOKEN_HMAC_KEY
-```
-
-After deploying:
-
-1. Copy the exact Worker URL printed by Wrangler.
-2. Verify `GET /health`.
-3. Confirm the service is `potion-panic-coordination`.
-4. Confirm `coordination.json` still points at the verified endpoint, or update
-   only `serverBaseUrl` if the endpoint changed.
-5. Record the deployment version, date, commands, and remaining blockers in
-   the relevant ticket without capturing secrets.
-
-### Issue A Developer Token
-
-Developer tokens are issued by the script in
-`Tools/CoordinationServer/scripts/issue-token.mjs`.
-
-The script prints the token once. Deliver it through an approved secret channel.
-The developer pastes it into Unity. Do not paste it into a ticket, chat, URL,
-log, or shell transcript.
-
-### Revoke A Developer
-
-Revocation removes that developer's server-side access and active sessions. It
-also removes that developer's coordination state.
-
-Use the delete route documented in the server README:
-
-```text
-DELETE /v1/projects/potion-panic/developers/{developerId}
-Authorization: Bearer <ADMIN_TOKEN>
-```
-
-Active clients for that developer should stop retrying after revocation.
+| Use active stage | Target the scene or prefab stage open in Unity. | Replaces the action target with the active stage path. | The active stage is a saved asset under Assets/. |
+| Use Project selection | Target an asset selected in the Project window before opening it. | Replaces the action target with the selected asset path. | The Project selection is an asset under Assets/. |
+| Advanced path | Enter a target when the Unity selection methods cannot provide it. | Lets you type or correct an Assets/ path. | Always visible; claim actions still require a valid coordinated path. |
+| Reconnect | Retry after an outage, endpoint correction, or network problem. | Starts a new connection attempt. | Windows editor, coordination enabled, and not already reconnecting. |
+| Reserve | Announce your intended edit before starting work. | Creates your reservation. | Connected, enabled, coordinated target, and no claim exists. |
+| Release editing lease | Finish or pause an active edit you own. | Releases your connection's editing lease. | Connected, enabled, and you own the target's editing lease. |
+| Cancel reservation | Give up an edit you no longer plan to start. | Removes your reservation. | Connected, enabled, and you own the target's reservation. |
+| Override… | Take a remotely owned reservation or editing lease after agreement. | Transfers the remote claim after confirmation. | Connected, enabled, and another developer owns the selected claim. |
+| Copy path | Copy the normalized path for an announcement, ticket, or manual check. | Copies the selected Assets/ path. | A valid action target exists, including while disconnected or disabled. |
+| Forget credentials | Remove the local developer token after revocation, suspected exposure, or an identity change. | Disconnects and removes the local credential. | Windows editor. |
+
+## Common Situations
+
+### You Need to Reserve a Scene
+
+Select the scene, confirm the helper text says Reserve is available, and reserve
+it before editing. A reservation is not a substitute for an announcement. Tell
+the team what you are changing and cancel it if the work no longer starts.
+
+### Someone Else Owns the Claim
+
+Read the row's owner, branch, task, and expiry. Contact that developer first.
+Use Override… only after explicit agreement or when the team accepts the risk
+of taking over an unreachable owner's claim. An override transfers ownership; it
+does not request permission.
+
+### Save Conflicts
+
+If another connection owns a coordinated scene when you save, Unity shows a
+conflict dialog.
+
+- Choose Override and save only after deliberate agreement or an accepted emergency.
+- Choose Cancel save when you do not want to save now.
+- Choose Keep working when you need to inspect or copy local changes first.
+
+During an outage or reconnect problem, Unity can offer Save locally without
+coordination. It requires confirmation and records a local warning. It does not
+create server history or make that save coordinated after the fact.
+
+### The Service Is Unavailable
+
+1. Stop and identify the protected file you are about to edit.
+2. Announce the file and risk manually.
+3. Select the local Disabled switch if the service is unavailable or unhealthy.
+4. Continue only if the team accepts manual coordination for that file.
+5. Save locally only after Unity's confirmation prompts.
+6. Reconnect after service health is restored. Do not describe the local save
+   as coordinated.
 
 ## Troubleshooting
 
-### The window says `Offline`
+### The window says Offline
 
-Check:
+Check your network and ask the operator to verify the service. Use Reconnect
+after the cause is fixed. Do not repeatedly toggle Disabled as a connection
+repair attempt.
 
-- the endpoint in `coordination.json`
-- local endpoint override in `coordination.local.json`
-- `/health`
-- network connectivity
-- whether the Worker was deployed after the current code changes
+### The window says AuthenticationFailed
 
-Click `Reconnect` after fixing the cause.
-
-### The window says `AuthenticationFailed`
-
-The token is missing, invalid, revoked, or the Worker rejected the session
-request.
-
-Use `Forget credentials`, ask the operator for a new developer token, and paste
-it into the credential prompt.
+Your token may be missing, invalid, revoked, or unsafe to reuse. Choose Forget
+credentials, obtain a new token through the approved channel, and enter it in
+Unity.
 
 ### Buttons are disabled
 
-Common causes:
-
-- the window is disconnected
-- `Disabled` is checked
-- no valid path is selected
-- the path is outside `Assets/`
-- the path does not match a coordinated rule
-- the selected claim is not owned by you
-- the claim changed since the row was rendered
-
-Use the helper text under the action target. It explains the current reason.
+Check the helper text. Common reasons are an invalid target, a path outside
+Assets/, a path outside the current rule, a disconnected window, Disabled, or a
+claim that no longer belongs to you.
 
 ### A claim looks stale
 
-First try `Reconnect`. If the owner has gone offline, wait for expiry before
-assuming the claim is gone. Editing leases and presence are short-lived, but
-reservations last longer.
+Try Reconnect and wait for the claim to expire before assuming it is gone. Use
+an override only after the team accepts the risk.
 
-Override only after the team accepts the risk.
+### The window warns about a local save
 
-### Local saves show warnings
-
-The save happened without authoritative coordination. Treat it as a manual
-coordination event:
-
-1. tell the other developer
-2. preserve the local diff
-3. reconnect
-4. resolve any conflict deliberately
-
-The warning clears when the affected asset closes or coordination later confirms
-local ownership.
-
-## What To Record In Tickets
-
-For coordination-related work, record facts that another developer can verify:
-
-- date and machine role
-- branch
-- Worker URL used
-- whether `/health` passed
-- Unity version
-- connection state
-- affected paths
-- whether the save was coordinated or local-only
-- commands run
-- test counts
-- remaining blockers
-
-Do not record:
-
-- tokens
-- session values
-- `Authorization` headers
-- secret values
-- Credential Manager contents
-- raw unfiltered `wrangler tail` output
+Tell the other developer, preserve the local diff, reconnect, and resolve any
+conflict deliberately. The warning clears when the asset closes or coordination
+later confirms local ownership.
 
 ## Quick Reference
 
 | Situation | Action |
 | --- | --- |
-| Starting scene work | Announce, connect, set task context, reserve the path. |
-| Someone else owns the path | Coordinate manually; override only deliberately. |
-| You own an editing lease | Save normally; release or close when done. |
+| Starting scene work | Announce, connect, set task context, choose the path, and reserve it. |
+| You own an editing lease | Save normally; release it or close the scene when finished. |
 | You own a reservation | Edit soon or cancel it. |
-| Worker is down | Use `Disabled`, announce manually, preserve local work. |
-| Token is bad | Forget credentials and ask for a new developer token. |
-| Testing backend locally | Use `.dev.vars` and a local endpoint override. |
-| Deploying backend | Follow `Tools/CoordinationServer/README.md`; never capture secrets. |
+| Someone else owns the path | Coordinate directly; override only deliberately. |
+| The service is down | Use Disabled, announce manually, and preserve local work. |
+| Authentication fails | Forget the credential and obtain a new developer token. |
+
+## Technical Reference
+
+The system is advisory. Git, Unity, Rider, and the filesystem can still write
+the file, so announcements remain required for protected Unity work.
+
+The current rule lives in repository-root coordination.json and covers
+Assets/Scenes/**/*.unity. Changing rules or the configured endpoint is an
+operator task, not a recovery step for ordinary contributors.
+
+Unity stores a developer token only in Windows Credential Manager. It keeps the
+session token in memory. The ignored local settings file
+UserSettings/PotionPanic/coordination.local.json may contain a task context, the
+Disabled choice, and an operator-directed endpoint override; it must never
+contain a token or secret.
+
+## For Operators
+
+Use the [Coordination Server README](https://github.com/gabrielwawerski/PotionPanic/blob/master/Tools/CoordinationServer/README.md)
+for local Worker development, deployment, health verification, developer-token
+issuance and revocation, monitoring, outage recovery, and secret rotation.
