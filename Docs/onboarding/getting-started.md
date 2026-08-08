@@ -124,6 +124,21 @@ If you add or rename a Markdown page under the normal docs folders while
 without a manual server restart. The top navigation bar is still manually
 curated.
 
+## Configure collaboration safety
+
+The Coordination window provides advisory leases for protected files. Open it
+from `Window > Potion Panic > Coordination`. Advisory leases support the
+existing announcement workflow; they do not replace pre-edit announcements.
+
+If the server is unavailable or invalid, use the local `Disabled` switch. It
+does not delete local work. Preserve your changes, use the manual collaboration
+fallback to announce protected-file edits, and reconnect only after the server
+health check succeeds.
+
+The repository endpoint is configured in `coordination.json`. Developer tokens
+belong only in the Unity credential window and Windows Credential Manager.
+Never put a token in local settings, Git, a URL, a ticket, or a log.
+
 ## Know which files need coordination
 
 Always announce before editing:

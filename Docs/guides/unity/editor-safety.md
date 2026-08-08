@@ -145,6 +145,13 @@ Announce before making broad structural changes such as:
 Small visual polish changes are usually safer. Structural changes need
 coordination.
 
+The Unity Coordination window provides advisory leases for protected files.
+These leases do not replace a pre-edit announcement. If its server is missing,
+invalid, or unhealthy, select the local `Disabled` switch. Disabling
+coordination does not delete local work. Preserve changes, announce the edit
+through the manual collaboration fallback, and reconnect after health is
+restored.
+
 ## Done Means Safe
 
 A Unity-side task is done only when:

@@ -106,6 +106,16 @@ GitHub Pages deployment note:
 - If the repository has never had Pages enabled, do that once manually before
   relying on the deploy workflow.
 
+Coordination Worker deployment note:
+
+- The coordination Worker deploy is a manual, authenticated operator action.
+- GitHub Actions is verification-only for the coordination server. It runs
+  type checking, tests, and a Wrangler dry run without deployment credentials.
+- `coordination.json` currently names
+  `https://potion-panic-coordination.gabriel-wawerski.workers.dev`. Verify its
+  `/health` response before treating the endpoint as available.
+- Operational procedures live in `Tools/CoordinationServer/README.md`.
+
 Optional Windows startup management:
 
 ```powershell

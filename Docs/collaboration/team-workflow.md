@@ -158,6 +158,12 @@ Avoid vague tasks like `Improve gameplay` or `Fix stuff`.
 
 Do not work silently on shared parts of the project.
 
+The Coordination window adds advisory presence and leases. It does not replace
+the announcement templates below. If the endpoint is missing, invalid, or
+unhealthy, select the local `Disabled` switch. This preserves local work. Use
+the manual collaboration fallback for every protected-file edit and reconnect
+only after server health is restored.
+
 Before starting work, post:
 
 ```text
