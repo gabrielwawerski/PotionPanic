@@ -206,7 +206,7 @@ contain a token or secret.
 
 - [Project Setup](../onboarding/getting-started.md)
 - [Daily Workflow](../collaboration/team-workflow.md)
-- [Editor Safety](unity/editor-safety.md)
+- [Editor Safety](../unity-guides/editor-safety.md)
 
 ## For Operators
 

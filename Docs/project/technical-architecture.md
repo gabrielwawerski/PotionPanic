@@ -14,7 +14,7 @@ and locked MVP rules.
 This contract names the specific data assets, runtime components, coordinating
 systems, dependencies, repository locations, and completion criteria that the
 MVP needs. It does not teach general Unity architecture patterns; use the
-[Unity Architecture Primer](../guides/unity/runtime-architecture.md) for that.
+[Architecture Primer](../unity-guides/runtime-architecture.md) for that.
 
 | Area | Contract |
 | --- | --- |
@@ -367,4 +367,4 @@ when it supports the playable game loop.
 - [Project Overview](index.md)
 - [Game Design](game-design.md)
 - [MVP Scope](mvp-scope.md)
-- [Unity Architecture Primer](../guides/unity/runtime-architecture.md)
+- [Architecture Primer](../unity-guides/runtime-architecture.md)

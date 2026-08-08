@@ -1,8 +1,8 @@
-# Unity coding and implementation
+# Coding and implementation
 
 Use this guide when turning a feature into code, tests, and a safe delivery
 sequence. It owns implementation habits and local verification; use
-[Daily Workflow](../../collaboration/team-workflow.md) for the full task,
+[Daily Workflow](../collaboration/team-workflow.md) for the full task,
 review, and handoff process.
 
 ## Start With The Smallest Playable Loop
@@ -170,6 +170,6 @@ It is done when:
 
 ## Related pages
 
-- [Unity Architecture Primer](runtime-architecture.md)
+- [Architecture Primer](runtime-architecture.md)
 - [Editor Safety](editor-safety.md)
-- [Daily Workflow](../../collaboration/team-workflow.md)
+- [Daily Workflow](../collaboration/team-workflow.md)

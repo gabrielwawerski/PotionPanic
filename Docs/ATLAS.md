@@ -35,14 +35,14 @@ map, not a complete file inventory.
 
 - [`guides/index.md`](guides/index.md): task-based guide directory. Open this
   when you know what kind of work you are doing but not which guide applies.
-- [`guides/unity/index.md`](guides/unity/index.md): which Unity guide to open.
-- [`guides/unity/runtime-architecture.md`](guides/unity/runtime-architecture.md):
+- [`unity-guides/index.md`](unity-guides/index.md): which Unity guide to open.
+- [`unity-guides/runtime-architecture.md`](unity-guides/runtime-architecture.md):
   Unity mental model, composition, state ownership, and scene boundaries.
-- [`guides/unity/coding-and-implementation.md`](guides/unity/coding-and-implementation.md):
+- [`unity-guides/coding-and-implementation.md`](unity-guides/coding-and-implementation.md):
   implementation habits, small playable slices, debugging, and checks.
-- [`guides/unity/editor-safety.md`](guides/unity/editor-safety.md): scene,
+- [`unity-guides/editor-safety.md`](unity-guides/editor-safety.md): scene,
   prefab, ProjectSettings, package, and inspector-change safety.
-- [`guides/unity/presentation-workflows.md`](guides/unity/presentation-workflows.md):
+- [`unity-guides/presentation-workflows.md`](unity-guides/presentation-workflows.md):
   UI, animation, materials, VFX, and feedback workflows.
 
 ## Coordination

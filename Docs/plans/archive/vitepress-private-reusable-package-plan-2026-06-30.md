@@ -204,16 +204,16 @@ export default defineDocsProject({
     {
       text: "Guides",
       items: [
-        {text: "Guides", link: "/guides/unity/"},
-        {text: "Runtime Architecture", link: "/guides/unity/runtime-architecture"},
+        {text: "Guides", link: "/unity-guides/"},
+        {text: "Runtime Architecture", link: "/unity-guides/runtime-architecture"},
         {
           text: "Coding And Implementation",
-          link: "/guides/unity/coding-and-implementation",
+          link: "/unity-guides/coding-and-implementation",
         },
-        {text: "Editor Safety", link: "/guides/unity/editor-safety"},
+        {text: "Editor Safety", link: "/unity-guides/editor-safety"},
         {
           text: "Presentation Workflows",
-          link: "/guides/unity/presentation-workflows",
+          link: "/unity-guides/presentation-workflows",
         },
       ],
     },

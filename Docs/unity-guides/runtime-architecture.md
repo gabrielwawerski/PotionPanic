@@ -1,9 +1,9 @@
-# Unity Architecture Primer
+# Architecture Primer
 
 Use this guide when learning or applying general Unity choices for component
 boundaries, ownership, lifecycle, data, and runtime state. For Potion
 Panic-specific data assets and component responsibilities, use the
-[Runtime Contract](../../project/technical-architecture.md).
+[Runtime Contract](../project/technical-architecture.md).
 
 ## Core Mental Model
 
@@ -218,6 +218,6 @@ not unpredictably break five others.
 
 ## Related pages
 
-- [Potion Panic Runtime Contract](../../project/technical-architecture.md)
+- [Potion Panic Runtime Contract](../project/technical-architecture.md)
 - [Coding and Implementation](coding-and-implementation.md)
 - [Editor Safety](editor-safety.md)

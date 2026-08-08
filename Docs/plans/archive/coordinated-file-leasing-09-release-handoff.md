@@ -72,7 +72,7 @@ produce the exact `workers.dev` URL.
 - Modify `coordination.json` to replace the placeholder endpoint after the
   Worker is deployed.
 - Update `README.md`, [Docs/onboarding/getting-started.md](../../onboarding/getting-started.md),
-  [Docs/collaboration/team-workflow.md](../../collaboration/team-workflow.md), and [Docs/guides/unity/editor-safety.md](../../guides/unity/editor-safety.md).
+  [Docs/collaboration/team-workflow.md](../../collaboration/team-workflow.md), and [Docs/unity-guides/editor-safety.md](../../unity-guides/editor-safety.md).
 - Append deployment, test, and two-machine evidence to [Docs/tickets/PP-7.md](../../tickets/PP-7.md).
 - Create Cloudflare secrets `TOKEN_HMAC_KEY` and `ADMIN_TOKEN`; issue one
   developer token per person without committing any secret.

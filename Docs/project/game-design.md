@@ -327,5 +327,5 @@ the [board](../board.md) instead of expanding the MVP.
 
 - [MVP Scope](mvp-scope.md)
 - [Potion Panic Runtime Contract](technical-architecture.md)
-- [Unity Presentation Workflows](../guides/unity/presentation-workflows.md)
+- [Presentation Workflows](../unity-guides/presentation-workflows.md)
 - [Design Research](../research/game-design-and-psychology.md)

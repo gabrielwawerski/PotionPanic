@@ -42,7 +42,7 @@ export default createDocsConfig(defineDocsProject({
       items: [
         {text: "Guide Index", link: "/guides/"},
         {text: "Coordinated Leasing", link: "/guides/coordinated-leasing"},
-        {text: "Unity Guides", link: "/guides/unity/"},
+        {text: "Unity Guides", link: "/unity-guides/"},
         {text: "Design Research", link: "/research/game-design-and-psychology"},
       ],
     },
@@ -68,6 +68,11 @@ export default createDocsConfig(defineDocsProject({
         text: "Guides",
         includeDirs: ["guides"],
         items: [{text: "Guide Index", link: "/guides/"}],
+      },
+      {
+        text: "Unity Guides",
+        includeDirs: ["unity-guides"],
+        items: [{text: "Unity guides", link: "/unity-guides/"}],
       },
       {
         text: "Research",

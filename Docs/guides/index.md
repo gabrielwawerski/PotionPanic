@@ -9,10 +9,10 @@ Potion Panic's binding game, scope, and runtime decisions.
 | If you are about to... | Open |
 | --- | --- |
 | Edit a coordinated scene or resolve a Coordination window warning | [Coordinated Leasing](coordinated-leasing.md) |
-| Design a Unity component boundary or ownership model | [Unity Architecture Primer](unity/runtime-architecture.md) |
-| Turn a feature into a small, verifiable implementation slice | [Coding and Implementation](unity/coding-and-implementation.md) |
-| Change scenes, prefabs, inspector wiring, or project-wide settings | [Editor Safety](unity/editor-safety.md) |
-| Work on UI, animation, models, materials, VFX, or visual feedback | [Presentation Workflows](unity/presentation-workflows.md) |
+| Design a Unity component boundary or ownership model | [Architecture Primer](../unity-guides/runtime-architecture.md) |
+| Turn a feature into a small, verifiable implementation slice | [Coding and implementation](../unity-guides/coding-and-implementation.md) |
+| Change scenes, prefabs, inspector wiring, or project-wide settings | [Editor Safety](../unity-guides/editor-safety.md) |
+| Work on UI, animation, models, materials, VFX, or visual feedback | [Presentation workflows](../unity-guides/presentation-workflows.md) |
 | Evaluate design ideas against research and small-team risk | [Design Research](../research/game-design-and-psychology.md) |
 
 ## How guides relate to project truth

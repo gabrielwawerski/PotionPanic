@@ -1,4 +1,4 @@
-# Unity presentation workflows
+# Presentation workflows
 
 Use this guide for UI, layout, models, animation, materials, VFX, and other
 presentation work. It owns presentation-side working methods; use
@@ -173,5 +173,5 @@ Aim for:
 ## Related pages
 
 - [Editor Safety](editor-safety.md)
-- [Game Design](../../project/game-design.md)
-- [Daily Workflow](../../collaboration/team-workflow.md)
+- [Game Design](../project/game-design.md)
+- [Daily Workflow](../collaboration/team-workflow.md)
