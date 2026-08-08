@@ -298,6 +298,37 @@ namespace PotionPanic.Tests.EditMode.Coordination
     }
 
     [Test]
+    public async Task ReservationCancellationSendsAPathOnlyRequestAndCompletesExactlyOnce()
+    {
+      var socket = new FakeWebSocketClient();
+      var service = CreateService(Credentials(), new FakeHttpClient(), socket);
+      var completions = new List<CoordinationRequestCompletion>();
+      service.RequestCompleted += completions.Add;
+
+      await service.ConnectAsync();
+      RaiseReady(socket, 1);
+      Assert.That(service.TryCancelReservation(
+        "Assets\\Scenes\\SampleScene.unity", out var request), Is.True);
+
+      Assert.That(request.NormalizedPath, Is.EqualTo("Assets/Scenes/SampleScene.unity"));
+      Assert.That(socket.SentMessages, Has.Count.EqualTo(1));
+      Assert.That(socket.SentMessages[0], Does.Contain("\"type\":\"reservation.cancel\""));
+      Assert.That(socket.SentMessages[0], Does.Not.Contain("\"branch\""));
+      Assert.That(socket.SentMessages[0], Does.Not.Contain("\"task\""));
+
+      var response = "{\"protocolVersion\":1,\"type\":\"lease.released\","
+        + "\"stateVersion\":2,\"requestId\":\"" + request.RequestId + "\","
+        + "\"path\":\"assets/scenes/samplescene.unity\",\"leaseId\":\"reservation-1\"}";
+      socket.RaiseMessage(response);
+      socket.RaiseMessage(response);
+
+      Assert.That(completions, Has.Count.EqualTo(1));
+      Assert.That(completions[0].Request, Is.SameAs(request));
+      Assert.That(completions[0].Response.type, Is.EqualTo("lease.released"));
+      await service.ShutdownAsync();
+    }
+
+    [Test]
     public async Task SendFailureRaisesTheMatchingRequestFailure()
     {
       var socket = new FakeWebSocketClient { SendException = new InvalidOperationException("write failed") };

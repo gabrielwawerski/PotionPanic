@@ -49,6 +49,8 @@ SQLite-backed Durable Objects, WebSocket Hibernation API, Wrangler, and Vitest.
 - Healthy clients heartbeat every 30 seconds.
 - Disconnected viewing presence and editing leases expire after 120 seconds.
 - Reservations last 30 minutes and survive the owning connection closing.
+- A developer may explicitly cancel its reservation from any authenticated
+  connection for that developer.
 - Closing an editing file releases its lease unless the developer reserved it.
 - A remote claim shows owner, branch, task, and expiry. Saving requires cancel or
   explicit override.
@@ -163,6 +165,7 @@ must not contain `projectId`, `developerId`, or `connectionId`.
 | `lease.acquire` | `path`, `branch`, `task` | Claim an unclaimed path for editing. |
 | `lease.release` | `path` | Release this developer's editing lease. |
 | `lease.reserve` | `path`, `branch`, `task` | Reserve an unclaimed path. |
+| `reservation.cancel` | `path` | Cancel this developer's reservation. |
 | `lease.override` | `path`, `branch`, `task` | Transfer a remotely owned lease deliberately. |
 | `heartbeat` | none | Extend only this connection's presence and editing leases. |
 | `snapshot.request` | none | Request the complete current state; no history replay exists. |
@@ -173,6 +176,12 @@ and `..` segments, and derives a lower-invariant canonical key. It preserves the
 normalized submitted casing as `displayPath`. A path is at most 1,024 UTF-16
 code units; `branch` and `task` are each at most 256 UTF-16 code units. The
 serialized UTF-8 envelope is at most 16 KiB.
+
+`lease.release` is connection-owned and applies only to an editing lease.
+`reservation.cancel` is developer-owned, so a recreated session or another
+connection for the same developer may cancel the reservation. Successful
+cancellation uses the existing correlated `lease.released` server envelope;
+the reservation ID is its `leaseId`.
 
 Every server-to-client envelope contains `protocolVersion: 1`, `type`, and the
 current monotonic `stateVersion`. A response to a request also contains that

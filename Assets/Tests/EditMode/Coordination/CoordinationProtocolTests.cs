@@ -37,6 +37,7 @@ namespace PotionPanic.Tests.EditMode.Coordination
         ClientEnvelope("lease.acquire", "\"path\":\"Assets/Scenes/A.unity\",\"branch\":\"feature/a\",\"task\":\"PP-7\""),
         ClientEnvelope("lease.release", "\"path\":\"Assets/Scenes/A.unity\""),
         ClientEnvelope("lease.reserve", "\"path\":\"Assets/Scenes/A.unity\",\"branch\":\"feature/a\",\"task\":\"PP-7\""),
+        ClientEnvelope("reservation.cancel", "\"path\":\"Assets/Scenes/A.unity\""),
         ClientEnvelope("lease.override", "\"path\":\"Assets/Scenes/A.unity\",\"branch\":\"feature/a\",\"task\":\"PP-7\""),
         ClientEnvelope("heartbeat", string.Empty),
         ClientEnvelope("snapshot.request", string.Empty)
@@ -59,6 +60,7 @@ namespace PotionPanic.Tests.EditMode.Coordination
         ClientEnvelope("lease.acquire", "\"path\":\"Assets/Scenes/A.unity\",\"task\":\"PP-7\""),
         ClientEnvelope("lease.release", string.Empty),
         ClientEnvelope("lease.reserve", "\"path\":\"Assets/Scenes/A.unity\",\"branch\":\"feature/a\""),
+        ClientEnvelope("reservation.cancel", string.Empty),
         ClientEnvelope("lease.override", "\"path\":\"Assets/Scenes/A.unity\",\"branch\":\"feature/a\""),
         ClientEnvelope("presence.open", "\"path\":\"Assets/Scenes/A.unity\",\"branch\":\""
           + new string('x', 257) + "\",\"task\":\"PP-7\"")
@@ -69,6 +71,16 @@ namespace PotionPanic.Tests.EditMode.Coordination
         Assert.That(CoordinationProtocol.TryParseClientEnvelope(json, out _, out _), Is.False,
           json);
       }
+    }
+
+    [Test]
+    public void RejectsContextFieldsOnReservationCancellation()
+    {
+      var json = ClientEnvelope(
+        "reservation.cancel",
+        "\"path\":\"Assets/Scenes/A.unity\",\"branch\":\"feature/a\",\"task\":\"PP-7\"");
+
+      Assert.That(CoordinationProtocol.TryParseClientEnvelope(json, out _, out _), Is.False);
     }
 
     [Test]

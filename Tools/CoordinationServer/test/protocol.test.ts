@@ -91,7 +91,8 @@ describe('protocol v1 client envelopes', () => {
   it('lists every client and server message defined by the v1 contract', () => {
     expect(ClientMessageTypes).toEqual([
       'presence.open', 'presence.close', 'lease.acquire', 'lease.release',
-      'lease.reserve', 'lease.override', 'heartbeat', 'snapshot.request'
+      'lease.reserve', 'reservation.cancel', 'lease.override', 'heartbeat',
+      'snapshot.request'
     ]);
     expect(ServerMessageTypes).toEqual([
       'session.ready', 'snapshot', 'presence.updated', 'presence.removed',
@@ -147,6 +148,7 @@ describe('protocol v1 client envelopes', () => {
     { type: 'lease.acquire', path: 'Assets/Scenes/A.unity', branch: 'feature/a', task: 'PP-7' },
     { type: 'lease.release', path: 'Assets/Scenes/A.unity' },
     { type: 'lease.reserve', path: 'Assets/Scenes/A.unity', branch: 'feature/a', task: 'PP-7' },
+    { type: 'reservation.cancel', path: 'Assets/Scenes/A.unity' },
     { type: 'lease.override', path: 'Assets/Scenes/A.unity', branch: 'feature/a', task: 'PP-7' },
     { type: 'heartbeat' },
     { type: 'snapshot.request' }
@@ -161,6 +163,7 @@ describe('protocol v1 client envelopes', () => {
     { type: 'lease.acquire', path: 'Assets/Scenes/A.unity', task: 'PP-7' },
     { type: 'lease.release' },
     { type: 'lease.reserve', path: 'Assets/Scenes/A.unity', branch: 'feature/a' },
+    { type: 'reservation.cancel' },
     { type: 'lease.override', path: 'Assets/Scenes/A.unity', branch: 'feature/a' }
   ])('rejects a client DTO with a required field missing', (value) => {
     expect(parseClientEnvelope(JSON.stringify({ protocolVersion: 1, requestId, ...value })))
@@ -172,6 +175,17 @@ describe('protocol v1 client envelopes', () => {
 
     expect(parseClientEnvelope(JSON.stringify({ protocolVersion: 1, type: 'lease.release',
       requestId, path }))).toEqual(expect.objectContaining({ ok: false }));
+  });
+
+  it('rejects context fields on reservation cancellation', () => {
+    expect(parseClientEnvelope(JSON.stringify({
+      protocolVersion: 1,
+      type: 'reservation.cancel',
+      requestId,
+      path: 'Assets/Scenes/A.unity',
+      branch: 'feature/a',
+      task: 'PP-7'
+    }))).toEqual(expect.objectContaining({ ok: false }));
   });
 });
 

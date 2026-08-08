@@ -675,6 +675,9 @@ export class CoordinationObject {
     if (message.type === 'lease.reserve') {
       return this.reserveLease(connection, message, path, now);
     }
+    if (message.type === 'reservation.cancel') {
+      return this.cancelReservation(connection, message.requestId, path, now);
+    }
     return this.overrideLease(connection, message, path, now);
   }
 
@@ -871,6 +874,31 @@ export class CoordinationObject {
       lease
     };
     return { requester: event, stateChanges: [event], stateVersion, connectionClosures: [] };
+  }
+
+  private cancelReservation(
+    connection: ConnectionRow,
+    requestId: string,
+    path: PathDetails,
+    now: Date
+  ): StateTransition {
+    const reservation = this.reservation(path.canonical);
+    if (reservation === null || reservation.developer_id !== connection.developer_id) {
+      return this.denied(
+        requestId,
+        path.canonical,
+        'reservation_not_owned',
+        this.effectiveLease(path.canonical),
+        now
+      );
+    }
+    this.state.storage.sql.exec(
+      'DELETE FROM reservations WHERE reservation_id = ?',
+      reservation.reservation_id
+    );
+    const stateVersion = this.advanceStateVersion();
+    const changes = this.reservationReleasedChanges(reservation, stateVersion, requestId);
+    return { requester: changes[0], stateChanges: changes, stateVersion, connectionClosures: [] };
   }
 
   private overrideLease(
@@ -1087,11 +1115,16 @@ export class CoordinationObject {
     }];
   }
 
-  private reservationReleasedChanges(row: ReservationRow, stateVersion: number): ServerEnvelope[] {
+  private reservationReleasedChanges(
+    row: ReservationRow,
+    stateVersion: number,
+    requestId?: string
+  ): ServerEnvelope[] {
     return [{
       protocolVersion: ProtocolVersion,
       type: 'lease.released',
       stateVersion,
+      ...(requestId === undefined ? {} : { requestId }),
       path: row.canonical_path,
       leaseId: row.reservation_id
     }];

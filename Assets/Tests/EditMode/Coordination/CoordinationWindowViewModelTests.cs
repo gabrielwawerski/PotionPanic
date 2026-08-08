@@ -30,6 +30,12 @@ namespace PotionPanic.Tests.EditMode.Coordination
       Assert.That(fixture.ViewModel.Reservations.Count, Is.EqualTo(1));
       Assert.That(fixture.ViewModel.EditingLeases[0].Owner, Is.EqualTo("Sol"));
       Assert.That(fixture.ViewModel.Reservations[0].IsLocal, Is.True);
+      Assert.That(fixture.ViewModel.Presence[0].Kind,
+        Is.EqualTo(CoordinationWindowRowKind.Presence));
+      Assert.That(fixture.ViewModel.EditingLeases[0].Kind,
+        Is.EqualTo(CoordinationWindowRowKind.EditingLease));
+      Assert.That(fixture.ViewModel.Reservations[0].Kind,
+        Is.EqualTo(CoordinationWindowRowKind.Reservation));
     }
 
     [Test]
@@ -44,6 +50,7 @@ namespace PotionPanic.Tests.EditMode.Coordination
       Assert.That(fixture.ViewModel.CanReconnect, Is.True);
       Assert.That(fixture.ViewModel.CanReserve, Is.False);
       Assert.That(fixture.ViewModel.CanRelease, Is.False);
+      Assert.That(fixture.ViewModel.CanCancelReservation, Is.False);
       Assert.That(fixture.ViewModel.CanOverride, Is.False);
       Assert.That(fixture.ViewModel.CanCopyCanonicalPath, Is.True);
 
@@ -55,6 +62,7 @@ namespace PotionPanic.Tests.EditMode.Coordination
       Assert.That(fixture.ViewModel.CanReconnect, Is.False);
       Assert.That(fixture.ViewModel.CanReserve, Is.False);
       Assert.That(fixture.ViewModel.CanRelease, Is.False);
+      Assert.That(fixture.ViewModel.CanCancelReservation, Is.False);
       Assert.That(fixture.ViewModel.CanOverride, Is.True);
       Assert.That(fixture.ViewModel.Override(), Is.True);
       Assert.That(fixture.Service.Requests,
@@ -69,6 +77,7 @@ namespace PotionPanic.Tests.EditMode.Coordination
         null));
 
       Assert.That(fixture.ViewModel.CanRelease, Is.True);
+      Assert.That(fixture.ViewModel.CanCancelReservation, Is.False);
       Assert.That(fixture.ViewModel.CanOverride, Is.False);
       Assert.That(fixture.ViewModel.Release(), Is.True);
       Assert.That(fixture.Service.Requests[1],
@@ -160,6 +169,125 @@ namespace PotionPanic.Tests.EditMode.Coordination
       Assert.That(fixture.ViewModel.Reserve(), Is.False);
       Assert.That(fixture.Service.Requests, Is.Empty);
       Assert.That(fixture.ViewModel.CanCopyCanonicalPath, Is.True);
+    }
+
+    [Test]
+    public void SelectingARowTargetsItsPathAndSelectsEveryRowForThatPath()
+    {
+      var fixture = new ViewModelFixture();
+      fixture.Service.SetIdentity("dev-local", "Rin", "connection-local");
+      fixture.State.ApplySnapshot(Snapshot(
+        Presence("Assets/Scenes/Laboratory.unity", "dev-remote", "Sol"),
+        EditingLease("Assets/Scenes/Laboratory.unity", "dev-remote", "Sol"),
+        null));
+
+      fixture.ViewModel.SelectRow(fixture.ViewModel.EditingLeases[0]);
+
+      Assert.That(fixture.ViewModel.SelectedPath,
+        Is.EqualTo("Assets/Scenes/Laboratory.unity"));
+      Assert.That(fixture.ViewModel.IsSelected(fixture.ViewModel.Presence[0]), Is.True);
+      Assert.That(fixture.ViewModel.IsSelected(fixture.ViewModel.EditingLeases[0]), Is.True);
+    }
+
+    [Test]
+    public void PathSourceButtonsNormalizePathsAndReportUnavailableSources()
+    {
+      var fixture = new ViewModelFixture();
+      fixture.Paths.ActiveStagePath = "Assets\\Scenes\\Laboratory.unity";
+      fixture.Paths.ProjectSelectionPath = "Assets/Scenes/Queued.unity";
+
+      Assert.That(fixture.ViewModel.UseActiveStage(), Is.True);
+      Assert.That(fixture.ViewModel.SelectedPath,
+        Is.EqualTo("Assets/Scenes/Laboratory.unity"));
+      Assert.That(fixture.ViewModel.UseProjectSelection(), Is.True);
+      Assert.That(fixture.ViewModel.SelectedPath, Is.EqualTo("Assets/Scenes/Queued.unity"));
+
+      fixture.Paths.ActiveStagePath = null;
+      Assert.That(fixture.ViewModel.UseActiveStage(), Is.False);
+      Assert.That(fixture.ViewModel.TargetHelpText,
+        Is.EqualTo("The active stage is not a saved asset under Assets/."));
+      Assert.That(fixture.ViewModel.SelectedPath, Is.EqualTo("Assets/Scenes/Queued.unity"));
+    }
+
+    [Test]
+    public void LocalReservationCanBeCancelledFromTheTargetOrItsRow()
+    {
+      var fixture = new ViewModelFixture();
+      fixture.Service.SetIdentity("dev-local", "Rin", "connection-local");
+      fixture.Service.SetState(CoordinationConnectionState.Connected);
+      fixture.State.ApplySnapshot(Snapshot(null, null,
+        Reservation("Assets/Scenes/Queued.unity", "dev-local", "Rin")));
+      var row = fixture.ViewModel.Reservations[0];
+
+      fixture.ViewModel.SelectRow(row);
+
+      Assert.That(fixture.ViewModel.CanCancelReservation, Is.True);
+      Assert.That(fixture.ViewModel.CanCancelReservationRow(row), Is.True);
+      Assert.That(fixture.ViewModel.TargetHelpText,
+        Is.EqualTo("You own this reservation. Cancel reservation is available."));
+      Assert.That(fixture.ViewModel.CancelReservation(row), Is.True);
+      Assert.That(fixture.Service.Requests,
+        Is.EqualTo(new[] { "reservation.cancel:Assets/Scenes/Queued.unity" }));
+    }
+
+    [Test]
+    public void StaleLocalReservationRowCannotCancelANewRemoteReservation()
+    {
+      var fixture = new ViewModelFixture();
+      fixture.Service.SetIdentity("dev-local", "Rin", "connection-local");
+      fixture.Service.SetState(CoordinationConnectionState.Connected);
+      fixture.State.ApplySnapshot(Snapshot(null, null,
+        Reservation("Assets/Scenes/Queued.unity", "dev-local", "Rin")));
+      var staleRow = fixture.ViewModel.Reservations[0];
+      fixture.State.ApplySnapshot(Snapshot(null, null,
+        Reservation("Assets/Scenes/Queued.unity", "dev-remote", "Sol")));
+
+      Assert.That(fixture.ViewModel.CanCancelReservationRow(staleRow), Is.False);
+      Assert.That(fixture.ViewModel.CancelReservation(staleRow), Is.False);
+      Assert.That(fixture.Service.Requests, Is.Empty);
+    }
+
+    [Test]
+    public void RemoteRowOverrideRequiresConfirmationAndUsesCurrentOwner()
+    {
+      var fixture = new ViewModelFixture();
+      fixture.Service.SetIdentity("dev-local", "Rin", "connection-local");
+      fixture.Service.SetState(CoordinationConnectionState.Connected);
+      fixture.State.ApplySnapshot(Snapshot(null,
+        EditingLease("Assets/Scenes/Laboratory.unity", "dev-remote", "Sol"), null));
+      var row = fixture.ViewModel.EditingLeases[0];
+      fixture.Confirmation.Result = false;
+
+      Assert.That(fixture.ViewModel.Override(row), Is.False);
+      Assert.That(fixture.Service.Requests, Is.Empty);
+      Assert.That(fixture.Confirmation.Path,
+        Is.EqualTo("Assets/Scenes/Laboratory.unity"));
+      Assert.That(fixture.Confirmation.Owner, Is.EqualTo("Sol"));
+
+      fixture.Confirmation.Result = true;
+      Assert.That(fixture.ViewModel.Override(row), Is.True);
+      Assert.That(fixture.Service.Requests,
+        Is.EqualTo(new[] { "lease.override:Assets/Scenes/Laboratory.unity" }));
+    }
+
+    [Test]
+    public void TargetHelpExplainsInvalidUncoordinatedDisconnectedAndFreePaths()
+    {
+      var fixture = new ViewModelFixture();
+
+      Assert.That(fixture.ViewModel.TargetHelpText, Does.StartWith("Choose a row"));
+      fixture.ViewModel.SelectedPath = "Packages/example.asset";
+      Assert.That(fixture.ViewModel.TargetHelpText,
+        Is.EqualTo("Choose an asset under Assets/."));
+      fixture.ViewModel.SelectedPath = "Assets/Scripts/Runtime/Player.cs";
+      Assert.That(fixture.ViewModel.TargetHelpText,
+        Is.EqualTo("This path is not covered by a coordination rule."));
+      fixture.ViewModel.SelectedPath = "Assets/Scenes/Laboratory.unity";
+      Assert.That(fixture.ViewModel.TargetHelpText,
+        Is.EqualTo("Reconnect to change claims. Copy path remains available."));
+      fixture.Service.SetState(CoordinationConnectionState.Connected);
+      Assert.That(fixture.ViewModel.TargetHelpText,
+        Is.EqualTo("No current claim. Reserve is available."));
     }
 
     private static CoordinationServerEnvelope Snapshot(
@@ -257,6 +385,9 @@ namespace PotionPanic.Tests.EditMode.Coordination
         = new CoordinationUncoordinatedSaveState();
       public FakeSettingsStore Store { get; } = new FakeSettingsStore();
       public FakeClipboard Clipboard { get; } = new FakeClipboard();
+      public FakePathSource Paths { get; } = new FakePathSource();
+      public FakeOverrideConfirmation Confirmation { get; }
+        = new FakeOverrideConfirmation();
       public CoordinationWindowViewModel ViewModel { get; }
 
       public ViewModelFixture(bool isSupportedPlatform = true, string gitBranch = null)
@@ -278,7 +409,9 @@ namespace PotionPanic.Tests.EditMode.Coordination
             }
           },
           new FakeGitContext(gitBranch),
-          Clipboard);
+          Clipboard,
+          Paths,
+          Confirmation);
       }
     }
 
@@ -308,6 +441,38 @@ namespace PotionPanic.Tests.EditMode.Coordination
       }
 
       public string GetBranch() => branch;
+    }
+
+    private sealed class FakePathSource : ICoordinationWindowPathSource
+    {
+      public string ActiveStagePath { get; set; }
+      public string ProjectSelectionPath { get; set; }
+
+      public bool TryGetActiveStagePath(out string path)
+      {
+        path = ActiveStagePath;
+        return path != null;
+      }
+
+      public bool TryGetProjectSelectionPath(out string path)
+      {
+        path = ProjectSelectionPath;
+        return path != null;
+      }
+    }
+
+    private sealed class FakeOverrideConfirmation : ICoordinationOverrideConfirmation
+    {
+      public bool Result { get; set; } = true;
+      public string Path { get; private set; }
+      public string Owner { get; private set; }
+
+      public bool Confirm(string path, string owner)
+      {
+        Path = path;
+        Owner = owner;
+        return Result;
+      }
     }
 
     private sealed class FakeWindowService : ICoordinationWindowService
@@ -350,6 +515,8 @@ namespace PotionPanic.Tests.EditMode.Coordination
         => Record("lease.reserve", path, out request);
       public bool TryReleaseLease(string path, out CoordinationRequestHandle request)
         => Record("lease.release", path, out request);
+      public bool TryCancelReservation(string path, out CoordinationRequestHandle request)
+        => Record("reservation.cancel", path, out request);
       public bool TryOverrideLease(string path, out CoordinationRequestHandle request)
         => Record("lease.override", path, out request);
 

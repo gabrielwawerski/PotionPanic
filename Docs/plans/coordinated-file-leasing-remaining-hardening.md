@@ -902,6 +902,7 @@ function Invoke-CoordinationEditMode {
   | Scenario | Required observed result |
   | --- | --- |
   | Presence and reservation | A opens `Assets/Scenes/SampleScene.unity`; B sees A. A reserves it; B sees the reservation owner and expiry. |
+  | Reservation cancellation | A cancels its reservation from the Coordination window. Both clients receive the correlated `lease.released` state, the reservation disappears, and the path becomes reservable. Repeat from a recreated A session to prove developer ownership does not depend on the original connection. |
   | Simultaneous acquire | A and B issue acquire against the same unclaimed coordinated path at the same time; exactly one receives `lease.granted`, and the other receives `lease.denied` with the same remote owner. |
   | Conflict, cancel, override | With A editing, B tries to save. B can cancel, keep working, or explicitly override; an override transfers the authoritative lease and A receives displacement information. |
   | Clean close | A closes the coordinated stage/editor cleanly; B sees A's presence and unreserved editing lease removed. |

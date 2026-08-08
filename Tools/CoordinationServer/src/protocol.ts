@@ -9,6 +9,7 @@ export const ClientMessageTypes = [
   'lease.acquire',
   'lease.release',
   'lease.reserve',
+  'reservation.cancel',
   'lease.override',
   'heartbeat',
   'snapshot.request'
@@ -52,6 +53,7 @@ export type ClientEnvelope =
   | (PathContextEnvelope & { type: 'lease.acquire' })
   | (PathEnvelope & { type: 'lease.release' })
   | (PathContextEnvelope & { type: 'lease.reserve' })
+  | (PathEnvelope & { type: 'reservation.cancel' })
   | (PathContextEnvelope & { type: 'lease.override' })
   | (ClientEnvelopeBase & { type: 'heartbeat' })
   | (ClientEnvelopeBase & { type: 'snapshot.request' });
@@ -147,7 +149,13 @@ export function parseClientEnvelope(input: unknown): ProtocolValidationResult<Cl
     return fail('invalid_path');
   }
 
-  if (value.type === 'presence.close' || value.type === 'lease.release') {
+  if (value.type === 'reservation.cancel'
+    && (value.branch !== undefined || value.task !== undefined)) {
+    return fail('invalid_envelope');
+  }
+
+  if (value.type === 'presence.close' || value.type === 'lease.release'
+    || value.type === 'reservation.cancel') {
     return { ok: true, value: { ...base, type: value.type, path } };
   }
 

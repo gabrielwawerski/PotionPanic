@@ -17,6 +17,23 @@ namespace PotionPanic.Editor.Coordination
   }
 
   [Serializable]
+  internal sealed class CoordinationClientBaseEnvelope
+  {
+    public int protocolVersion;
+    public string type;
+    public string requestId;
+  }
+
+  [Serializable]
+  internal sealed class CoordinationClientPathEnvelope
+  {
+    public int protocolVersion;
+    public string type;
+    public string requestId;
+    public string path;
+  }
+
+  [Serializable]
   public sealed class CoordinationPresenceRecord
   {
     public string path;
@@ -118,7 +135,8 @@ namespace PotionPanic.Editor.Coordination
     private static readonly string[] ClientMessageTypes =
     {
       "presence.open", "presence.close", "lease.acquire", "lease.release",
-      "lease.reserve", "lease.override", "heartbeat", "snapshot.request"
+      "lease.reserve", "reservation.cancel", "lease.override", "heartbeat",
+      "snapshot.request"
     };
 
     private static readonly string[] ServerMessageTypes =
@@ -176,6 +194,13 @@ namespace PotionPanic.Editor.Coordination
           return false;
         }
 
+        if (parsed.type == "reservation.cancel"
+          && (HasTopLevelJsonField(json, "branch") || HasTopLevelJsonField(json, "task")))
+        {
+          error = "Reservation cancellation cannot contain branch or task context.";
+          return false;
+        }
+
         envelope = parsed;
         error = null;
         return true;
@@ -185,6 +210,35 @@ namespace PotionPanic.Editor.Coordination
         error = "Client envelope is not valid JSON.";
         return false;
       }
+    }
+
+    internal static string ToJson(CoordinationClientEnvelope envelope)
+    {
+      if (envelope == null)
+      {
+        throw new ArgumentNullException(nameof(envelope));
+      }
+
+      if (RequiresContext(envelope.type))
+      {
+        return JsonUtility.ToJson(envelope);
+      }
+      if (RequiresPath(envelope.type))
+      {
+        return JsonUtility.ToJson(new CoordinationClientPathEnvelope
+        {
+          protocolVersion = envelope.protocolVersion,
+          type = envelope.type,
+          requestId = envelope.requestId,
+          path = envelope.path
+        });
+      }
+      return JsonUtility.ToJson(new CoordinationClientBaseEnvelope
+      {
+        protocolVersion = envelope.protocolVersion,
+        type = envelope.type,
+        requestId = envelope.requestId
+      });
     }
 
     public static bool TryParseServerEnvelope(

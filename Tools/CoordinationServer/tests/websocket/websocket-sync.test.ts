@@ -260,6 +260,54 @@ describe('coordination WebSocket synchronization', () => {
     expect(firstBroadcast).toEqual(firstResult);
   });
 
+  it('broadcasts reservation cancellation and replays it only to the requester', async () => {
+    const rin = await createDeveloper('Rin');
+    const sol = await createDeveloper('Sol');
+    const rinSocket = await connect(rin.developerToken);
+    const solSocket = await connect(sol.developerToken);
+    const rinInitial = collectMessages(rinSocket, 2);
+    const solInitial = collectMessages(solSocket, 2);
+    rinSocket.accept();
+    solSocket.accept();
+    await Promise.all([rinInitial, solInitial]);
+
+    const reservedByRin = collectMessages(rinSocket, 1);
+    const reservedBySol = collectMessages(solSocket, 1);
+    rinSocket.send(JSON.stringify({
+      protocolVersion: 1,
+      type: 'lease.reserve',
+      requestId: '99999999-9999-4999-8999-999999999999',
+      path: 'Assets/Scenes/Lab.unity',
+      branch: 'feature/test',
+      task: 'PP-7'
+    }));
+    await Promise.all([reservedByRin, reservedBySol]);
+
+    const request = JSON.stringify({
+      protocolVersion: 1,
+      type: 'reservation.cancel',
+      requestId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      path: 'Assets/Scenes/Lab.unity'
+    });
+    const firstRin = collectMessages(rinSocket, 1);
+    const firstSol = collectMessages(solSocket, 1);
+    rinSocket.send(request);
+    const [[firstResult], [firstBroadcast]] = await Promise.all([firstRin, firstSol]);
+
+    const replayRin = collectMessages(rinSocket, 1);
+    const replaySol = collectMessages(solSocket, 1);
+    rinSocket.send(request);
+
+    expect(firstResult).toMatchObject({
+      type: 'lease.released',
+      requestId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      path: 'assets/scenes/lab.unity'
+    });
+    expect(firstBroadcast).toEqual(firstResult);
+    expect(await replayRin).toEqual([firstResult]);
+    expect(await replaySol).toEqual([]);
+  });
+
   it('returns a replayed request response after a newer state exists without rebroadcasting it', async () => {
     const rin = await createDeveloper('Rin');
     const sol = await createDeveloper('Sol');

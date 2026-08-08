@@ -1,14 +1,50 @@
 using System;
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace PotionPanic.Editor.Coordination
 {
+  public sealed class UnityCoordinationWindowPathSource : ICoordinationWindowPathSource
+  {
+    public bool TryGetActiveStagePath(out string path)
+    {
+      var prefabStage = PrefabStageUtility.GetCurrentPrefabStage();
+      path = prefabStage == null ? SceneManager.GetActiveScene().path : prefabStage.assetPath;
+      return !string.IsNullOrEmpty(path);
+    }
+
+    public bool TryGetProjectSelectionPath(out string path)
+    {
+      path = Selection.activeObject == null
+        ? string.Empty
+        : AssetDatabase.GetAssetPath(Selection.activeObject);
+      return !string.IsNullOrEmpty(path) && !AssetDatabase.IsValidFolder(path);
+    }
+  }
+
+  public sealed class UnityCoordinationOverrideConfirmation
+    : ICoordinationOverrideConfirmation
+  {
+    public bool Confirm(string path, string owner)
+    {
+      return EditorUtility.DisplayDialog(
+        "Override coordination claim?",
+        path + " is claimed by " + owner
+          + ". Override transfers the editing lease to this connection.",
+        "Override",
+        "Cancel");
+    }
+  }
+
   public sealed class CoordinationWindow : EditorWindow
   {
     private CoordinationWindowViewModel viewModel;
     private Vector2 scrollPosition;
+    private bool showAdvancedPath;
+    private bool clearKeyboardFocus;
 
     [MenuItem("Window/Potion Panic/Coordination")]
     public static void ShowWindow()
@@ -38,6 +74,7 @@ namespace PotionPanic.Editor.Coordination
 
     private void OnEnable()
     {
+      clearKeyboardFocus = true;
       CoordinationEditorBootstrap.ReconnectRuntime();
       CoordinationEditorBootstrap.FlushPendingNotifications();
       EditorApplication.update -= BindViewModel;
@@ -69,6 +106,7 @@ namespace PotionPanic.Editor.Coordination
       }
 
       viewModel = current;
+      clearKeyboardFocus = true;
       if (viewModel != null)
       {
         viewModel.Changed += Repaint;
@@ -79,6 +117,13 @@ namespace PotionPanic.Editor.Coordination
     private void OnGUI()
     {
       BindViewModel();
+      if (clearKeyboardFocus)
+      {
+        GUI.FocusControl(null);
+        GUIUtility.keyboardControl = 0;
+        clearKeyboardFocus = false;
+      }
+
       if (viewModel == null)
       {
         EditorGUILayout.HelpBox(
@@ -155,24 +200,42 @@ namespace PotionPanic.Editor.Coordination
     private void DrawActions()
     {
       EditorGUILayout.LabelField("Actions", EditorStyles.boldLabel);
-      viewModel.SelectedPath = EditorGUILayout.TextField(
-        "Asset path", viewModel.SelectedPath);
+      EditorGUILayout.LabelField("Action target",
+        string.IsNullOrEmpty(viewModel.SelectedPath) ? "None" : viewModel.SelectedPath);
+      using (new EditorGUILayout.HorizontalScope())
+      {
+        DrawButton("Use active stage", true, viewModel.UseActiveStage);
+        DrawButton("Use Project selection", true, viewModel.UseProjectSelection);
+      }
+
+      showAdvancedPath = EditorGUILayout.Foldout(
+        showAdvancedPath, "Advanced path", true);
+      if (showAdvancedPath)
+      {
+        viewModel.SelectedPath = EditorGUILayout.TextField(
+          "Asset path", viewModel.SelectedPath);
+      }
+
       using (new EditorGUILayout.HorizontalScope())
       {
         DrawButton("Reconnect", viewModel.CanReconnect, viewModel.Reconnect);
         DrawButton("Reserve", viewModel.CanReserve, viewModel.Reserve);
-        DrawButton("Release", viewModel.CanRelease, viewModel.Release);
-        DrawButton("Override", viewModel.CanOverride, viewModel.Override);
+        DrawButton("Release editing lease", viewModel.CanRelease, viewModel.Release);
+        DrawButton("Cancel reservation",
+          viewModel.CanCancelReservation,
+          viewModel.CancelReservation);
+        DrawButton("Override…", viewModel.CanOverride, viewModel.Override);
       }
       using (new EditorGUILayout.HorizontalScope())
       {
-        DrawButton("Copy canonical path",
+        DrawButton("Copy path",
           viewModel.CanCopyCanonicalPath,
           viewModel.CopyCanonicalPath);
         DrawButton("Forget credentials",
           viewModel.CanForgetCredentials,
           viewModel.ForgetCredentials);
       }
+      EditorGUILayout.HelpBox(viewModel.TargetHelpText, MessageType.Info);
       EditorGUILayout.Space();
     }
 
@@ -187,7 +250,7 @@ namespace PotionPanic.Editor.Coordination
       }
     }
 
-    private static void DrawRows(
+    private void DrawRows(
       string title,
       IReadOnlyList<CoordinationWindowRow> rows,
       string emptyMessage)
@@ -202,15 +265,55 @@ namespace PotionPanic.Editor.Coordination
 
       foreach (var row in rows)
       {
-        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+        var isSelected = viewModel.IsSelected(row);
+        var style = new GUIStyle(EditorStyles.helpBox);
+        if (isSelected)
+        {
+          style.normal.background = EditorStyles.selectionRect.normal.background;
+        }
+
+        using (var rowScope = new EditorGUILayout.VerticalScope(style))
         {
           EditorGUILayout.LabelField(row.Path, EditorStyles.boldLabel);
+          if (isSelected)
+          {
+            EditorGUILayout.LabelField("Selected action target", EditorStyles.miniLabel);
+          }
           EditorGUILayout.LabelField("Owner",
             row.Owner + (row.IsLocal ? " (local)" : string.Empty));
           EditorGUILayout.LabelField("Developer ID", row.DeveloperId);
           EditorGUILayout.LabelField("Branch", EmptyFallback(row.Branch));
           EditorGUILayout.LabelField("Task", EmptyFallback(row.Task));
           EditorGUILayout.LabelField("Expires", EmptyFallback(row.ExpiresAt));
+          using (new EditorGUILayout.HorizontalScope())
+          {
+            if (row.Kind == CoordinationWindowRowKind.EditingLease && row.IsLocal)
+            {
+              DrawButton("Release editing lease",
+                viewModel.CanReleaseRow(row),
+                () => viewModel.Release(row));
+            }
+            else if (row.Kind == CoordinationWindowRowKind.Reservation && row.IsLocal)
+            {
+              DrawButton("Cancel reservation",
+                viewModel.CanCancelReservationRow(row),
+                () => viewModel.CancelReservation(row));
+            }
+            else if (row.Kind != CoordinationWindowRowKind.Presence)
+            {
+              DrawButton("Override…",
+                viewModel.CanOverrideRow(row),
+                () => viewModel.Override(row));
+            }
+            DrawButton("Copy path", true, () => viewModel.CopyPath(row));
+          }
+
+          if (Event.current.type == EventType.MouseDown
+            && rowScope.rect.Contains(Event.current.mousePosition))
+          {
+            viewModel.SelectRow(row);
+            Repaint();
+          }
         }
       }
       EditorGUILayout.Space();

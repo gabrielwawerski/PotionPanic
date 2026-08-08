@@ -221,6 +221,68 @@ describe('authoritative coordination state', () => {
     expect(state.leases[0]).not.toHaveProperty('connectionId');
   });
 
+  it('cancels a reservation from another connection owned by the same developer', async () => {
+    const rin = await createSessionIdentity('Rin');
+    const [firstConnection, secondConnection] = await openConnections([rin, rin]);
+    const reserved = await message(
+      firstConnection,
+      contextMessage('lease.reserve', 'Assets/Scenes/Lab.unity'),
+      start
+    );
+    const requestId = '33333333-3333-4333-8333-333333333333';
+
+    const cancelled = await message(
+      secondConnection,
+      { ...pathMessage('reservation.cancel', 'Assets/Scenes/Lab.unity'), requestId },
+      plusSeconds(start, 1)
+    );
+    const state = await snapshot(secondConnection, plusSeconds(start, 1));
+
+    expect(cancelled).toMatchObject({
+      stateVersion: reserved.stateVersion + 1,
+      requester: {
+        type: 'lease.released',
+        requestId,
+        path: 'assets/scenes/lab.unity'
+      },
+      stateChanges: [{ type: 'lease.released', requestId }]
+    });
+    expect(state.leases).toEqual([]);
+  });
+
+  it('denies reservation cancellation by another developer without changing state', async () => {
+    const [rin, sol] = await Promise.all([
+      createSessionIdentity('Rin'),
+      createSessionIdentity('Sol')
+    ]);
+    const [rinConnection, solConnection] = await openConnections([rin, sol]);
+    const reserved = await message(
+      rinConnection,
+      contextMessage('lease.reserve', 'Assets/Scenes/Lab.unity'),
+      start
+    );
+
+    const denied = await message(
+      solConnection,
+      pathMessage('reservation.cancel', 'Assets/Scenes/Lab.unity'),
+      plusSeconds(start, 1)
+    );
+    const state = await snapshot(solConnection, plusSeconds(start, 1));
+
+    expect(denied).toMatchObject({
+      stateVersion: reserved.stateVersion,
+      requester: {
+        type: 'lease.denied',
+        code: 'reservation_not_owned',
+        currentLease: { developerId: rin.developerId, mode: 'reserved' }
+      },
+      stateChanges: []
+    });
+    expect(state.leases).toEqual([
+      expect.objectContaining({ developerId: rin.developerId, mode: 'reserved' })
+    ]);
+  });
+
   it('rebinds an editing lease to a same-developer reconnect and rejects stale release attempts', async () => {
     const rin = await createSessionIdentity('Rin');
     const [firstConnection, secondConnection] = await openConnections([rin, rin]);
@@ -520,7 +582,10 @@ function contextMessage(
   };
 }
 
-function pathMessage(type: 'presence.close' | 'lease.release', path: string): ClientEnvelope {
+function pathMessage(
+  type: 'presence.close' | 'lease.release' | 'reservation.cancel',
+  path: string
+): ClientEnvelope {
   return { protocolVersion: 1, type, requestId: crypto.randomUUID(), path };
 }
 

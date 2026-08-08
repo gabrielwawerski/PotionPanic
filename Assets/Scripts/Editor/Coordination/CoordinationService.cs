@@ -86,6 +86,7 @@ namespace PotionPanic.Editor.Coordination
     Task SetDisabledAsync(bool disabled);
     bool TryReserveLease(string path, out CoordinationRequestHandle request);
     bool TryReleaseLease(string path, out CoordinationRequestHandle request);
+    bool TryCancelReservation(string path, out CoordinationRequestHandle request);
     bool TryOverrideLease(string path, out CoordinationRequestHandle request);
   }
 
@@ -355,6 +356,11 @@ namespace PotionPanic.Editor.Coordination
     public bool TryReserveLease(string path, out CoordinationRequestHandle request)
     {
       return TrySend("lease.reserve", path, true, out request);
+    }
+
+    public bool TryCancelReservation(string path, out CoordinationRequestHandle request)
+    {
+      return TrySend("reservation.cancel", path, false, out request);
     }
 
     public bool TryOverrideLease(string path, out CoordinationRequestHandle request)
@@ -632,7 +638,7 @@ namespace PotionPanic.Editor.Coordination
         branch = includeContext ? CoordinationProtocol.ClampContext(gitContext.GetBranch()) : null,
         task = includeContext ? CoordinationProtocol.ClampContext(settings.taskContext) : null
       };
-      var json = JsonUtility.ToJson(envelope);
+      var json = CoordinationProtocol.ToJson(envelope);
       if (!CoordinationProtocol.TryParseClientEnvelope(json, out var parsed, out _))
       {
         return false;
@@ -644,7 +650,7 @@ namespace PotionPanic.Editor.Coordination
         pendingRequests.Add(request.RequestId, request);
       }
 
-      QueueSend(request, JsonUtility.ToJson(parsed));
+      QueueSend(request, CoordinationProtocol.ToJson(parsed));
       return true;
     }
 

@@ -33,8 +33,27 @@ namespace PotionPanic.Editor.Coordination
     }
   }
 
+  public interface ICoordinationWindowPathSource
+  {
+    bool TryGetActiveStagePath(out string path);
+    bool TryGetProjectSelectionPath(out string path);
+  }
+
+  public interface ICoordinationOverrideConfirmation
+  {
+    bool Confirm(string path, string owner);
+  }
+
+  public enum CoordinationWindowRowKind
+  {
+    Presence,
+    EditingLease,
+    Reservation
+  }
+
   public sealed class CoordinationWindowRow
   {
+    public CoordinationWindowRowKind Kind { get; }
     public string Path { get; }
     public string Owner { get; }
     public string DeveloperId { get; }
@@ -44,6 +63,7 @@ namespace PotionPanic.Editor.Coordination
     public bool IsLocal { get; }
 
     public CoordinationWindowRow(
+      CoordinationWindowRowKind kind,
       string path,
       string owner,
       string developerId,
@@ -52,6 +72,7 @@ namespace PotionPanic.Editor.Coordination
       string expiresAt,
       bool isLocal)
     {
+      Kind = kind;
       Path = path ?? string.Empty;
       Owner = owner ?? string.Empty;
       DeveloperId = developerId ?? string.Empty;
@@ -71,8 +92,11 @@ namespace PotionPanic.Editor.Coordination
     private readonly ICoordinationUserSettingsStore settingsStore;
     private readonly CoordinatedPathRule[] rules;
     private readonly ICoordinationClipboard clipboard;
+    private readonly ICoordinationWindowPathSource pathSource;
+    private readonly ICoordinationOverrideConfirmation overrideConfirmation;
     private bool isEnabled;
     private string selectedPath = string.Empty;
+    private string pathSourceMessage = string.Empty;
 
     public event Action Changed;
     public string Branch { get; }
@@ -111,7 +135,11 @@ namespace PotionPanic.Editor.Coordination
       get => selectedPath;
       set
       {
-        var next = value ?? string.Empty;
+        var raw = value ?? string.Empty;
+        var next = CoordinationPathMatcher.TryNormalize(raw, out var normalized)
+          ? normalized
+          : raw;
+        pathSourceMessage = string.Empty;
         if (selectedPath == next)
         {
           return;
@@ -128,9 +156,12 @@ namespace PotionPanic.Editor.Coordination
     public bool CanReserve => CanSendForSelectedPath() && SelectedLease() == null;
     public bool CanRelease => CanSendForSelectedPath()
       && IsLocallyOwnedEditing(SelectedLease());
+    public bool CanCancelReservation => CanSendForSelectedPath()
+      && IsLocallyOwnedReservation(SelectedLease());
     public bool CanOverride => CanSendForSelectedPath() && IsRemotelyOwned(SelectedLease());
     public bool CanCopyCanonicalPath => TrySelectedPath(out _);
     public bool CanForgetCredentials => service.IsSupportedPlatform;
+    public string TargetHelpText => BuildTargetHelpText();
 
     public CoordinationWindowViewModel(
       ICoordinationWindowService service,
@@ -140,7 +171,9 @@ namespace PotionPanic.Editor.Coordination
       ICoordinationUserSettingsStore settingsStore,
       IEnumerable<CoordinatedPathRule> rules,
       ICoordinationGitContext gitContext,
-      ICoordinationClipboard clipboard)
+      ICoordinationClipboard clipboard,
+      ICoordinationWindowPathSource pathSource,
+      ICoordinationOverrideConfirmation overrideConfirmation)
     {
       this.service = service ?? throw new ArgumentNullException(nameof(service));
       this.stateStore = stateStore ?? throw new ArgumentNullException(nameof(stateStore));
@@ -149,6 +182,9 @@ namespace PotionPanic.Editor.Coordination
       this.settingsStore = settingsStore ?? throw new ArgumentNullException(nameof(settingsStore));
       this.rules = rules?.ToArray() ?? throw new ArgumentNullException(nameof(rules));
       this.clipboard = clipboard ?? throw new ArgumentNullException(nameof(clipboard));
+      this.pathSource = pathSource ?? throw new ArgumentNullException(nameof(pathSource));
+      this.overrideConfirmation = overrideConfirmation
+        ?? throw new ArgumentNullException(nameof(overrideConfirmation));
       if (gitContext == null)
       {
         throw new ArgumentNullException(nameof(gitContext));
@@ -225,10 +261,109 @@ namespace PotionPanic.Editor.Coordination
         && service.TryReleaseLease(path, out _);
     }
 
+    public bool CancelReservation()
+    {
+      return CanCancelReservation && TrySelectedPath(out var path)
+        && service.TryCancelReservation(path, out _);
+    }
+
     public bool Override()
     {
+      var lease = SelectedLease();
       return CanOverride && TrySelectedPath(out var path)
+        && overrideConfirmation.Confirm(path, DisplayOwner(lease.displayName, lease.developerId))
         && service.TryOverrideLease(path, out _);
+    }
+
+    public bool UseActiveStage()
+    {
+      return pathSource.TryGetActiveStagePath(out var path)
+        ? TrySetPathFromSource(path, "The active stage is not a saved asset under Assets/.")
+        : SetPathSourceFailure("The active stage is not a saved asset under Assets/.");
+    }
+
+    public bool UseProjectSelection()
+    {
+      return pathSource.TryGetProjectSelectionPath(out var path)
+        ? TrySetPathFromSource(path, "The Project selection is not an asset under Assets/.")
+        : SetPathSourceFailure("The Project selection is not an asset under Assets/.");
+    }
+
+    public void SelectRow(CoordinationWindowRow row)
+    {
+      if (row == null)
+      {
+        throw new ArgumentNullException(nameof(row));
+      }
+      SelectedPath = row.Path;
+    }
+
+    public bool IsSelected(CoordinationWindowRow row)
+    {
+      return row != null && TrySelectedPath(out var selected)
+        && CoordinationPathMatcher.TryNormalize(row.Path, out var candidate)
+        && CoordinationPathMatcher.ToCanonicalKey(selected)
+          == CoordinationPathMatcher.ToCanonicalKey(candidate);
+    }
+
+    public bool CanReleaseRow(CoordinationWindowRow row)
+    {
+      return row != null && row.Kind == CoordinationWindowRowKind.EditingLease
+        && CanActOnRow(row, out var lease) && IsLocallyOwnedEditing(lease);
+    }
+
+    public bool CanCancelReservationRow(CoordinationWindowRow row)
+    {
+      return row != null && row.Kind == CoordinationWindowRowKind.Reservation
+        && CanActOnRow(row, out var lease) && IsLocallyOwnedReservation(lease);
+    }
+
+    public bool CanOverrideRow(CoordinationWindowRow row)
+    {
+      return row != null && row.Kind != CoordinationWindowRowKind.Presence
+        && CanActOnRow(row, out var lease)
+        && lease.mode == (row.Kind == CoordinationWindowRowKind.EditingLease
+          ? "editing" : "reserved") && IsRemotelyOwned(lease);
+    }
+
+    public bool Release(CoordinationWindowRow row)
+    {
+      if (!CanReleaseRow(row))
+      {
+        return false;
+      }
+      SelectRow(row);
+      return Release();
+    }
+
+    public bool CancelReservation(CoordinationWindowRow row)
+    {
+      if (!CanCancelReservationRow(row))
+      {
+        return false;
+      }
+      SelectRow(row);
+      return CancelReservation();
+    }
+
+    public bool Override(CoordinationWindowRow row)
+    {
+      if (!CanOverrideRow(row))
+      {
+        return false;
+      }
+      SelectRow(row);
+      return Override();
+    }
+
+    public bool CopyPath(CoordinationWindowRow row)
+    {
+      if (row == null)
+      {
+        return false;
+      }
+      SelectRow(row);
+      return CopyCanonicalPath();
     }
 
     public bool CopyCanonicalPath()
@@ -258,6 +393,7 @@ namespace PotionPanic.Editor.Coordination
       return stateStore.GetAllPresence()
         .OrderBy(value => value.displayPath ?? value.path, StringComparer.OrdinalIgnoreCase)
         .Select(value => Row(
+          CoordinationWindowRowKind.Presence,
           value.displayPath ?? value.path,
           value.displayName,
           value.developerId,
@@ -275,6 +411,9 @@ namespace PotionPanic.Editor.Coordination
         .Where(value => value.mode == mode)
         .OrderBy(value => value.displayPath ?? value.path, StringComparer.OrdinalIgnoreCase)
         .Select(value => Row(
+          mode == "editing"
+            ? CoordinationWindowRowKind.EditingLease
+            : CoordinationWindowRowKind.Reservation,
           value.displayPath ?? value.path,
           value.displayName,
           value.developerId,
@@ -288,6 +427,7 @@ namespace PotionPanic.Editor.Coordination
     }
 
     private static CoordinationWindowRow Row(
+      CoordinationWindowRowKind kind,
       string path,
       string displayName,
       string developerId,
@@ -297,6 +437,7 @@ namespace PotionPanic.Editor.Coordination
       bool isLocal)
     {
       return new CoordinationWindowRow(
+        kind,
         path,
         DisplayOwner(displayName, developerId),
         developerId,
@@ -318,6 +459,12 @@ namespace PotionPanic.Editor.Coordination
       return lease != null && lease.mode == "editing"
         && lease.developerId == service.DeveloperId
         && lease.connectionId == service.ConnectionId;
+    }
+
+    private bool IsLocallyOwnedReservation(CoordinationLeaseRecord lease)
+    {
+      return lease != null && lease.mode == "reserved"
+        && lease.developerId == service.DeveloperId;
     }
 
     private bool IsRemotelyOwned(CoordinationLeaseRecord lease)
@@ -348,6 +495,92 @@ namespace PotionPanic.Editor.Coordination
     {
       return CoordinationPathMatcher.TryNormalize(selectedPath, out normalizedPath)
         && normalizedPath.StartsWith("Assets/", StringComparison.Ordinal);
+    }
+
+    private bool CanActOnRow(
+      CoordinationWindowRow row,
+      out CoordinationLeaseRecord lease)
+    {
+      lease = null;
+      return service.State == CoordinationConnectionState.Connected && !IsDisabled
+        && TryLeaseForRow(row, out lease);
+    }
+
+    private bool TryLeaseForRow(
+      CoordinationWindowRow row,
+      out CoordinationLeaseRecord lease)
+    {
+      lease = null;
+      return row != null && CoordinationPathMatcher.TryNormalize(row.Path, out var path)
+        && rules.Any(rule => CoordinationPathMatcher.Matches(rule, path))
+        && stateStore.TryGetLease(path, out lease);
+    }
+
+    private bool TrySetPathFromSource(string path, string failureMessage)
+    {
+      if (!CoordinationPathMatcher.TryNormalize(path, out var normalized)
+        || !normalized.StartsWith("Assets/", StringComparison.Ordinal))
+      {
+        return SetPathSourceFailure(failureMessage);
+      }
+
+      SelectedPath = normalized;
+      return true;
+    }
+
+    private bool SetPathSourceFailure(string message)
+    {
+      pathSourceMessage = message;
+      Changed?.Invoke();
+      return false;
+    }
+
+    private string BuildTargetHelpText()
+    {
+      if (!string.IsNullOrEmpty(pathSourceMessage))
+      {
+        return pathSourceMessage;
+      }
+      if (string.IsNullOrWhiteSpace(selectedPath))
+      {
+        return "Choose a row, the active stage, the Project selection, or an advanced path.";
+      }
+      if (!TrySelectedPath(out var path))
+      {
+        return "Choose an asset under Assets/.";
+      }
+      if (!rules.Any(rule => CoordinationPathMatcher.Matches(rule, path)))
+      {
+        return "This path is not covered by a coordination rule.";
+      }
+      if (!service.IsSupportedPlatform)
+      {
+        return "Coordination actions are available only in the Windows editor.";
+      }
+      if (settings.disabled)
+      {
+        return "Coordination is disabled. Copy path remains available.";
+      }
+      if (service.State != CoordinationConnectionState.Connected)
+      {
+        return "Reconnect to change claims. Copy path remains available.";
+      }
+
+      var lease = SelectedLease();
+      if (lease == null)
+      {
+        return "No current claim. Reserve is available.";
+      }
+      if (IsLocallyOwnedEditing(lease))
+      {
+        return "You own this editing lease. Release editing lease is available.";
+      }
+      if (IsLocallyOwnedReservation(lease))
+      {
+        return "You own this reservation. Cancel reservation is available.";
+      }
+      return "Claimed by " + DisplayOwner(lease.displayName, lease.developerId)
+        + ". Override requires confirmation.";
     }
 
     private void HandleChanged() => Changed?.Invoke();

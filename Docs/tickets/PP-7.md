@@ -450,6 +450,36 @@ action; reservations remain until expiry, override, or revocation. Treat row
 selection, context actions, and reservation cancellation as explicit follow-up
 design and protocol work rather than completed release behavior.
 
+2026-08-08: The `feature/coordination-window-actions` implementation adds
+path-oriented row selection, active-stage and Project-selection targets, an
+advanced manual-path fallback, contextual row actions, disabled-action helper
+text, override confirmation, and the explicit path-only
+`reservation.cancel` Protocol v1 request. Cancellation is developer-owned and
+uses the existing correlated `lease.released` response; `lease.release`
+remains editing-lease and connection-owned.
+
+Local verification ran from `Tools/CoordinationServer` with
+`npm run typecheck`, `npm test`, `npm audit --audit-level=high`,
+`npx wrangler --version`, and `npx wrangler deploy --dry-run`. Results were a
+successful typecheck, 104/104 backend tests, zero vulnerabilities, Wrangler
+`4.120.0`, and a successful dry run. Root `npm test` passed 16/16 and
+`npm run docs:build` completed. Unity `6000.5.1f1` focused suites passed
+41/41 protocol, 42/42 service, and 14/14 window-view-model tests; the full
+Coordination EditMode suite passed 212/212.
+
+The manual `Assets/Scenes/SampleScene.unity` Play Mode smoke showed zero
+Console errors and rendered the new source controls, target guidance,
+selectable claim treatment, local reservation cancellation action, and copy
+action. A domain-reload focus regression found during the smoke was corrected;
+the persisted task context remained empty on the repeat run. Screenshot
+evidence is `Logs/coordination-window-actions-smoke.png`.
+
+The updated Worker was not deployed and live cancellation was deliberately not
+sent to the older production protocol. No secret, token, credential,
+`coordination.json`, or production Worker mutation occurred. The external
+two-machine matrix, the new reservation-cancellation row, and filtered tail
+evidence remain incomplete, so Task 6 and PP-7 remain open.
+
 ## Definition of Done
 
 - [ ] Acceptance criteria met
