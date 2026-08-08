@@ -7,9 +7,9 @@ const docsDir = fileURLToPath(new URL("..", import.meta.url));
 
 export default createDocsConfig(defineDocsProject({
   head: [
-    ["link", {rel: "icon", type: "image/svg+xml", href: "/favicon.svg"}],
-    ["link", {rel: "icon", type: "image/x-icon", href: "/favicon.ico"}],
-    ["link", {rel: "icon", type: "image/png", sizes: "512x512", href: "/logo.png"}],
+    ["link", {rel: "icon", type: "image/svg+xml", href: "/PotionPanic/favicon.svg"}],
+    ["link", {rel: "icon", type: "image/x-icon", href: "/PotionPanic/favicon.ico"}],
+    ["link", {rel: "icon", type: "image/png", sizes: "512x512", href: "/PotionPanic/logo.png"}],
   ],
   themeConfig: {logo: "/favicon.svg"},
   title: "Potion Panic",

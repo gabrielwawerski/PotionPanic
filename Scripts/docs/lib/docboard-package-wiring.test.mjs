@@ -37,6 +37,22 @@ test("PotionPanic managed docs config exposes the current navigation contract", 
   });
 });
 
+test("PotionPanic favicon links include the GitHub Pages base path", () => {
+  assert.deepEqual(docsConfig.head, [
+    ["link", {rel: "icon", type: "image/svg+xml", href: "/PotionPanic/favicon.svg"}],
+    ["link", {rel: "icon", type: "image/x-icon", href: "/PotionPanic/favicon.ico"}],
+    [
+      "link",
+      {
+        rel: "icon",
+        type: "image/png",
+        sizes: "512x512",
+        href: "/PotionPanic/logo.png",
+      },
+    ],
+  ]);
+});
+
 test("PotionPanic theme entrypoint delegates to the Docboard package theme", () => {
   const themeEntrypoint = fs.readFileSync(
     path.resolve("Docs/.vitepress/theme/index.ts"),
