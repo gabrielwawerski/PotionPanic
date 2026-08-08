@@ -569,6 +569,46 @@ intended developer credentials through the documented secret channel, capture
 filtered Wrangler-tail evidence during a credentialed connection or lease
 operation, and later run the full two-machine different-network matrix.
 
+2026-08-08: Cloudflare Worker redeployed from clean `master` at
+`0b9073a31ad2aa84ca35ac800f80755fa0279c01`
+(`docs(coordination): record controlled rollout checkpoint`), aligned with
+`origin/master`. Pre-deploy checks from `Tools/CoordinationServer` passed:
+`npm run typecheck`, `npm test` (104/104), `npm audit --audit-level=high`
+with zero vulnerabilities, `npx wrangler --version` reporting `4.120.0`,
+`npx wrangler whoami` confirming the authenticated account
+`d6fe2dd4378f5957461c683b9cd7cfbd`, `npx wrangler secret list` reporting
+only `ADMIN_TOKEN` and `TOKEN_HMAC_KEY` secret names, and `npx wrangler deploy
+--dry-run` reporting the `COORDINATION_OBJECT (CoordinationObject)` Durable
+Object binding. The pre-deploy `/health` check returned HTTP 200, service
+`potion-panic-coordination`, and parseable server time
+`2026-08-08T14:03:06.229Z`.
+
+The authorized mutation was `npx wrangler deploy` only. Wrangler uploaded and
+deployed `potion-panic-coordination`, reported Worker startup time `5 ms`, the
+unchanged URL
+`https://potion-panic-coordination.gabriel-wawerski.workers.dev`, and current
+version ID `727852a4-16cc-4bc8-8c12-c64f672f5d6a`.
+
+Post-deploy verification reported version
+`727852a4-16cc-4bc8-8c12-c64f672f5d6a`, created
+`2026-08-08T14:03:22.815Z`, receiving 100 percent of traffic. `npx wrangler
+versions view 727852a4-16cc-4bc8-8c12-c64f672f5d6a` showed the `fetch`
+handler, compatibility date `2026-08-06`, the required `ADMIN_TOKEN` and
+`TOKEN_HMAC_KEY` secret names, and the `COORDINATION_OBJECT
+(CoordinationObject)` Durable Object binding. The post-deploy `/health` check
+returned HTTP 200, service `potion-panic-coordination`, and parseable server
+time `2026-08-08T14:03:43.566Z`. A credential-free live protocol check,
+`POST /v1/projects/potion-panic/sessions` with an empty JSON body and no
+`Authorization` header, returned HTTP 401.
+
+No secret value, authorization header, developer token, opaque session token,
+Credential Manager content, secret provisioning, secret rotation,
+developer-token operation, `coordination.json` change, GitHub mutation, Unity
+file change, or unrelated Cloudflare change occurred. This redeploy does not
+complete the interactive single-machine smoke, filtered credentialed tail
+evidence, developer provisioning, or the two-machine different-network
+acceptance matrix. PP-7 remains open.
+
 ## Definition of Done
 
 - [ ] Acceptance criteria met
