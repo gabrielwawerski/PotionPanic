@@ -71,7 +71,7 @@ namespace PotionPanic.Editor.Coordination
     }
   }
 
-  public sealed class CoordinationService : ICoordinationAssetService
+  public sealed class CoordinationService : ICoordinationAssetService, ICoordinationSaveService
   {
     private static readonly int[] ReconnectDelaysSeconds = { 1, 2, 4, 8, 16, 30 };
     private static readonly object RandomLock = new object();

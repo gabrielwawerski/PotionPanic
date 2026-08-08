@@ -217,6 +217,47 @@ editor bootstrap/UI lifecycle, or implement the Slice 07 save interception,
 authorization, or offline-confirmation behavior. Those items remain required
 before PP-7 can be completed.
 
+2026-08-08: Slice 07 conflict-safe saving implemented under commit subject
+`feat(coordination): guard conflicting saves`. `OnWillSaveAssets` now returns
+all non-exclusive, disabled, and authoritatively local-owned paths immediately.
+It omits only exclusive paths with a remote claim or a pending local claim. The
+callback performs normalization, state reads, in-memory pending registration,
+and `EditorApplication.delayCall` scheduling only. It does not send protocol
+requests, open UI, or call a Unity save API. Deferred work correlates each
+request ID with its normalized path set and resumes only the exact path whose
+current connected-session state contains the local developer's editing lease.
+Cached offline ownership and stale replay grants cannot authorize a save.
+
+Authoritative denial queues `SaveConflictDialog` with exactly `Override and
+save`, `Cancel save`, and `Keep working`; only the override action sends
+`lease.override`. Outage, reconnect, request timeout, and transport-level
+override failure can offer `Save locally without coordination`. The offer is
+withdrawn if an outage reconnects before UI opens, and saving requires a second
+confirmation that lists every affected path and its last known owner. Successful
+uncoordinated paths create memory-only warning records and a Console warning;
+partial batch failures do not warn for unsaved paths. Slice 08 receives those
+records through `ICoordinationUncoordinatedSaveState` and remains responsible
+for the main window and lifecycle bootstrap.
+
+Fresh prerequisite verification passed before implementation. The Coordination
+Server passed typecheck; auth, state, WebSocket, and full tests passed 6/6,
+10/10, 12/12, and 77/77; `npm audit --audit-level=moderate` reported zero
+vulnerabilities; and the Wrangler 4.120.0 deployment dry run passed. Unity
+6000.5.1f1 then passed the pre-change Coordination EditMode suite 95/95. Final
+Slice 07 focused EditMode coverage passed 29/29, and the final full Coordination
+EditMode suite passed 124/124 with zero failed, skipped, or inconclusive tests
+and no C# compiler errors or warnings in the final log.
+
+The required manual editor smoke is not complete. A temporary, untracked
+editor-only harness compiled and logged `SLICE07_SMOKE_READY`, but the supported
+Windows Computer Use helper failed before scene interaction with
+`SetIsBorderRequired failed: No such interface supported (0x80004002)`. The
+harness was removed, Unity closed cleanly, and no scene, prefab,
+`ProjectSettings`, or `Packages` file was written. Remaining risk: the real
+`UnityCoordinationSaveInvoker` scene, selected-Prefab-Stage, and general asset
+save paths still need the planned editor smoke after UI control is available.
+Live Worker deployment and two-machine acceptance remain Slice 09 work.
+
 ## Definition of Done
 
 - [ ] Acceptance criteria met
