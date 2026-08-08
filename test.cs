@@ -2,7 +2,7 @@ namespace DefaultNamespace;
 
 public class test
 {
-  #test
+  #test0
 
 }
 
