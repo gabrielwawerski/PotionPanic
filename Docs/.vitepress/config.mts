@@ -15,7 +15,7 @@ export default createDocsConfig(defineDocsProject({
   title: "Potion Panic",
   description: "Shared project docs and task board for Potion Panic.",
   socialPreview: {
-    siteUrl: "https://gabrielwawerski.github.io/PotionPanic",
+    siteUrl: "https://gabrielwawerski.github.io/PotionPanic/",
   },
   base: "/PotionPanic/",
   docsRoot: "Docs",
