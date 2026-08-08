@@ -331,6 +331,69 @@ not authenticated on this machine, so deployment, the exact production URL,
 issued developer credentials, and two-machine acceptance remain external
 release blockers. PP-7 stays open until those steps have recorded evidence.
 
+2026-08-08: Remaining hardening local gate completed on `master`. Repository
+HEAD was `92be418`; the reviewed coordination hardening scope ends at
+`bbafa22` (`docs(coordination): document secure Worker operations`). No live
+deployment, secret mutation, developer-token operation, or destructive
+Cloudflare action ran in this gate.
+
+Backend and root verification passed with exact output captured in
+`Logs/task5-backend-root-gate.log`. From `Tools/CoordinationServer`, `npm ci`
+exited zero and audited 84 packages, `npm run typecheck` passed, `npm test`
+passed 98/98, `npm audit --audit-level=moderate` reported zero vulnerabilities,
+and `npx wrangler deploy --dry-run` exited zero with Wrangler 4.120.0 and the
+`COORDINATION_OBJECT (CoordinationObject)` Durable Object binding. From the
+repository root, `npm test` passed 16/16 and `npm run docs:build` completed.
+The post-gate worktree was clean.
+
+Unity 6000.5.1f1 passed the focused
+`PotionPanic.Tests.EditMode.Coordination.CoordinationSnapshotAssemblerTests`
+fixture 12/12 and the full
+`PotionPanic.Tests.EditMode.Coordination` suite 204/204, with zero failed,
+skipped, or inconclusive tests. Neither final log contains a C# compilation
+error or warning. Evidence paths are
+`Logs/coordination-release-focused.xml`,
+`Logs/coordination-release-focused.log`,
+`Logs/coordination-release-editmode.xml`, and
+`Logs/coordination-release-editmode.log`.
+
+The manual editor smoke opened `Assets/Scenes/SampleScene.unity` and the
+Coordination window, entered Play Mode for eight seconds, exited Play Mode,
+and showed an empty Console. The window state was Identity `Not authenticated`,
+Git branch `master`, Connection `Offline`, Disabled false, empty task context,
+and empty presence, editing-lease, and reservation lists. The scene was not
+saved, and no scene, prefab, `ProjectSettings`, or `Packages` file changed.
+Evidence is in `Logs/task5-manual-smoke.log`,
+`Logs/unity-smoke-playmode.png`, and
+`Logs/unity-smoke-console-shortcut.png`.
+
+Independent GPT-5.6 Terra reviewer `task5_independent_review` reviewed the
+coordination scope introduced by `15c96e5`, `13edd35`, `173ded5`, and
+`bbafa22` and returned `approved`. The review confirmed atomic snapshot apply,
+exact-once request termination, UTF-16 256-unit bounds, the shared C# and
+TypeScript Unicode fixture with non-ASCII case preservation, declarative
+Wrangler release configuration without legacy migrations, no tracked token,
+and a verification-only GitHub workflow.
+
+Read-only Cloudflare verification is captured in
+`Logs/task5-cloudflare-readonly.log`. `npx wrangler whoami` confirmed one
+authenticated account with Worker access. `npx wrangler deployments list`
+reported deployment version `badf6872-b3bf-4d7e-879a-57b125937cbe`, created
+`2026-08-08T10:15:29.455Z`. The configured Worker's `/health` returned HTTP
+200, service `potion-panic-coordination`, and a parseable `serverTime`.
+`npx wrangler secret list` returned an empty list. The endpoint is deployed and
+healthy for its unauthenticated health route, but production authentication is
+not configured according to the secret-name listing.
+
+PP-7 remains open. Production `TOKEN_HMAC_KEY` and `ADMIN_TOKEN` secrets have
+not been verified as configured, developer tokens have not been issued or
+provisioned, and two Windows machines on different networks have not completed
+any acceptance-matrix row. Presence and reservation, simultaneous acquire,
+conflict/cancel/override, clean close, abrupt termination and 120-second
+expiry, network loss and outage fallback, 24-hour session recreation,
+hibernation, revocation, and filtered live-tail evidence all still require
+dated external observations.
+
 ## Definition of Done
 
 - [ ] Acceptance criteria met
