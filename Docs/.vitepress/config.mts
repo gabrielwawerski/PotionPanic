@@ -14,6 +14,9 @@ export default createDocsConfig(defineDocsProject({
   themeConfig: {logo: "/favicon.svg"},
   title: "Potion Panic",
   description: "Shared project docs and task board for Potion Panic.",
+  socialPreview: {
+    siteUrl: "https://gabrielwawerski.github.io/PotionPanic",
+  },
   base: "/PotionPanic/",
   docsRoot: "Docs",
   pagePathPrefix: "Docs",
