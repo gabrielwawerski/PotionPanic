@@ -7,7 +7,7 @@ title: 'Coordinated Leasing 07: Conflict-Safe Save Guard'
 **Session goal:** Prevent accidental conflicting saves while preserving local
 work during pending requests, failures, offline operation, and reloads.
 
-**Depends on:** Slices 05 and 06.
+**Depends on:** Slices 05B and 06.
 
 **Produces:** A callback-safe save guard that cancels only conflicted paths and
 resumes only the omitted paths after an authoritative grant or override.
@@ -24,11 +24,15 @@ resumes only the omitted paths after an authoritative grant or override.
 - In `AssetModificationProcessor.OnWillSaveAssets`, return all safe paths
   immediately and omit only paths with a remote claim or pending local claim.
   Start asynchronous acquisition or override work after the callback returns.
-- Represent each pending save by its normalized target paths and request ID.
-  Handle multi-path saves without resuming an unrelated path.
-- After an authoritative grant or override, resume only the omitted target via
-  `EditorApplication.delayCall`. Use a one-shot recursion guard that clears on
-  completion and on failure.
+- Key each pending save by its request ID and normalized path set. Handle
+  multi-path saves without resuming an unrelated path.
+- Resume a save only when current authoritative state confirms that the local
+  developer owns the editing lease. A stale replayed grant is insufficient.
+- Add `Save locally without coordination`, enabled only during an outage,
+  reconnect, timeout, or transport-level override failure. Require a second
+  confirmation showing affected paths and the last known owner.
+- Mark an uncoordinated save in memory, show it in the Coordination UI, and log
+  a warning. Do not create backend history or tracked state.
 - When an authoritative `lease.denied` result identifies a remote owner, queue
   `SaveConflictDialog` with `EditorApplication.delayCall`; never open UI inside
   `OnWillSaveAssets`. The dialog has exactly `Override and save`, `Cancel save`,
@@ -36,8 +40,9 @@ resumes only the omitted paths after an authoritative grant or override.
   the other actions preserve dirty local changes without scheduling a save.
   If an override fails, if the backend is offline, or if the editor reloads,
   preserve dirty local changes and leave the file editable.
-- Never treat a timeout or local offline state as ownership. Manual coordination
-  remains the fallback.
+- Preserve dirty work for cancellation, authoritative denial, reload, and
+  failed saves. Never treat a timeout or local offline state as ownership.
+  Manual coordination remains the fallback.
 
 ## Verification
 

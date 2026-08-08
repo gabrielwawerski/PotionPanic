@@ -229,6 +229,10 @@ creates a connection record; an HTTP session never does.
              ↓
 05 Unity connection service
              ↓
+05A Authoritative backend stabilization
+             ↓
+05B Unity connection stabilization
+             ↓
 06 Scene and prefab tracking
              ↓
 07 Conflict-safe save guard
@@ -240,8 +244,11 @@ creates a connection record; an HTTP session never does.
 
 Slice 01 includes the repository baseline and protocol contract. Slice 02
 creates identities and authenticated sessions. Slice 03 owns all state
-transitions and expiry. Slice 04 transports that state. Slices 05 through 08
-consume the stable backend contract in order. Slice 09 is the only release gate.
+transitions and expiry. Slice 04 transports that state. Slice 05A stabilizes
+the authoritative backend and Slice 05B stabilizes the Unity protocol and
+transport. Slice 06 remains paused until both stabilization gates are green.
+Slices 06 through 08 then consume the stable contract in order. Slice 09 is the
+only release gate.
 
 ## Session slices
 
@@ -250,10 +257,12 @@ consume the stable backend contract in order. Slice 09 is the only release gate.
 3. [Authoritative state and expiry](./coordinated-file-leasing-03-authoritative-state.md)
 4. [Hibernating WebSocket synchronization](./coordinated-file-leasing-04-websocket-sync.md)
 5. [Unity authentication and connection service](./coordinated-file-leasing-05-unity-connection.md)
-6. [Scene and selected-prefab tracking](./coordinated-file-leasing-06-asset-tracking.md)
-7. [Conflict-safe save guard](./coordinated-file-leasing-07-save-guard.md)
-8. [Coordination window and lifecycle](./coordinated-file-leasing-08-ui-lifecycle.md)
-9. [Release acceptance and documentation handoff](./coordinated-file-leasing-09-release-handoff.md)
+6. [Authoritative backend stabilization](./coordinated-file-leasing-stabilization.md#slice-05a-backend-stabilization)
+7. [Unity connection stabilization](./coordinated-file-leasing-stabilization.md#slice-05b-unity-client-stabilization)
+8. [Scene and selected-prefab tracking](./coordinated-file-leasing-06-asset-tracking.md)
+9. [Conflict-safe save guard](./coordinated-file-leasing-07-save-guard.md)
+10. [Coordination window and lifecycle](./coordinated-file-leasing-08-ui-lifecycle.md)
+11. [Release acceptance and documentation handoff](./coordinated-file-leasing-09-release-handoff.md)
 
 ## Release acceptance
 

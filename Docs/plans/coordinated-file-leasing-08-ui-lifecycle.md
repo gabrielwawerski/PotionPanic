@@ -7,7 +7,7 @@ title: 'Coordinated Leasing 08: Coordination Window and Lifecycle'
 **Session goal:** Make coordination state inspectable and operable in the Unity
 editor, and make normal shutdown, compilation, and domain reload safe.
 
-**Depends on:** Slices 05, 06, and 07.
+**Depends on:** Slices 05B, 06, and 07.
 
 **Produces:** The first usable editor interface and lifecycle-hardening layer.
 
@@ -29,10 +29,14 @@ editor, and make normal shutdown, compilation, and domain reload safe.
 - Use Unity notifications only for claims, conflicts, overrides, reservations,
   authentication failure, and prolonged disconnect. Do not add native Windows
   notifications or Rider integration.
+- Own service startup and `ShutdownAsync`, including cancellation of heartbeat
+  and reconnect loops before socket shutdown.
+- Prevent duplicate bootstrap, heartbeat, reconnect, and event subscriptions
+  across domain reload.
+- Display uncoordinated-save warnings until the affected asset closes or
+  coordination confirms ownership.
 - Release owned presence and editing leases during normal shutdown where
   possible. Treat abrupt shutdown as stale expiry.
-- Ensure compilation and domain reload recreate services without duplicate
-  event subscriptions, leaked sockets, or stale resume guards.
 
 ## Verification
 

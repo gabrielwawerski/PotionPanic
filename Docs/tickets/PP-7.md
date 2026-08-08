@@ -124,6 +124,60 @@ No scene, prefab, package, or project-setting files changed. Handoff: Slice 06
 may subscribe to `CoordinationService` events and its `Try*` protocol methods,
 without changing authentication or transport behavior.
 
+2026-08-08: Stabilization baseline recorded before implementation. The backend
+typecheck passed. `npm test -- tests/auth` passed 6/6 and
+`npm test -- tests/websocket` passed 11/11, but `npm test -- tests/state`
+failed 8/9 and the full `npm test` failed 8/75. The failed state tests use
+fixed 2026-08-07 timestamps, which had already expired on this run; the first
+failure was `Target cannot be null or undefined` at
+`authoritative-state.test.ts:74` because the snapshot had no `leases` field.
+The same run logged `SQLite alarm overdue` and later requests received
+`connection_not_found` or expired-session errors. `npm audit
+--audit-level=moderate` reported four vulnerabilities, three moderate and one
+high, through `undici 7.0.0 - 7.28.0`; the command named
+`@cloudflare/vitest-pool-workers 0.20.2`, `wrangler 4.119.0`, and Miniflare as
+affected dependents. `npx wrangler deploy --dry-run` passed with Wrangler
+4.119.0. Unity 6000.5.1f1 compiled successfully and ran the full Coordination
+EditMode suite: 39/40 passed, 1 failed, 0 skipped, exit code 2. The failing
+test was `CoordinationProtocolTests.AcceptsEveryV1ServerMessageWithItsRequiredFields`:
+the valid `lease.denied` envelope with `"currentLease":null` parsed as false.
+The license was valid for this run. Slice 06 is paused pending 05A and 05B.
+
+2026-08-08: Slice 05A committed as
+`aa7ad8171be0dac7375f92706771d9649e3f444f`
+(`fix(coordination): stabilize authoritative backend`). State tests now derive
+their start time from the current run. All multi-statement state transitions,
+state-version increments, and replay inserts run in `storage.transactionSync`;
+alarms and socket work occur after commit. Expiry now removes sockets with
+`4001` before broadcasting removal events only to remaining connections.
+Verification from `Tools/CoordinationServer`: `npm ci --ignore-scripts`,
+`npm run typecheck`, and `npm test` passed (77/77); focused auth, state, and
+WebSocket suites passed 6/6, 10/10, and 12/12. `npm audit
+--audit-level=moderate` reported zero vulnerabilities and
+`npx wrangler deploy --dry-run` passed with Wrangler 4.120.0. The lockfile
+contains Worker pool 0.20.3, Wrangler 4.120.0, Miniflare
+5.20260801.1-alpha, and Undici 7.29.0. Remaining risk: this is a deployment
+dry run only; Slice 05B must clear the Unity protocol and transport gate before
+Slice 06 may resume.
+
+2026-08-08: Slice 05B committed as
+`d47f2d0df5418de02ea4a188348295fca59eccb6`
+(`fix(coordination): harden Unity connection service`). It accepts explicit
+`lease.denied.currentLease: null`, bounds fragmented text messages to 16 KiB,
+serializes sends, closes binary and oversized messages with `1003` and `1009`,
+starts configured heartbeats only after `session.ready`, and cancels heartbeat
+and reconnect work on shutdown or credential removal. Close `4001` creates a
+new session immediately; close `4003` sets `AuthenticationFailed`, raises
+revocation, and does not retry. Mutation APIs now return correlated request
+handles; stale replay responses complete their matching request without
+reapplying state. Credential Manager read failures are surfaced without opening
+the credential prompt. Unity 6000.5.1f1 ran the full Coordination EditMode
+suite successfully: 53/53 passed, 0 failed, 0 skipped, with no new compiler
+errors in the log. No scene, prefab, package, or project-setting files changed.
+Both stabilization gates are green. Slice 06 remains intentionally paused and
+was not started in this scope. Remaining risk: the Worker has only a deployment
+dry run and the two-machine Slice 09 acceptance is still outstanding.
+
 ## Definition of Done
 
 - [ ] Acceptance criteria met
