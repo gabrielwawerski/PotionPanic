@@ -121,6 +121,7 @@ InitTestScene*.unity*
 /Docs/.vitepress/cache/
 /Docs/.vitepress/dist/
 /.worktrees/
+/.superpowers/
 
 # Coordination local credentials, runtime state, and tooling output
 /Tools/CoordinationServer/.dev.vars
