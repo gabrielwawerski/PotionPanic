@@ -157,6 +157,24 @@ namespace PotionPanic.Tests.EditMode.Coordination
     }
 
     [Test]
+    public async Task PresenceUpdatePublishesItsAuthoritativeEnvelope()
+    {
+      var socket = new FakeWebSocketClient();
+      var service = CreateService(Credentials(), new FakeHttpClient(), socket);
+      object received = null;
+      service.PresenceReceived += value => received = value;
+
+      await service.ConnectAsync();
+      RaiseReady(socket, 1);
+      socket.RaiseMessage("{\"protocolVersion\":1,\"type\":\"presence.updated\","
+        + "\"stateVersion\":2,\"presence\":[]}");
+
+      Assert.That(received, Is.TypeOf<CoordinationServerEnvelope>());
+      Assert.That(((CoordinationServerEnvelope)received).stateVersion, Is.EqualTo(2));
+      await service.ShutdownAsync();
+    }
+
+    [Test]
     public async Task SessionReadyStartsHeartbeatsWithoutRequestingAnotherSnapshot()
     {
       var credentials = Credentials();

@@ -71,7 +71,7 @@ namespace PotionPanic.Editor.Coordination
     }
   }
 
-  public sealed class CoordinationService
+  public sealed class CoordinationService : ICoordinationAssetService
   {
     private static readonly int[] ReconnectDelaysSeconds = { 1, 2, 4, 8, 16, 30 };
     private static readonly object RandomLock = new object();
@@ -108,7 +108,7 @@ namespace PotionPanic.Editor.Coordination
     public event Action<CoordinationConnectionState> StateChanged;
     public event Action<CoordinationServerEnvelope> SessionReady;
     public event Action<CoordinationServerEnvelope> SnapshotReceived;
-    public event Action<CoordinationPresenceRecord[]> PresenceReceived;
+    public event Action<CoordinationServerEnvelope> PresenceReceived;
     public event Action<CoordinationServerEnvelope> PresenceRemoved;
     public event Action<CoordinationServerEnvelope> LeaseResultReceived;
     public event Action<CoordinationServerEnvelope> ErrorReceived;
@@ -597,7 +597,7 @@ namespace PotionPanic.Editor.Coordination
           SnapshotReceived?.Invoke(envelope);
           break;
         case "presence.updated":
-          PresenceReceived?.Invoke(envelope.presence);
+          PresenceReceived?.Invoke(envelope);
           break;
         case "presence.removed":
           PresenceRemoved?.Invoke(envelope);
