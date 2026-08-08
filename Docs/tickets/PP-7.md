@@ -528,6 +528,47 @@ filtered Wrangler-tail evidence still require dated observations from two
 Windows machines using Unity 6000.5.1f1 on different networks. PP-7 remains
 open.
 
+2026-08-08: Controlled internal rollout checkpoint after excluding the
+two-machine acceptance matrix. The deployment evidence commit
+`cdc229f44c91a5b807d6bcbb902187c639cb55eb`
+(`docs(coordination): record window actions deployment`) is pushed to
+`origin/master`. GitHub Actions run `31259384832` for that commit completed
+successfully in the `Deploy Docs` workflow. The coordination-server workflow
+did not run for this commit because its path filter excludes ticket-only
+documentation changes; the Worker-code verification was rerun locally instead.
+
+Local verification from `Tools/CoordinationServer` passed again: `npm run
+typecheck`, `npm test` (104/104), and `npx wrangler deploy --dry-run` all
+exited zero. The dry run reported the `COORDINATION_OBJECT
+(CoordinationObject)` Durable Object binding.
+
+Live Worker sanity checks against
+`https://potion-panic-coordination.gabriel-wawerski.workers.dev` returned
+three HTTP 200 `/health` responses and three HTTP 401 responses for
+unauthenticated `POST /v1/projects/potion-panic/sessions` requests with an
+empty JSON body. A bounded `npx wrangler tail --format json` capture ran during
+those probes and produced no captured events before the timeout. No secret
+value, authorization header, developer token, opaque session token, Credential
+Manager content, secret provisioning, secret rotation, developer-token
+operation, `coordination.json` change, GitHub mutation, or unrelated
+Cloudflare change occurred.
+
+A temporary Unity batch-mode single-machine smoke harness was created and then
+removed without committing it. The expected Credential Manager target
+`PotionPanic/Coordination/potion-panic/developer-token` exists, but its value
+was not read or displayed. Two Unity `6000.5.1f1` batch attempts reached
+`TASK6_RELEASE_SMOKE state=Reconnecting` and did not reach `session.ready` or
+any request completion before the bounded runs were terminated. Evidence is in
+`Logs/task6-release-unity.log`. This is not counted as a passed Unity live
+smoke, and no acceptance row is completed from it.
+
+Release status: the current `master` is suitable only for controlled internal
+rollout with PP-7 open. Before declaring final release, complete at least one
+interactive single-machine live smoke with the updated Unity client, provision
+intended developer credentials through the documented secret channel, capture
+filtered Wrangler-tail evidence during a credentialed connection or lease
+operation, and later run the full two-machine different-network matrix.
+
 ## Definition of Done
 
 - [ ] Acceptance criteria met
