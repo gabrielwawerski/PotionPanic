@@ -164,6 +164,50 @@ describe('coordination WebSocket synchronization', () => {
     expect(firstBroadcast).toEqual(firstResult);
   });
 
+  it('returns a replayed request response after a newer state exists without rebroadcasting it', async () => {
+    const rin = await createDeveloper('Rin');
+    const sol = await createDeveloper('Sol');
+    const rinSocket = await connect(rin.developerToken);
+    const solSocket = await connect(sol.developerToken);
+    const rinInitial = collectMessages(rinSocket, 2);
+    const solInitial = collectMessages(solSocket, 2);
+    rinSocket.accept();
+    solSocket.accept();
+    await Promise.all([rinInitial, solInitial]);
+
+    const request = JSON.stringify({
+      protocolVersion: 1,
+      type: 'presence.open',
+      requestId: '77777777-7777-4777-8777-777777777777',
+      path: 'Assets/Scenes/Lab.unity',
+      branch: 'feature/test',
+      task: 'PP-7'
+    });
+    const firstRin = collectMessages(rinSocket, 1);
+    const firstSol = collectMessages(solSocket, 1);
+    rinSocket.send(request);
+    const [[firstResponse]] = await Promise.all([firstRin, firstSol]);
+
+    const newerRin = collectMessages(rinSocket, 1);
+    const newerSol = collectMessages(solSocket, 1);
+    solSocket.send(JSON.stringify({
+      protocolVersion: 1,
+      type: 'presence.open',
+      requestId: '88888888-8888-4888-8888-888888888888',
+      path: 'Assets/Scenes/Other.unity',
+      branch: 'feature/test',
+      task: 'PP-7'
+    }));
+    await Promise.all([newerRin, newerSol]);
+
+    const replayRin = collectMessages(rinSocket, 1);
+    const replaySol = collectMessages(solSocket, 1);
+    rinSocket.send(request);
+
+    expect(await replayRin).toEqual([firstResponse]);
+    expect(await replaySol).toEqual([]);
+  });
+
   it('rejects client-supplied state versions before applying a mutation', async () => {
     const developer = await createDeveloper('Rin');
     const socket = await connect(developer.developerToken);
@@ -230,19 +274,26 @@ describe('coordination WebSocket synchronization', () => {
 
     await runInDurableObject(projectObject(), (_instance, state) => {
       state.storage.sql.exec(
-        "UPDATE connections SET expires_at = '2000-01-01T00:00:00.000Z'"
+        "UPDATE connections SET expires_at = '2000-01-01T00:00:00.000Z' WHERE connection_id = ?",
+        rinReady.connectionId
       );
       state.storage.sql.exec(
-        "UPDATE presence SET expires_at = '2000-01-01T00:00:00.000Z'"
+        "UPDATE presence SET expires_at = '2000-01-01T00:00:00.000Z' WHERE connection_id = ?",
+        rinReady.connectionId
       );
     });
+    const rinClosed = collectClose(rinSocket);
+    const rinExpiry = collectMessages(rinSocket, 1);
     const solExpiry = collectMessages(solSocket, 1);
 
     expect(await runDurableObjectAlarm(projectObject())).toBe(true);
+    expect(await rinClosed).toMatchObject({ code: 4001 });
+    expect(await rinExpiry).toEqual([]);
     expect(await solExpiry).toEqual([expect.objectContaining({
       type: 'presence.removed',
       connectionId: rinReady.connectionId
     })]);
+    expect(solSocket.readyState).toBe(WebSocket.OPEN);
   });
 
   it('rejects older server state when a client has already applied a newer version', () => {

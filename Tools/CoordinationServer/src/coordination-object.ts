@@ -96,6 +96,13 @@ export interface StateTransition {
   requester: ServerEnvelope | null;
   stateChanges: ServerEnvelope[];
   stateVersion: number;
+  connectionClosures: ConnectionClosure[];
+}
+
+export interface ConnectionClosure {
+  connectionId: string;
+  code: 4001 | 4003;
+  reason: string;
 }
 
 export class CoordinationObject {
@@ -150,6 +157,9 @@ export class CoordinationObject {
       displayName: session.display_name,
       expiresAt: session.expires_at
     });
+    const expiredSockets = this.removeConnectionSockets(opened.connectionClosures);
+    this.broadcast(opened.stateChanges);
+    this.closeSockets(expiredSockets);
     const ready = opened.requester;
     if (ready === null || ready.type !== 'session.ready') {
       throw new Error('Opening a connection did not return session readiness.');
@@ -174,39 +184,44 @@ export class CoordinationObject {
 
   async openConnection(session: AuthenticatedSession, now = new Date()): Promise<StateTransition> {
     await this.initialized;
-    const authenticated = this.connectionSession(session, now);
-    if (authenticated === null) {
-      throw new Error('The authenticated session is no longer valid.');
-    }
+    const transition = this.state.storage.transactionSync(() => {
+      const pruned = this.pruneExpiredInTransaction(now);
+      const authenticated = this.connectionSession(session, now);
+      if (authenticated === null) {
+        throw new Error('The authenticated session is no longer valid.');
+      }
 
-    const connectionId = crypto.randomUUID();
-    this.state.storage.sql.exec(
-      `INSERT INTO connections (
-        connection_id, session_id, developer_id, display_name, expires_at
-      ) VALUES (?, ?, ?, ?, ?)`,
-      connectionId,
-      authenticated.session_id,
-      authenticated.developer_id,
-      authenticated.display_name,
-      authenticated.expires_at
-    );
-    const stateVersion = this.advanceStateVersion();
-    await this.scheduleNextAlarm();
-    return {
-      requester: {
-        protocolVersion: ProtocolVersion,
-        type: 'session.ready',
-        stateVersion,
-        developerId: authenticated.developer_id,
-        displayName: authenticated.display_name,
-        serverTime: now.toISOString(),
+      const connectionId = crypto.randomUUID();
+      this.state.storage.sql.exec(
+        `INSERT INTO connections (
+          connection_id, session_id, developer_id, display_name, expires_at
+        ) VALUES (?, ?, ?, ?, ?)`,
         connectionId,
-        leaseTtlSeconds: LeaseTtlSeconds,
-        reservationTtlSeconds: ReservationTtlSeconds
-      },
-      stateChanges: [],
-      stateVersion
-    };
+        authenticated.session_id,
+        authenticated.developer_id,
+        authenticated.display_name,
+        authenticated.expires_at
+      );
+      const stateVersion = this.advanceStateVersion();
+      return this.prepend(pruned, {
+        requester: {
+          protocolVersion: ProtocolVersion,
+          type: 'session.ready',
+          stateVersion,
+          developerId: authenticated.developer_id,
+          displayName: authenticated.display_name,
+          serverTime: now.toISOString(),
+          connectionId,
+          leaseTtlSeconds: LeaseTtlSeconds,
+          reservationTtlSeconds: ReservationTtlSeconds
+        },
+        stateChanges: [],
+        stateVersion,
+        connectionClosures: []
+      });
+    });
+    await this.scheduleNextAlarm();
+    return transition;
   }
 
   async currentSnapshot(now = new Date()): Promise<ServerEnvelope> {
@@ -243,24 +258,32 @@ export class CoordinationObject {
 
   async closeConnection(connectionId: string, now = new Date()): Promise<StateTransition> {
     await this.initialized;
-    const pruned = await this.pruneExpired(now);
-    const connection = this.connection(connectionId);
-    if (connection === null) {
-      return pruned;
-    }
+    const transition = this.state.storage.transactionSync(() => {
+      const pruned = this.pruneExpiredInTransaction(now);
+      const connection = this.connection(connectionId);
+      if (connection === null) {
+        return pruned;
+      }
 
-    const presence = this.presenceForConnection(connectionId);
-    const leases = this.leasesForConnection(connectionId);
-    this.state.storage.sql.exec('DELETE FROM presence WHERE connection_id = ?', connectionId);
-    this.state.storage.sql.exec('DELETE FROM leases WHERE connection_id = ?', connectionId);
-    this.state.storage.sql.exec('DELETE FROM connections WHERE connection_id = ?', connectionId);
-    const stateVersion = this.advanceStateVersion();
-    const stateChanges: ServerEnvelope[] = [
-      ...presence.map((row) => this.presenceRemoved(row, stateVersion)),
-      ...leases.flatMap((row) => this.leaseReleasedChanges(row, stateVersion))
-    ];
+      const presence = this.presenceForConnection(connectionId);
+      const leases = this.leasesForConnection(connectionId);
+      this.state.storage.sql.exec('DELETE FROM presence WHERE connection_id = ?', connectionId);
+      this.state.storage.sql.exec('DELETE FROM leases WHERE connection_id = ?', connectionId);
+      this.state.storage.sql.exec('DELETE FROM connections WHERE connection_id = ?', connectionId);
+      const stateVersion = this.advanceStateVersion();
+      const stateChanges: ServerEnvelope[] = [
+        ...presence.map((row) => this.presenceRemoved(row, stateVersion)),
+        ...leases.flatMap((row) => this.leaseReleasedChanges(row, stateVersion))
+      ];
+      return this.prepend(pruned, {
+        requester: null,
+        stateChanges,
+        stateVersion,
+        connectionClosures: []
+      });
+    });
     await this.scheduleNextAlarm();
-    return this.prepend(pruned, { requester: null, stateChanges, stateVersion });
+    return transition;
   }
 
   async handleMessage(
@@ -269,38 +292,48 @@ export class CoordinationObject {
     now = new Date()
   ): Promise<StateTransition> {
     await this.initialized;
-    const pruned = await this.pruneExpired(now);
-    const connection = this.connection(connectionId);
-    if (connection === null) {
-      return this.prepend(pruned, this.error(message.requestId, 'connection_not_found', now));
-    }
-
-    if (message.type === 'snapshot.request') {
-      return this.prepend(pruned, this.snapshot(message.requestId, now));
-    }
-
-    const payloadHash = await hashPayload(message);
-    const replay = this.replay(connection.developer_id, message.requestId);
-    if (replay !== null) {
-      if (replay.payload_hash !== payloadHash) {
-        return this.prepend(pruned, this.error(message.requestId, 'replay_payload_mismatch', now));
+    const payloadHash = message.type === 'snapshot.request' ? null : await hashPayload(message);
+    const transition = this.state.storage.transactionSync(() => {
+      const pruned = this.pruneExpiredInTransaction(now);
+      const connection = this.connection(connectionId);
+      if (connection === null) {
+        return this.prepend(pruned, this.error(message.requestId, 'connection_not_found', now));
       }
-      const replayed = JSON.parse(replay.result_json) as StateTransition;
-      return {
-        requester: replayed.requester,
-        stateChanges: pruned.stateChanges,
-        stateVersion: pruned.stateVersion
-      };
-    }
 
-    const transition = this.applyMessage(connection, message, now);
-    this.storeReplay(connection.developer_id, message.requestId, payloadHash, transition, now);
+      if (message.type === 'snapshot.request') {
+        return this.prepend(pruned, this.snapshot(message.requestId, now));
+      }
+
+      const replay = this.replay(connection.developer_id, message.requestId);
+      if (replay !== null) {
+        if (replay.payload_hash !== payloadHash) {
+          return this.prepend(pruned, this.error(message.requestId, 'replay_payload_mismatch', now));
+        }
+        const replayed = JSON.parse(replay.result_json) as StateTransition;
+        return {
+          requester: replayed.requester,
+          stateChanges: pruned.stateChanges,
+          stateVersion: pruned.stateVersion,
+          connectionClosures: pruned.connectionClosures
+        };
+      }
+
+      const applied = this.applyMessage(connection, message, now);
+      this.storeReplay(connection.developer_id, message.requestId, payloadHash as string, applied, now);
+      return this.prepend(pruned, applied);
+    });
     await this.scheduleNextAlarm();
-    return this.prepend(pruned, transition);
+    return transition;
   }
 
   async pruneExpired(now = new Date()): Promise<StateTransition> {
     await this.initialized;
+    const transition = this.state.storage.transactionSync(() => this.pruneExpiredInTransaction(now));
+    await this.scheduleNextAlarm();
+    return transition;
+  }
+
+  private pruneExpiredInTransaction(now: Date): StateTransition {
     const cutoff = now.toISOString();
     const expiredConnections = this.state.storage.sql.exec<ConnectionRow>(
       'SELECT connection_id, session_id, developer_id, display_name, expires_at FROM connections WHERE expires_at <= ?',
@@ -330,7 +363,6 @@ export class CoordinationObject {
       && expiredSessions.length === 0
       && expiredReplay.length === 0
     ) {
-      await this.scheduleNextAlarm();
       return this.emptyTransition();
     }
 
@@ -352,14 +384,24 @@ export class CoordinationObject {
       ...expiredLeases.flatMap((row) => this.leaseReleasedChanges(row, stateVersion)),
       ...expiredReservations.flatMap((row) => this.reservationReleasedChanges(row, stateVersion))
     ];
-    await this.scheduleNextAlarm();
-    return { requester: null, stateChanges, stateVersion };
+    return {
+      requester: null,
+      stateChanges,
+      stateVersion,
+      connectionClosures: expiredConnections.map(({ connection_id }) => ({
+        connectionId: connection_id,
+        code: 4001,
+        reason: 'Session expired.'
+      }))
+    };
   }
 
   async alarm(): Promise<void> {
     await this.initialized;
     const transition = await this.pruneExpired(new Date());
+    const expiredSockets = this.removeConnectionSockets(transition.connectionClosures);
     this.broadcast(transition.stateChanges);
+    this.closeSockets(expiredSockets);
   }
 
   private restoreSockets(): void {
@@ -394,14 +436,46 @@ export class CoordinationObject {
     }
 
     const transition = await this.closeConnection(attachment.connectionId);
+    const expiredSockets = this.removeConnectionSockets(transition.connectionClosures);
     this.broadcast(transition.stateChanges);
+    this.closeSockets(expiredSockets);
   }
 
   private deliverTransition(ws: WebSocket, transition: StateTransition): void {
-    if (transition.requester !== null && !transition.stateChanges.includes(transition.requester)) {
+    const expiredSockets = this.removeConnectionSockets(transition.connectionClosures);
+    if (
+      transition.requester !== null
+      && !transition.stateChanges.includes(transition.requester)
+      && this.sockets.has(ws)
+    ) {
       this.send(ws, transition.requester);
     }
     this.broadcast(transition.stateChanges);
+    this.closeSockets(expiredSockets);
+  }
+
+  private removeConnectionSockets(closures: ConnectionClosure[]): SocketClosure[] {
+    const sockets: SocketClosure[] = [];
+    for (const closure of closures) {
+      for (const [ws, attachment] of this.sockets.entries()) {
+        if (attachment.connectionId !== closure.connectionId) {
+          continue;
+        }
+        this.sockets.delete(ws);
+        sockets.push({ ws, closure });
+      }
+    }
+    return sockets;
+  }
+
+  private closeSockets(sockets: SocketClosure[]): void {
+    for (const { ws, closure } of sockets) {
+      try {
+        ws.close(closure.code, closure.reason);
+      } catch {
+        // Closing an already-closed socket does not affect committed state.
+      }
+    }
   }
 
   private broadcast(envelopes: ServerEnvelope[]): void {
@@ -585,7 +659,7 @@ export class CoordinationObject {
       requestId: message.requestId,
       presence: this.presenceForPath(path.canonical)
     };
-    return { requester: event, stateChanges: [event], stateVersion };
+    return { requester: event, stateChanges: [event], stateVersion, connectionClosures: [] };
   }
 
   private closePresence(
@@ -608,7 +682,7 @@ export class CoordinationObject {
     );
     const stateVersion = this.advanceStateVersion();
     const event = this.presenceRemoved(presence, stateVersion, requestId);
-    return { requester: event, stateChanges: [event], stateVersion };
+    return { requester: event, stateChanges: [event], stateVersion, connectionClosures: [] };
   }
 
   private acquireLease(
@@ -681,7 +755,7 @@ export class CoordinationObject {
       path: path.canonical,
       lease
     };
-    return { requester: event, stateChanges: [event], stateVersion };
+    return { requester: event, stateChanges: [event], stateVersion, connectionClosures: [] };
   }
 
   private releaseLease(
@@ -701,7 +775,7 @@ export class CoordinationObject {
     this.state.storage.sql.exec('DELETE FROM leases WHERE lease_id = ?', lease.lease_id);
     const stateVersion = this.advanceStateVersion();
     const changes = this.leaseReleasedChanges(lease, stateVersion, requestId);
-    return { requester: changes[0], stateChanges: changes, stateVersion };
+    return { requester: changes[0], stateChanges: changes, stateVersion, connectionClosures: [] };
   }
 
   private reserveLease(
@@ -742,7 +816,7 @@ export class CoordinationObject {
       path: path.canonical,
       lease
     };
-    return { requester: event, stateChanges: [event], stateVersion };
+    return { requester: event, stateChanges: [event], stateVersion, connectionClosures: [] };
   }
 
   private overrideLease(
@@ -789,7 +863,7 @@ export class CoordinationObject {
       previousDeveloperId: current.developerId,
       lease
     };
-    return { requester: event, stateChanges: [event], stateVersion };
+    return { requester: event, stateChanges: [event], stateVersion, connectionClosures: [] };
   }
 
   private heartbeat(connection: ConnectionRow, requestId: string, now: Date): StateTransition {
@@ -817,7 +891,12 @@ export class CoordinationObject {
         lease: this.leaseRecord(this.lease(lease.canonical_path) as LeaseRow)
       }))
     ];
-    return { requester: this.snapshotEnvelope(requestId, now, stateVersion), stateChanges, stateVersion };
+    return {
+      requester: this.snapshotEnvelope(requestId, now, stateVersion),
+      stateChanges,
+      stateVersion,
+      connectionClosures: []
+    };
   }
 
   private snapshot(requestId: string, now: Date): StateTransition {
@@ -825,7 +904,8 @@ export class CoordinationObject {
     return {
       requester: this.snapshotEnvelope(requestId, now, stateVersion),
       stateChanges: [],
-      stateVersion
+      stateVersion,
+      connectionClosures: []
     };
   }
 
@@ -864,7 +944,8 @@ export class CoordinationObject {
         currentLease
       },
       stateChanges: [],
-      stateVersion
+      stateVersion,
+      connectionClosures: []
     };
   }
 
@@ -880,7 +961,8 @@ export class CoordinationObject {
         message: errorMessage(code)
       },
       stateChanges: [],
-      stateVersion
+      stateVersion,
+      connectionClosures: []
     };
   }
 
@@ -1134,14 +1216,20 @@ export class CoordinationObject {
   }
 
   private emptyTransition(): StateTransition {
-    return { requester: null, stateChanges: [], stateVersion: this.stateVersion() };
+    return {
+      requester: null,
+      stateChanges: [],
+      stateVersion: this.stateVersion(),
+      connectionClosures: []
+    };
   }
 
   private prepend(first: StateTransition, second: StateTransition): StateTransition {
     return {
       requester: second.requester,
       stateChanges: [...first.stateChanges, ...second.stateChanges],
-      stateVersion: second.stateVersion
+      stateVersion: second.stateVersion,
+      connectionClosures: [...first.connectionClosures, ...second.connectionClosures]
     };
   }
 
@@ -1228,30 +1316,68 @@ export class CoordinationObject {
     }
 
     const revokedAt = new Date().toISOString();
-    const exists = this.state.storage.sql.exec(
-      'SELECT developer_id FROM developers WHERE developer_id = ?',
-      developerId
-    ).toArray().length > 0;
-    if (!exists) {
+    const result = this.state.storage.transactionSync(() => {
+      const pruned = this.pruneExpiredInTransaction(new Date(revokedAt));
+      const exists = this.state.storage.sql.exec(
+        'SELECT developer_id FROM developers WHERE developer_id = ?',
+        developerId
+      ).toArray().length > 0;
+      if (!exists) {
+        return { exists: false, transition: pruned };
+      }
+
+      const connections = this.state.storage.sql.exec<ConnectionRow>(`
+        SELECT connection_id, session_id, developer_id, display_name, expires_at
+        FROM connections WHERE developer_id = ?
+      `, developerId).toArray();
+      const connectionIds = connections.map(({ connection_id }) => connection_id);
+      const placeholders = connectionIds.map(() => '?').join(', ');
+      const presence = connectionIds.length === 0 ? [] : this.state.storage.sql.exec<PresenceRow>(`
+        SELECT canonical_path, display_path, developer_id, display_name, connection_id, branch, task, expires_at
+        FROM presence WHERE connection_id IN (${placeholders})
+      `, ...connectionIds).toArray();
+      const leases = connectionIds.length === 0 ? [] : this.state.storage.sql.exec<LeaseRow>(`
+        SELECT lease_id, canonical_path, display_path, developer_id, display_name, branch, task,
+          connection_id, expires_at
+        FROM leases WHERE connection_id IN (${placeholders})
+      `, ...connectionIds).toArray();
+
+      this.state.storage.sql.exec(
+        'UPDATE developers SET revoked_at = ? WHERE developer_id = ? AND revoked_at IS NULL',
+        revokedAt,
+        developerId
+      );
+      this.state.storage.sql.exec('DELETE FROM sessions WHERE developer_id = ?', developerId);
+      if (connectionIds.length === 0) {
+        return { exists: true, transition: pruned };
+      }
+
+      this.state.storage.sql.exec(`DELETE FROM presence WHERE connection_id IN (${placeholders})`, ...connectionIds);
+      this.state.storage.sql.exec(`DELETE FROM leases WHERE connection_id IN (${placeholders})`, ...connectionIds);
+      this.state.storage.sql.exec(`DELETE FROM connections WHERE connection_id IN (${placeholders})`, ...connectionIds);
+      const stateVersion = this.advanceStateVersion();
+      const transition: StateTransition = {
+        requester: null,
+        stateChanges: [
+          ...presence.map((row) => this.presenceRemoved(row, stateVersion)),
+          ...leases.flatMap((row) => this.leaseReleasedChanges(row, stateVersion))
+        ],
+        stateVersion,
+        connectionClosures: connectionIds.map((connectionId) => ({
+          connectionId,
+          code: 4003,
+          reason: 'Developer access revoked.'
+        }))
+      };
+      return { exists: true, transition: this.prepend(pruned, transition) };
+    });
+    await this.scheduleNextAlarm();
+    const sockets = this.removeConnectionSockets(result.transition.connectionClosures);
+    this.broadcast(result.transition.stateChanges);
+    this.closeSockets(sockets);
+    if (!result.exists) {
       return new Response('Not found', { status: 404 });
     }
-
-    this.state.storage.sql.exec(
-      'UPDATE developers SET revoked_at = ? WHERE developer_id = ? AND revoked_at IS NULL',
-      revokedAt,
-      developerId
-    );
-    this.state.storage.sql.exec('DELETE FROM sessions WHERE developer_id = ?', developerId);
-    const sockets = Array.from(this.sockets.entries()).filter(
-      ([, attachment]) => attachment.developerId === developerId
-    );
-    for (const [ws, attachment] of sockets) {
-      this.sockets.delete(ws);
-      ws.close(4003, 'Developer access revoked.');
-      const transition = await this.closeConnection(attachment.connectionId);
-      this.broadcast(transition.stateChanges);
-    }
-    await this.scheduleNextAlarm();
     return new Response(null, { status: 204 });
   }
 
@@ -1323,6 +1449,11 @@ interface SocketAttachment {
   developerId: string;
   displayName: string;
   connectionId: string;
+}
+
+interface SocketClosure {
+  ws: WebSocket;
+  closure: ConnectionClosure;
 }
 
 function parseSocketAttachment(value: unknown): SocketAttachment | null {

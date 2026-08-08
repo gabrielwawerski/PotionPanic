@@ -5,7 +5,7 @@ import type { ClientEnvelope, LeaseRecord, ServerEnvelope } from '../../src/prot
 const projectId = 'potion-panic';
 const projectUrl = `https://example.test/v1/projects/${projectId}`;
 const adminToken = 'test-admin-token';
-const start = new Date('2026-08-07T12:00:00.000Z');
+const start = new Date(Date.now() + 5 * 60 * 1000);
 
 interface SessionIdentity {
   sessionId: string;
@@ -130,6 +130,40 @@ describe('authoritative coordination state', () => {
       requester: { type: 'error', code: 'replay_payload_mismatch' }
     });
     expect(state.presence).toHaveLength(1);
+  });
+
+  it('rolls back a failed replay insertion without persisting a lease or state version', async () => {
+    const rin = await createSessionIdentity('Rin');
+    const [connection] = await openConnections([rin]);
+    const before = await inspectProject((state) => state.storage.sql.exec<{ value: number }>(
+      "SELECT value FROM coordination_state WHERE key = 'state_version'"
+    ).one().value);
+    await inspectProject((state) => {
+      state.storage.sql.exec(`
+        CREATE TRIGGER abort_replay_insert
+        BEFORE INSERT ON replay_records
+        BEGIN
+          SELECT RAISE(ABORT, 'replay insert failure');
+        END
+      `);
+    });
+
+    await expect(message(
+      connection,
+      contextMessage('lease.acquire', 'Assets/Scenes/Atomic.unity'),
+      start
+    )).rejects.toThrow('replay insert failure');
+
+    const after = await inspectProject((state) => ({
+      stateVersion: state.storage.sql.exec<{ value: number }>(
+        "SELECT value FROM coordination_state WHERE key = 'state_version'"
+      ).one().value,
+      leases: state.storage.sql.exec<{ count: number }>(
+        "SELECT COUNT(*) AS count FROM leases WHERE canonical_path = 'assets/scenes/atomic.unity'"
+      ).one().count
+    }));
+
+    expect(after).toEqual({ stateVersion: before, leases: 0 });
   });
 
   it('converts its owner reservation to an editing lease and restores the reservation on close', async () => {
