@@ -117,28 +117,19 @@ Record the deployment evidence in the relevant ticket without secrets:
 
 ## Issue and revoke developer tokens
 
-Use the still-valid administrative secret only for the current shell. The
-issuance script calls `POST /v1/projects/potion-panic/developers` and prints the
-new developer token once without writing it to disk.
+From the repository root, run the token command with the developer's display
+name. It reads `serverBaseUrl` from `coordination.json`, verifies the Worker's
+`/health` response, prompts for `ADMIN_TOKEN` without echoing it, and calls
+`POST /v1/projects/potion-panic/developers`.
 
 ```powershell
-$secureAdmin = Read-Host 'ADMIN_TOKEN' -AsSecureString
-$pointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureAdmin)
-try {
-  $env:ADMIN_TOKEN = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($pointer)
-  $workerBaseUrl = Read-Host 'Paste the exact Worker URL printed by wrangler deploy'
-  node scripts/issue-token.mjs $workerBaseUrl 'Developer name'
-}
-finally {
-  Remove-Item Env:ADMIN_TOKEN -ErrorAction SilentlyContinue
-  [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($pointer)
-}
+npm --prefix Tools/CoordinationServer run issue-dev-token -- 'Developer name'
 ```
 
-Use only the URL from verified deployment output. Deliver the printed token
-once through an approved secret channel. The developer pastes it only into
-`Window > Potion Panic > Coordination`; never put it in a URL, tracked file,
-log, ticket, or chat.
+The command prints the new developer token once without writing it to disk.
+Deliver that token once through an approved secret channel. The developer
+pastes it only into `Window > Potion Panic > Coordination`; never put it in a
+URL, tracked file, log, ticket, or chat.
 
 To revoke a developer, call the administrative delete route with the developer
 ID. Revocation deletes that developer's sessions, closes active sockets with

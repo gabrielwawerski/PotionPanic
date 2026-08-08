@@ -7,7 +7,7 @@ export default defineConfig({
       defineProject({
         test: {
           name: 'protocol',
-          include: ['test/protocol.test.ts'],
+          include: ['test/protocol.test.ts', 'test/issue-token.test.ts'],
           environment: 'node'
         }
       }),
@@ -24,7 +24,7 @@ export default defineConfig({
         test: {
           name: 'workers',
           include: ['test/**/*.test.ts', 'tests/**/*.test.ts'],
-          exclude: ['test/protocol.test.ts'],
+          exclude: ['test/protocol.test.ts', 'test/issue-token.test.ts'],
           pool: '@cloudflare/vitest-pool-workers'
         }
       })

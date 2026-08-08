@@ -6,7 +6,8 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "issue-dev-token": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/issue-dev-token.ps1"
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.20.3",
