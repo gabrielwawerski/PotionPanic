@@ -1,3 +1,10 @@
+---
+title: 'VitePress Project Management Feature Proposals'
+status: archived
+archivedAt: 2026-08-08
+originalPath: 'Docs/collaboration/vitepress-project-management-feature-proposals.md'
+---
+
 # VitePress Project Management Feature Proposals
 
 This repo uses the private `@gabrielwawerski/docboard` VitePress kanban UI

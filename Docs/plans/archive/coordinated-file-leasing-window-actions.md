@@ -1,3 +1,10 @@
+---
+title: 'Coordination Window Actions and Reservation Cancellation'
+status: archived
+archivedAt: 2026-08-08
+originalPath: 'Docs/plans/coordinated-file-leasing-window-actions.md'
+---
+
 # Coordination Window Actions and Reservation Cancellation
 
 ## Summary

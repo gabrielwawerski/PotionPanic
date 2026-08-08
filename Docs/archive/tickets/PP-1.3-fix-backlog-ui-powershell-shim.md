@@ -1,5 +1,8 @@
 ---
 title: Fix backlog-ui background server startup on PowerShell shim installs
+status: archived
+archivedAt: 2026-08-08
+originalPath: 'Docs/archive/completed/pp-1.3.md'
 ---
 
 ## Description

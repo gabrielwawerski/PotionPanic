@@ -1,5 +1,9 @@
 ---
+title: 'VitePress Theme Review - 2026-06-28'
 date: 2026-06-28
+status: archived
+archivedAt: 2026-08-08
+originalPath: 'Docs/archive/completed/vitepress-theme-review-2026-06-28.md'
 ---
 
 # VitePress Theme Review - 2026-06-28

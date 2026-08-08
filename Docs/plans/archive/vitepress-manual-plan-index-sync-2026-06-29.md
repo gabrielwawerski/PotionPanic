@@ -1,5 +1,9 @@
 ---
+title: 'VitePress Manual Plan Index Sync'
 date: 2026-06-29
+status: archived
+archivedAt: 2026-08-08
+originalPath: 'Docs/archive/completed/vitepress-manual-plan-index-sync-2026-06-29.md'
 ---
 
 # VitePress Manual Plan Index Sync

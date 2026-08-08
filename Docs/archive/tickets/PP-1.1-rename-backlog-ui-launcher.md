@@ -1,5 +1,8 @@
 ---
 title: Rename browser UI launcher to backlog-ui
+status: archived
+archivedAt: 2026-08-08
+originalPath: 'Docs/archive/completed/pp-1.1.md'
 ---
 
 ## Description

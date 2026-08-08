@@ -1,3 +1,10 @@
+---
+title: 'VitePress Windows Startup Refactor Plan'
+status: archived
+archivedAt: 2026-08-08
+originalPath: 'Docs/archive/completed/vitepress-windows-startup-refactor-2026-06-29.md'
+---
+
 # VitePress Windows Startup Refactor Plan
 
 ## Summary

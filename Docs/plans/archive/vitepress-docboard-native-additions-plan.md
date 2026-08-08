@@ -1,5 +1,9 @@
 ---
+title: 'VitePress Native Additions In Docboard'
 date: 2026-07-02
+status: archived
+archivedAt: 2026-08-08
+originalPath: 'Docs/archive/completed/vitepress-docboard-native-additions-plan.md'
 ---
 
 # VitePress Native Additions In Docboard

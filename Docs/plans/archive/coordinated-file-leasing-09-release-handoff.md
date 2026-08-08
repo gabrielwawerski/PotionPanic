@@ -71,14 +71,14 @@ produce the exact `workers.dev` URL.
 
 - Modify `coordination.json` to replace the placeholder endpoint after the
   Worker is deployed.
-- Update `README.md`, [Docs/onboarding/getting-started.md](../onboarding/getting-started.md),
-  [Docs/collaboration/team-workflow.md](../collaboration/team-workflow.md), and [Docs/guides/unity/editor-safety.md](../guides/unity/editor-safety.md).
-- Append deployment, test, and two-machine evidence to [Docs/tickets/PP-7.md](../tickets/PP-7.md).
+- Update `README.md`, [Docs/onboarding/getting-started.md](../../onboarding/getting-started.md),
+  [Docs/collaboration/team-workflow.md](../../collaboration/team-workflow.md), and [Docs/guides/unity/editor-safety.md](../../guides/unity/editor-safety.md).
+- Append deployment, test, and two-machine evidence to [Docs/tickets/PP-7.md](../../tickets/PP-7.md).
 - Create Cloudflare secrets `TOKEN_HMAC_KEY` and `ADMIN_TOKEN`; issue one
   developer token per person without committing any secret.
-- Move the program page and completed slice pages into
-  `Docs/archive/completed/` only after acceptance, and update
-  [Docs/archive/completed/index.md](../archive/completed/index.md) through the existing plan archive flow.
+- Move the program page and completed slice pages into `Docs/plans/archive/`
+  only after acceptance, and update
+  [Docs/plans/archive/index.md](index.md) through the existing plan archive flow.
 
 ## Acceptance run
 

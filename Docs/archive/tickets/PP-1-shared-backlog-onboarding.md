@@ -1,5 +1,8 @@
 ---
 title: Set up shared Backlog.md collaborator onboarding
+status: archived
+archivedAt: 2026-08-08
+originalPath: 'Docs/archive/completed/pp-1.md'
 ---
 
 ## Description

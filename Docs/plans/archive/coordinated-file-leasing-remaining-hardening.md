@@ -1,3 +1,11 @@
+---
+title: 'Coordinated File Leasing Remaining Hardening Implementation Plan'
+status: archived
+archivedAt: 2026-08-08
+originalPath: 'Docs/plans/coordinated-file-leasing-remaining-hardening.md'
+supersededBy: '../coordinated-file-leasing-release-acceptance.md'
+---
+
 # Coordinated File Leasing Remaining Hardening Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
@@ -96,8 +104,8 @@ function Invoke-CoordinationEditMode {
 | `Tools/CoordinationServer/test/protocol.test.ts` | Consume the shared path fixture rather than maintaining a TypeScript-only vector list. |
 | `Tools/CoordinationServer/wrangler.jsonc` | Declarative Durable Object export, required secret names, public `workers.dev`, disabled preview URLs, and full observability. |
 | `Tools/CoordinationServer/.dev.vars.example` | Tracked local-secret shape with no secret values. |
-| `Tools/CoordinationServer/README.md`, `README.md`, [Docs/onboarding/getting-started.md](../onboarding/getting-started.md), [Docs/collaboration/team-workflow.md](../collaboration/team-workflow.md), [Docs/guides/unity/editor-safety.md](../guides/unity/editor-safety.md) | Server operation and evergreen user guidance. |
-| [Docs/tickets/PP-7.md](../tickets/PP-7.md) | Dated commands, results, reviewer result, external blockers, and later two-machine acceptance evidence. |
+| `Tools/CoordinationServer/README.md`, `README.md`, [Docs/onboarding/getting-started.md](../../onboarding/getting-started.md), [Docs/collaboration/team-workflow.md](../../collaboration/team-workflow.md), [Docs/guides/unity/editor-safety.md](../../guides/unity/editor-safety.md) | Server operation and evergreen user guidance. |
+| [Docs/tickets/PP-7.md](../../tickets/PP-7.md) | Dated commands, results, reviewer result, external blockers, and later two-machine acceptance evidence. |
 | `coordination.json` | Replace the example endpoint only after an actual authenticated deployment has supplied the exact URL. |
 | `.github/workflows/coordination-server.yml` | Remains verification-only: `npm ci`, typecheck, tests, and `wrangler deploy --dry-run`; no Cloudflare credential, secret, or deployment step. |
 
@@ -582,9 +590,9 @@ function Invoke-CoordinationEditMode {
 
 - Modify: `Tools/CoordinationServer/README.md`
 - Modify: `README.md`
-- Modify: [Docs/onboarding/getting-started.md](../onboarding/getting-started.md)
-- Modify: [Docs/collaboration/team-workflow.md](../collaboration/team-workflow.md)
-- Modify: [Docs/guides/unity/editor-safety.md](../guides/unity/editor-safety.md)
+- Modify: [Docs/onboarding/getting-started.md](../../onboarding/getting-started.md)
+- Modify: [Docs/collaboration/team-workflow.md](../../collaboration/team-workflow.md)
+- Modify: [Docs/guides/unity/editor-safety.md](../../guides/unity/editor-safety.md)
 
 **Interfaces:**
 
@@ -740,7 +748,7 @@ function Invoke-CoordinationEditMode {
 
 **Files:**
 
-- Modify: [Docs/tickets/PP-7.md](../tickets/PP-7.md)
+- Modify: [Docs/tickets/PP-7.md](../../tickets/PP-7.md)
 - Verify only: all backend, root, docs, and Unity files named in this plan
 
 **Interfaces:**
@@ -837,7 +845,7 @@ function Invoke-CoordinationEditMode {
 **Files:**
 
 - Modify after successful deploy only: `coordination.json`
-- Modify after each observed acceptance run: [Docs/tickets/PP-7.md](../tickets/PP-7.md)
+- Modify after each observed acceptance run: [Docs/tickets/PP-7.md](../../tickets/PP-7.md)
 - Verify only: deployed Worker dashboard/logs and two Windows Unity machines
 
 **Interfaces:**

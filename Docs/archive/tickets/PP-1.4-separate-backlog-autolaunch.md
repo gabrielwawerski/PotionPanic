@@ -4,6 +4,8 @@ title: Separate Backlog server autolaunch from browser-opening launcher
 status: done
 priority: medium
 tags: []
+archivedAt: 2026-08-08
+originalPath: 'Docs/archive/completed/pp-1.4.md'
 ---
 
 ## Description

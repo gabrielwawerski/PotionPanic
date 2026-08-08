@@ -1,5 +1,9 @@
 ---
+title: 'VitePress Ticket Archive And Restore'
 date: 2026-06-29
+status: archived
+archivedAt: 2026-08-08
+originalPath: 'Docs/archive/completed/vitepress-ticket-archive-and-restore.md'
 ---
 
 # VitePress Ticket Archive And Restore
@@ -18,7 +22,7 @@ added.
 ### Board Behavior And Docs Structure
 
 - Keep the active board at [Docs/board.md](../../board.md).
-- Add a dedicated archive board page at [Docs/archive/board.md](../board.md).
+- Add a dedicated archive board page at [Docs/archive/board.md](../../archive/board.md).
 - Store active tickets in `Docs/tickets/` and archived tickets in
   `Docs/archive/tickets/`.
 - Link the new archive board from [Docs/archive/index.md](../index.md) and the VitePress

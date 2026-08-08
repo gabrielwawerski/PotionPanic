@@ -1,9 +1,13 @@
+---
+title: 'Game Design and Player Psychology'
+status: current
+originalPath: 'Docs/project/game-design-and-psychology.md'
+---
+
 # Game Design and Player Psychology
 
-> **Temporary location:** This research guide remains under `Docs/project/` for
-> now and is intended to move to a dedicated research or reference section
-> later. Its current location does not make it a source of locked Potion Panic
-> requirements.
+This research guide is advisory reference material. It is not a Potion Panic
+design specification and does not override current project requirements.
 
 ## Purpose
 
@@ -23,9 +27,9 @@ requirements.
 
 For authoritative Potion Panic decisions, use:
 
-- [`game-design.md`](game-design.md) for player-facing design
-- [`mvp-scope.md`](mvp-scope.md) for locked scope, tuning, and milestone order
-- [`technical-architecture.md`](technical-architecture.md) for implementation
+- [`../project/game-design.md`](../project/game-design.md) for player-facing design
+- [`../project/mvp-scope.md`](../project/mvp-scope.md) for locked scope, tuning, and milestone order
+- [`../project/technical-architecture.md`](../project/technical-architecture.md) for implementation
   boundaries and runtime ownership
 
 Recommendations in this guide are heuristics, not mandatory rules. Test them

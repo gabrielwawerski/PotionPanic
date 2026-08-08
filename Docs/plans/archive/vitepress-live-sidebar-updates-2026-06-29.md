@@ -1,5 +1,9 @@
 ---
+title: 'VitePress Live Sidebar Updates During `docs:dev`'
 date: 2026-06-29
+status: archived
+archivedAt: 2026-08-08
+originalPath: 'Docs/archive/completed/vitepress-live-sidebar-updates-2026-06-29.md'
 ---
 
 # VitePress Live Sidebar Updates During `docs:dev`

@@ -3,118 +3,77 @@
 Potion Panic is a small-scope Unity project for a two-person beginner team. The
 target is a finished small game, not a large experimental prototype.
 
-This repository uses a VitePress site rooted in `Docs/` as shared project state
-for planning, execution, and evergreen documentation. The reusable board,
-sidebar, ticket, plan, and theme tooling comes from the private
-`@gabrielwawerski/docboard` package; this repo owns the docs content, board
-frontmatter, and thin PotionPanic VitePress adapters.
+This repository uses a VitePress site rooted in `Docs/` for shared project
+state, planning, and evergreen documentation. The reusable board, sidebar,
+ticket, plan, and theme tooling comes from the private
+`@gabrielwawerski/docboard` package. This repository owns the Potion Panic docs
+content, board frontmatter, and VitePress configuration.
 
-Published docs site:
+Published read-only docs site:
 
 - `https://gabrielwawerski.github.io/PotionPanic/`
-- This GitHub Pages site is read-only by design.
-- Persistent board, ticket, and plan editing still happens through
-  `npm run docs:ui` or `npm run docs:dev`.
+- Persistent board, ticket, and plan editing happens through the local
+  VitePress server, usually with `npm run docs:ui`.
 
 ## Start Here
 
-If this is your first day in the repo, read these in order:
+Read these in order:
 
 1. `Docs/index.md`
-2. `Docs/onboarding/getting-started.md`
-3. `Docs/collaboration/team-workflow.md`
-4. `Docs/board.md`
-5. `Docs/project/game-design.md`
-6. `Docs/project/mvp-scope.md`
-7. `Docs/project/technical-architecture.md`
+2. `Docs/ATLAS.md`
+3. `Docs/onboarding/getting-started.md`
+4. `Docs/collaboration/team-workflow.md`
+5. `Docs/board.md`
+6. `Docs/project/game-design.md`
+7. `Docs/project/mvp-scope.md`
+8. `Docs/project/technical-architecture.md`
 
-## First Day Setup
+## First Day Commands
 
-Install these once on each machine:
-
-- Unity Hub
-- Unity Editor `6000.5.1f1`
-- JetBrains Rider
-- Git
-- Git LFS
-- Node.js and npm for the docs board
-
-Then:
-
-1. Clone the repository.
-2. Run `git lfs install`.
-3. Open the repo root in Unity Hub with editor `6000.5.1f1`.
-4. Let Unity finish package import and script compilation.
-5. Open `PotionPanic.sln` in Rider.
-6. Open `Assets/Scenes/SampleScene.unity`.
-7. Press Play and confirm the project enters Play Mode without new console errors.
-8. Run `npm install`.
-9. Open the docs board with `npm run docs:ui`.
-
-Current repo note:
-
-- The shared prototype scene is currently `Assets/Scenes/SampleScene.unity`.
-- `Assets/Scenes/testscene.unity` is not the shared milestone scene unless a
-  task explicitly says so.
-- Milestone 1 is expected to rename or replace the shared scene as
-  `Laboratory.unity`.
-
-## Collaboration Docs
-
-- `Docs/index.md` is the docs index and source-of-truth map.
-- `Docs/board.md` is the shared task board entry point.
-- `Docs/onboarding/getting-started.md` is the step-by-step onboarding guide.
-- `Docs/collaboration/team-workflow.md` is the day-to-day collaboration guide.
-- `Docs/project/game-design.md` is the player-facing design source of truth.
-- `Docs/project/mvp-scope.md` is the MVP scope, milestone, and tuning source of
-  truth.
-- `Docs/project/technical-architecture.md` is the runtime structure source of
-  truth.
-
-## Docs Board Setup
-
-Use these bootstrap commands if you need to install or verify the package-backed
-docs tooling:
+Run from the repository root in PowerShell:
 
 ```powershell
+git lfs install
 npm install
 npm run docs:ui
 ```
 
-Useful npm commands:
+For Unity, open the repo in Unity Hub with editor `6000.5.1f1`, open
+`Assets/Scenes/SampleScene.unity`, press Play, and confirm there are no new
+Console errors. `SampleScene.unity` is the current shared prototype scene;
+`Laboratory.unity` is the planned canonical gameplay scene after Milestone 1
+work completes.
+
+## Documentation Owners
+
+- `Docs/ATLAS.md` routes recurring questions to the owning document.
+- `Docs/onboarding/getting-started.md` owns detailed setup instructions.
+- `Docs/collaboration/team-workflow.md` owns day-to-day process and protected
+  Unity edit coordination.
+- `Docs/project/game-design.md` owns player-facing design.
+- `Docs/project/mvp-scope.md` owns locked MVP scope, milestone order, and
+  definition of done.
+- `Docs/project/technical-architecture.md` owns runtime structure.
+- `Docs/guides/coordinated-leasing.md` owns Unity Coordination window usage.
+- `Tools/CoordinationServer/README.md` owns coordination Worker operations.
+
+## Docs Commands
 
 ```powershell
+npm run docs:ui
 npm run docs:dev
 npm run docs:dev:local
 npm run docs:build
 npm test
 ```
 
-`npm install` links the private `@gabrielwawerski/docboard` dependency from the
-sibling `../Docboard` checkout. `npm run docs:ui` calls the package CLI to start
-the VitePress server when needed and open the editable PotionPanic board.
-
-Published read-only site:
-
-```text
-https://gabrielwawerski.github.io/PotionPanic/
-```
-
-GitHub Pages deployment note:
-
-- In `Settings > Pages`, set the source to `GitHub Actions`.
-- If the repository has never had Pages enabled, do that once manually before
-  relying on the deploy workflow.
-
-Coordination Worker deployment note:
-
-- The coordination Worker deploy is a manual, authenticated operator action.
-- GitHub Actions is verification-only for the coordination server. It runs
-  type checking, tests, and a Wrangler dry run without deployment credentials.
-- `coordination.json` currently names
-  `https://potion-panic-coordination.gabriel-wawerski.workers.dev`. Verify its
-  `/health` response before treating the endpoint as available.
-- Operational procedures live in `Tools/CoordinationServer/README.md`.
+- `npm run docs:ui` starts the local docs server if needed and opens the
+  editable board.
+- `npm run docs:dev` starts the LAN-accessible server on port `6420`.
+- `npm run docs:dev:local` starts the local-only server on
+  `127.0.0.1:6420`.
+- `npm run docs:build` verifies the static VitePress site.
+- `npm test` runs docs tooling tests.
 
 Optional Windows startup management:
 
@@ -124,32 +83,26 @@ npm run docs:startup:uninstall
 npm run docs:stop
 ```
 
-Repository rules:
+GitHub Pages uses the `Deploy Docs` workflow. In `Settings > Pages`, the source
+must be `GitHub Actions`; do that once manually if the repository has never
+served Pages before.
 
-- PowerShell is the primary shell expected for local project commands.
-- The browser board is the default human task workflow for this repo.
-- Persistent webpage editing happens through the local VitePress server, not the
-  static build.
-- `npm run docs:ticket -- "Ticket title" --assignee "Name"` is available for
-  CLI ticket creation when needed, and it now uses the same multi-section
-  ticket template as the board workflow.
-- AI collaborators should follow the committed `AGENTS.md`, `CLAUDE.md`, and
-  `GEMINI.md` instructions.
+## Coordination Worker
 
-### Docs commands
+The coordination Worker deploy is a manual, authenticated operator action.
+GitHub Actions is verification-only for the coordination server. It runs type
+checking, tests, and a Wrangler dry run without deployment credentials.
 
-- `npm install` installs or verifies the Node dependencies needed for the
-  package-backed VitePress docs workflow.
-- `npm run docs:ui` uses the Docboard package CLI to start the local docs
-  server if needed and open the editable task board in the default browser.
-- `npm run docs:dev` starts the LAN-accessible VitePress dev server manually.
-- `npm run docs:dev:local` starts the local-only VitePress dev server on
-  `127.0.0.1:6420`.
-- `npm run docs:ticket -- "Ticket title" --assignee "Name"` uses the Docboard
-  package CLI to create a markdown ticket from the board frontmatter settings.
-- `npm run docs:startup:install` installs the optional Windows sign-in shortcut
-  that starts `npm run docs:dev` in the background without opening a
-  browser.
-- `npm run docs:startup:uninstall` removes that Windows startup shortcut.
-- `npm run docs:stop` stops the docs server process that is listening on the
-  shared docs port `6420`.
+`coordination.json` currently names
+`https://potion-panic-coordination.gabriel-wawerski.workers.dev`. Verify its
+`/health` response before treating the endpoint as available.
+
+Operational procedures live in `Tools/CoordinationServer/README.md`.
+
+## Repository Rules
+
+- PowerShell is the primary shell for local project commands.
+- The browser board is the default human task workflow.
+- AI collaborators follow `AGENTS.md`; `CLAUDE.md` and `GEMINI.md` point to it.
+- Never commit generated folders such as `Library/`, `Temp/`, `Logs/`, `obj/`,
+  `UserSettings/`, `node_modules/`, or VitePress cache/dist output.

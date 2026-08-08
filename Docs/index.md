@@ -10,7 +10,7 @@ hero:
   actions:
     - theme: brand
       text: Start Here
-      link: /site-map
+      link: /ATLAS
     - theme: alt
       text: Plans
       link: /plans/
@@ -31,4 +31,7 @@ features:
   - title: Archive
     details: Completed or superseded planning history, archived board state, and historical project records.
     link: /archive/board
+  - title: Atlas
+    details: Routing map for setup, workflow, project truth, coordination, active work, and archived history.
+    link: /ATLAS
 ---

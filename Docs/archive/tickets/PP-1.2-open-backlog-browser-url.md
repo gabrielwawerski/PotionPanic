@@ -1,5 +1,8 @@
 ---
 title: Make backlog-ui open browser URL and ensure server is running
+status: archived
+archivedAt: 2026-08-08
+originalPath: 'Docs/archive/completed/pp-1.2.md'
 ---
 
 ## Description

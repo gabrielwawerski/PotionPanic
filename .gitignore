@@ -122,6 +122,8 @@ InitTestScene*.unity*
 /Docs/.vitepress/dist/
 /.worktrees/
 /.superpowers/
+/.claude/CLAUDE.md
+/AGENTS.override.md
 
 # Coordination local credentials, runtime state, and tooling output
 /Tools/CoordinationServer/.dev.vars*

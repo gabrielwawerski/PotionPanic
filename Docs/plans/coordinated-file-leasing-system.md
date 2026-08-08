@@ -261,17 +261,17 @@ only release gate.
 
 ## Session slices
 
-1. [Foundations, configuration, and protocol](./coordinated-file-leasing-01-foundations.md)
-2. [Developer and session authentication](./coordinated-file-leasing-02-authentication.md)
-3. [Authoritative state and expiry](./coordinated-file-leasing-03-authoritative-state.md)
-4. [Hibernating WebSocket synchronization](./coordinated-file-leasing-04-websocket-sync.md)
-5. [Unity authentication and connection service](./coordinated-file-leasing-05-unity-connection.md)
-6. [Authoritative backend stabilization](./coordinated-file-leasing-stabilization.md#slice-05a-backend-stabilization)
-7. [Unity connection stabilization](./coordinated-file-leasing-stabilization.md#slice-05b-unity-client-stabilization)
-8. [Scene and selected-prefab tracking](./coordinated-file-leasing-06-asset-tracking.md)
-9. [Conflict-safe save guard](./coordinated-file-leasing-07-save-guard.md)
-10. [Coordination window and lifecycle](./coordinated-file-leasing-08-ui-lifecycle.md)
-11. [Release acceptance and documentation handoff](./coordinated-file-leasing-09-release-handoff.md)
+1. [Foundations, configuration, and protocol](./archive/coordinated-file-leasing-01-foundations.md)
+2. [Developer and session authentication](./archive/coordinated-file-leasing-02-authentication.md)
+3. [Authoritative state and expiry](./archive/coordinated-file-leasing-03-authoritative-state.md)
+4. [Hibernating WebSocket synchronization](./archive/coordinated-file-leasing-04-websocket-sync.md)
+5. [Unity authentication and connection service](./archive/coordinated-file-leasing-05-unity-connection.md)
+6. [Authoritative backend stabilization](./archive/coordinated-file-leasing-stabilization.md#slice-05a-backend-stabilization)
+7. [Unity connection stabilization](./archive/coordinated-file-leasing-stabilization.md#slice-05b-unity-client-stabilization)
+8. [Scene and selected-prefab tracking](./archive/coordinated-file-leasing-06-asset-tracking.md)
+9. [Conflict-safe save guard](./archive/coordinated-file-leasing-07-save-guard.md)
+10. [Coordination window and lifecycle](./archive/coordinated-file-leasing-08-ui-lifecycle.md)
+11. [Release acceptance and documentation handoff](./coordinated-file-leasing-release-acceptance.md)
 
 ## Release acceptance
 

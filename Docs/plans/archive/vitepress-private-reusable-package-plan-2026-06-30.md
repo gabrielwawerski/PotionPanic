@@ -1,5 +1,9 @@
 ---
+title: 'Private Reusable VitePress Docs Package Plan'
 date: 2026-06-30
+status: archived
+archivedAt: 2026-08-08
+originalPath: 'Docs/archive/completed/vitepress-private-reusable-package-plan-2026-06-30.md'
 ---
 
 # Private Reusable VitePress Docs Package Plan
@@ -120,7 +124,7 @@ See README.md for current project scope and provenance details.
 ## Inventory Of PotionPanic-Specific Parts
 
 - All content under `Docs/**/*.md`
-- [Docs/board.md](../../board.md) and [Docs/archive/board.md](../board.md) frontmatter
+- [Docs/board.md](../../board.md) and [Docs/archive/board.md](../../archive/board.md) frontmatter
   - `board`, `boardMode`, `ticketsDir`, `archiveTicketsDir`,
     `restoreTicketsDir`, `ticketPrefix`, `defaultColumn`, `ticketSections`,
     `columns`, `demo`
@@ -434,7 +438,7 @@ docboard create-ticket --board Docs/board.md --dir Docs/tickets
 - Add the Git dependency to PotionPanic
 - Replace local implementation files with thin adapters
 - Switch `package.json` scripts to direct `docboard` package bins
-- Keep [Docs/board.md](../../board.md), [Docs/archive/board.md](../board.md), and all content files in place
+- Keep [Docs/board.md](../../board.md), [Docs/archive/board.md](../../archive/board.md), and all content files in place
 - Review gate: `npm test`, `npm run docs:build`, and manual `npm run docs:ui`
   succeed in PotionPanic
 
@@ -469,7 +473,7 @@ docboard create-ticket --board Docs/board.md --dir Docs/tickets
 
 - `Docs/**/*.md`
 - [Docs/board.md](../../board.md)
-- [Docs/archive/board.md](../board.md)
+- [Docs/archive/board.md](../../archive/board.md)
 - `README.md`
 - `.gitignore`
 - `Docs/.vitepress/config.ts` as a thin adapter
@@ -511,7 +515,7 @@ docboard create-ticket --board Docs/board.md --dir Docs/tickets
   - `npm run docs:build`
   - manual `npm run docs:ui`
   - manual board smoke on [Docs/board.md](../../board.md)
-  - manual archive-board smoke on [Docs/archive/board.md](../board.md)
+  - manual archive-board smoke on [Docs/archive/board.md](../../archive/board.md)
 - Regression focus
   - no behavior drift in frontmatter contract
   - no hardcoded `Potion Panic` strings inside package internals

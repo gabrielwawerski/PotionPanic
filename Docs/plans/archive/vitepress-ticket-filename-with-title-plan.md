@@ -1,5 +1,9 @@
 ---
+title: 'VitePress Ticket Filename With Title Plan'
 date: 2026-06-29
+status: archived
+archivedAt: 2026-08-08
+originalPath: 'Docs/archive/completed/vitepress-ticket-filename-with-title-plan.md'
 ---
 
 # VitePress Ticket Filename With Title Plan

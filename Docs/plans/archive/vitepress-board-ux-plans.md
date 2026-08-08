@@ -1,5 +1,9 @@
 ---
+title: 'VitePress Board UX Plans'
 date: 2026-06-28
+status: archived
+archivedAt: 2026-08-08
+originalPath: 'Docs/archive/completed/vitepress-board-ux-plans.md'
 ---
 
 # VitePress Board UX Plans

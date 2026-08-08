@@ -7,13 +7,12 @@ is in progress.
 Use one page per implementation slice. Keep milestone intent in
 [`../project/mvp-scope.md`](../project/mvp-scope.md), keep execution tracking
 in [`../board.md`](../board.md) and the related tickets, and move finished or
-superseded plans into [`../archive/completed/index.md`](../archive/completed/index.md).
+superseded plans into [`archive/index.md`](archive/index.md).
 
 ## Active Plans
 
-- [Coordinated File Leasing Remaining Hardening Implementation Plan](./coordinated-file-leasing-remaining-hardening.md)
+- [Coordinated File Leasing Release Acceptance](./coordinated-file-leasing-release-acceptance.md)
 - [Coordinated File Leasing Program](./coordinated-file-leasing-system.md)
-- [Coordination Window Actions and Reservation Cancellation](./coordinated-file-leasing-window-actions.md)
 ## Writing Rules
 
 - Docboard regenerates the Active Plans links from each plan's frontmatter
