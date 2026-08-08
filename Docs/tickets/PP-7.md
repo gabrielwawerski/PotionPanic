@@ -394,6 +394,49 @@ expiry, network loss and outage fallback, 24-hour session recreation,
 hibernation, revocation, and filtered live-tail evidence all still require
 dated external observations.
 
+2026-08-08: Task 6 production secret provisioning and deployment completed
+through the documented local hidden-prompt procedure. Wrangler 4.120.0 used
+the single authenticated account `d6fe2dd4378f5957461c683b9cd7cfbd`.
+`npx wrangler secret list` reported the required `ADMIN_TOKEN` and
+`TOKEN_HMAC_KEY` secret names without exposing their values. After the operator
+rotated both values, `npx wrangler deployments list` reported version
+`be75c2fc-ad1b-4877-97bd-ca25a02155d7`, created
+`2026-08-08T11:24:00.829Z`, receiving 100 percent of traffic. No matching
+`potion-panic-secrets-*.env` temporary file remained under `%TEMP%`.
+
+The configured endpoint remains
+`https://potion-panic-coordination.gabriel-wawerski.workers.dev`; no
+`coordination.json` change was required. Its `/health` route returned HTTP 200,
+service `potion-panic-coordination`, and parseable server time
+`2026-08-08T11:24:56.654Z`. No secret value, authorization header, developer
+token, opaque session, or Credential Manager content was captured.
+
+At this deployment checkpoint, developer tokens had not been issued or
+provisioned, and two Windows machines using Unity 6000.5.1f1 on different
+networks had not completed any acceptance-matrix row or filtered
+`wrangler tail` observation. PP-7 remained open.
+
+2026-08-08: Machine A provisioning used developer label
+`Machine A - MX-DESKTOP`. The operator confirmed that the one-time developer
+token was saved through `Window > Potion Panic > Coordination`; the token was
+not captured in chat, tool output, a tracked file, or PP-7. Unity 6000.5.1f1
+was running on `MX-DESKTOP`, the issuance terminal had closed, and
+`UserSettings/PotionPanic/coordination.local.json` contained no key whose name
+matched token, secret, authorization, or credential.
+
+The Coordination window showed identity `Machine A - MX-DESKTOP`, developer ID
+`9b41718d-1457-40ec-b897-0e977ef0a904`, branch `master`, and connection state
+`Connected`. It showed local presence and a locally owned editing lease for
+`Assets/Scenes/SampleScene.unity`, both expiring
+`2026-08-08T11:39:35.266Z`, with no reservation. Screenshot evidence is
+`Logs/task6-machine-a-connected.png`. This verifies Machine A authentication,
+connection, presence, and editing-lease acquisition; it does not independently
+verify the opaque session's 24-hour lifetime.
+
+A bounded 25-second `npx wrangler tail --format json` observation returned no
+event. Machine B has not been issued or provisioned, and no two-machine
+acceptance row is complete.
+
 ## Definition of Done
 
 - [ ] Acceptance criteria met
