@@ -10,10 +10,19 @@
       }
     ]
   },
-  "migrations": [
-    {
-      "tag": "v1",
-      "new_sqlite_classes": ["CoordinationObject"]
+  "exports": {
+    "CoordinationObject": {
+      "type": "durable-object",
+      "storage": "sqlite"
     }
-  ]
+  },
+  "secrets": {
+    "required": ["TOKEN_HMAC_KEY", "ADMIN_TOKEN"]
+  },
+  "workers_dev": true,
+  "preview_urls": false,
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  }
 }

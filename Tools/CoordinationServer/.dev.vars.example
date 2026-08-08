@@ -1,2 +1,3 @@
-# Slice 01 needs no local secrets. Later authentication slices will document
-# their required development-only variables here. Do not commit .dev.vars.
+# Generate independent local values. Never copy production secrets here.
+TOKEN_HMAC_KEY=
+ADMIN_TOKEN=

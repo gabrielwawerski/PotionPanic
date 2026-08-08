@@ -9,6 +9,7 @@ import {
 } from '../src/protocol';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
+import { parse, type ParseError } from 'jsonc-parser';
 import { describe, expect, it } from 'vitest';
 
 interface CanonicalPathVector {
@@ -25,6 +26,17 @@ const canonicalPathVectorsPath = fileURLToPath(canonicalPathVectorsUrl.href);
 const canonicalPathVectors = JSON.parse(
   await readFile(canonicalPathVectorsPath, 'utf8')
 ) as CanonicalPathVector[];
+const wranglerConfigPath = fileURLToPath(new URL('../wrangler.jsonc', import.meta.url).href);
+const wranglerConfigJsonc = await readFile(wranglerConfigPath, 'utf8');
+
+interface WranglerReleaseConfig {
+  exports?: Record<string, unknown>;
+  secrets?: { required?: string[] };
+  workers_dev?: boolean;
+  preview_urls?: boolean;
+  observability?: { enabled?: boolean; head_sampling_rate?: number };
+  migrations?: unknown;
+}
 
 const requestId = '123e4567-e89b-42d3-a456-426614174000';
 const snapshotId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
@@ -53,6 +65,21 @@ const presence = {
 };
 
 describe('protocol v1 client envelopes', () => {
+  it('declares the durable object release contract without legacy migrations', () => {
+    const parseErrors: ParseError[] = [];
+    const wranglerConfig = parse(wranglerConfigJsonc, parseErrors) as WranglerReleaseConfig;
+
+    expect(parseErrors).toEqual([]);
+    expect(wranglerConfig.exports).toEqual({
+      CoordinationObject: { type: 'durable-object', storage: 'sqlite' }
+    });
+    expect(wranglerConfig.secrets?.required).toEqual(['TOKEN_HMAC_KEY', 'ADMIN_TOKEN']);
+    expect(wranglerConfig.workers_dev).toBe(true);
+    expect(wranglerConfig.preview_urls).toBe(false);
+    expect(wranglerConfig.observability).toEqual({ enabled: true, head_sampling_rate: 1 });
+    expect(wranglerConfig).not.toHaveProperty('migrations');
+  });
+
   it.each(canonicalPathVectors)(
     'creates NFC, slash-normalized, ASCII-folded canonical keys for $input',
     ({ input, normalized, canonical }) => {
