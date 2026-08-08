@@ -9,12 +9,15 @@ namespace PotionPanic.Editor.Coordination
     private ICredentialStore credentialStore;
     private string credentialTarget;
     private string developerToken = string.Empty;
+    private Action credentialsSaved;
 
-    public static void ShowForProject(string projectId, ICredentialStore credentialStore)
+    public static void ShowForProject(string projectId, ICredentialStore credentialStore,
+      Action credentialsSaved)
     {
       var window = GetWindow<CoordinationCredentialWindow>(true, "Coordination Credentials");
       window.credentialStore = credentialStore ?? throw new ArgumentNullException(nameof(credentialStore));
       window.credentialTarget = CoordinationCredentialStore.GetDeveloperTokenTarget(projectId);
+      window.credentialsSaved = credentialsSaved;
       window.developerToken = string.Empty;
       window.minSize = new Vector2(420, 120);
       window.ShowUtility();
@@ -23,6 +26,12 @@ namespace PotionPanic.Editor.Coordination
     public static bool TrySubmitToken(ICredentialStore credentialStore, string credentialTarget,
       string developerToken)
     {
+      return TrySubmitToken(credentialStore, credentialTarget, developerToken, null);
+    }
+
+    public static bool TrySubmitToken(ICredentialStore credentialStore, string credentialTarget,
+      string developerToken, Action credentialsSaved)
+    {
       if (credentialStore == null || string.IsNullOrWhiteSpace(credentialTarget)
         || string.IsNullOrWhiteSpace(developerToken))
       {
@@ -30,6 +39,7 @@ namespace PotionPanic.Editor.Coordination
       }
 
       credentialStore.Write(credentialTarget, developerToken.Trim());
+      credentialsSaved?.Invoke();
       return true;
     }
 
@@ -44,7 +54,8 @@ namespace PotionPanic.Editor.Coordination
       developerToken = EditorGUILayout.PasswordField("Token", developerToken);
       using (new EditorGUILayout.HorizontalScope())
       {
-        if (GUILayout.Button("Save") && TrySubmitToken(credentialStore, credentialTarget, developerToken))
+        if (GUILayout.Button("Save") && TrySubmitToken(credentialStore, credentialTarget,
+          developerToken, credentialsSaved))
         {
           developerToken = string.Empty;
           Close();

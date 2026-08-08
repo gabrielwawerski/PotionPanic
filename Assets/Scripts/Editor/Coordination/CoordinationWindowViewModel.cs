@@ -94,7 +94,7 @@ namespace PotionPanic.Editor.Coordination
       get => settings.taskContext ?? string.Empty;
       set
       {
-        var next = value ?? string.Empty;
+        var next = CoordinationProtocol.ClampContext(value);
         if (settings.taskContext == next)
         {
           return;
@@ -154,7 +154,7 @@ namespace PotionPanic.Editor.Coordination
         throw new ArgumentNullException(nameof(gitContext));
       }
 
-      Branch = gitContext.GetBranch() ?? string.Empty;
+      Branch = CoordinationProtocol.ClampContext(gitContext.GetBranch());
     }
 
     public void Enable()

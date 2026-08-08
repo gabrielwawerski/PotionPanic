@@ -123,7 +123,7 @@ namespace PotionPanic.Editor.Coordination
     private readonly IMainThreadDispatcher dispatcher;
     private readonly ICoordinationGitContext gitContext;
     private readonly bool isSupportedPlatform;
-    private readonly Action requestCredentials;
+    private readonly Action<Action> requestCredentials;
     private readonly ICoordinationDelay delay;
     private readonly Func<TimeSpan, TimeSpan> reconnectJitter;
     private readonly object socketMessageGateLock = new object();
@@ -174,7 +174,7 @@ namespace PotionPanic.Editor.Coordination
       IMainThreadDispatcher dispatcher,
       ICoordinationGitContext gitContext,
       bool isSupportedPlatform,
-      Action requestCredentials = null,
+      Action<Action> requestCredentials = null,
       ICoordinationDelay delay = null,
       Func<TimeSpan, TimeSpan> reconnectJitter = null)
     {
@@ -212,8 +212,8 @@ namespace PotionPanic.Editor.Coordination
         new UnityMainThreadDispatcher(),
         new GitCoordinationContext(),
         Application.platform == RuntimePlatform.WindowsEditor,
-        () => CoordinationCredentialWindow.ShowForProject(
-          configuration.projectId, new WindowsCredentialStore()));
+        onSaved => CoordinationCredentialWindow.ShowForProject(
+          configuration.projectId, new WindowsCredentialStore(), onSaved));
       return true;
     }
 
@@ -629,8 +629,8 @@ namespace PotionPanic.Editor.Coordination
         type = type,
         requestId = Guid.NewGuid().ToString(),
         path = path,
-        branch = includeContext ? gitContext.GetBranch() ?? string.Empty : null,
-        task = includeContext ? settings.taskContext ?? string.Empty : null
+        branch = includeContext ? CoordinationProtocol.ClampContext(gitContext.GetBranch()) : null,
+        task = includeContext ? CoordinationProtocol.ClampContext(settings.taskContext) : null
       };
       var json = JsonUtility.ToJson(envelope);
       if (!CoordinationProtocol.TryParseClientEnvelope(json, out var parsed, out _))
@@ -685,11 +685,16 @@ namespace PotionPanic.Editor.Coordination
 
     private void ReportRequestSendFailure(CoordinationRequestHandle request, string message)
     {
+      var removed = false;
       lock (pendingRequests)
       {
-        pendingRequests.Remove(request.RequestId);
+        removed = pendingRequests.Remove(request.RequestId);
       }
-      dispatcher.Post(() => RequestSendFailed?.Invoke(new CoordinationRequestSendFailure(request, message)));
+      if (removed)
+      {
+        dispatcher.Post(() => RequestSendFailed?.Invoke(
+          new CoordinationRequestSendFailure(request, message)));
+      }
     }
 
     private void OnSocketMessage(string json)
@@ -813,6 +818,7 @@ namespace PotionPanic.Editor.Coordination
       InvalidateSocketMessagesAndResetSnapshot();
       dispatcher.Post(() =>
       {
+        DrainPendingRequests("The coordination socket closed.");
         session = null;
         currentConnectionId = string.Empty;
         StopHeartbeat();
@@ -918,7 +924,36 @@ namespace PotionPanic.Editor.Coordination
       }
 
       hasPromptedForCredentials = true;
-      requestCredentials?.Invoke();
+      requestCredentials?.Invoke(OnCredentialsSaved);
+    }
+
+    private void OnCredentialsSaved()
+    {
+      if (shutdown || IsDisabled || State == CoordinationConnectionState.Connected)
+      {
+        return;
+      }
+
+      credentialUnavailable = false;
+      hasPromptedForCredentials = false;
+      EnsureConnectionCancellation();
+      _ = StartConnectionAttempt();
+    }
+
+    private void DrainPendingRequests(string message)
+    {
+      CoordinationRequestHandle[] drained;
+      lock (pendingRequests)
+      {
+        drained = new CoordinationRequestHandle[pendingRequests.Count];
+        pendingRequests.Values.CopyTo(drained, 0);
+        pendingRequests.Clear();
+      }
+
+      foreach (var request in drained)
+      {
+        RequestSendFailed?.Invoke(new CoordinationRequestSendFailure(request, message));
+      }
     }
 
     private void PublishTransportError(string code, string message)

@@ -3,10 +3,28 @@ import {
   ServerMessageTypes,
   VersionedServerState,
   canonicalPathKey,
+  normalizePath,
   parseClientEnvelope,
   parseServerEnvelope
 } from '../src/protocol';
+import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+
+interface CanonicalPathVector {
+  input: string;
+  normalized: string;
+  canonical: string;
+}
+
+const canonicalPathVectorsUrl = new URL(
+  './fixtures/canonical-path-vectors.json',
+  import.meta.url
+);
+const canonicalPathVectorsPath = fileURLToPath(canonicalPathVectorsUrl.href);
+const canonicalPathVectors = JSON.parse(
+  await readFile(canonicalPathVectorsPath, 'utf8')
+) as CanonicalPathVector[];
 
 const requestId = '123e4567-e89b-42d3-a456-426614174000';
 const snapshotId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
@@ -35,14 +53,13 @@ const presence = {
 };
 
 describe('protocol v1 client envelopes', () => {
-  it.each([
-    ['Assets\\Scenes\\Ä\\İ.unity', 'assets/scenes/Ä/İ.unity'],
-    ['ASSETS/MiXeD.unity', 'assets/mixed.unity'],
-    ['Assets/Scenes/Cafe\u0301.unity', 'assets/scenes/café.unity'],
-    ['Assets/Scenes/Café.unity', 'assets/scenes/café.unity']
-  ])('creates NFC, slash-normalized, ASCII-folded canonical keys for %s', (path, expected) => {
-    expect(canonicalPathKey(path)).toBe(expected);
-  });
+  it.each(canonicalPathVectors)(
+    'creates NFC, slash-normalized, ASCII-folded canonical keys for $input',
+    ({ input, normalized, canonical }) => {
+      expect(normalizePath(input)).toBe(normalized);
+      expect(canonicalPathKey(input)).toBe(canonical);
+    }
+  );
 
   it('lists every client and server message defined by the v1 contract', () => {
     expect(ClientMessageTypes).toEqual([

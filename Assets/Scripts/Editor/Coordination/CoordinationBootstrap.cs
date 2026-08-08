@@ -342,8 +342,8 @@ namespace PotionPanic.Editor.Coordination
         new UnityMainThreadDispatcher(),
         new GitCoordinationContext(),
         Application.platform == RuntimePlatform.WindowsEditor,
-        () => CoordinationCredentialWindow.ShowForProject(
-          configuration.projectId, credentialStore));
+        onSaved => CoordinationCredentialWindow.ShowForProject(
+          configuration.projectId, credentialStore, onSaved));
       var lifecycle = new CoordinationStageLifecycleAdapter(
         new UnityCoordinationStageLifecycleSource());
       var stateStore = new CoordinationStateStore();

@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using PotionPanic.Editor.Coordination;
+using System.Linq;
 
 namespace PotionPanic.Tests.EditMode.Coordination
 {
@@ -68,6 +69,18 @@ namespace PotionPanic.Tests.EditMode.Coordination
         Assert.That(CoordinationProtocol.TryParseClientEnvelope(json, out _, out _), Is.False,
           json);
       }
+    }
+
+    [Test]
+    public void ContextLimitsUseUtf16CodeUnitsAndPreserveSurrogatePairs()
+    {
+      var accepted = string.Concat(Enumerable.Repeat("😀", 128));
+      var rejected = string.Concat(Enumerable.Repeat("😀", 129));
+
+      Assert.That(CoordinationProtocol.IsValidContext(string.Empty), Is.True);
+      Assert.That(CoordinationProtocol.IsValidContext(accepted), Is.True);
+      Assert.That(CoordinationProtocol.IsValidContext(rejected), Is.False);
+      Assert.That(CoordinationProtocol.ClampContext(rejected), Is.EqualTo(accepted));
     }
 
     [TestCase("{\"protocolVersion\":2,\"type\":\"heartbeat\",\"requestId\":\"123e4567-e89b-42d3-a456-426614174000\"}")]

@@ -1,0 +1,8 @@
+[
+  { "input": "Assets\\Scenes\\Ä\\İ.unity", "normalized": "Assets/Scenes/Ä/İ.unity", "canonical": "assets/scenes/Ä/İ.unity" },
+  { "input": "ASSETS/MiXeD.unity", "normalized": "ASSETS/MiXeD.unity", "canonical": "assets/mixed.unity" },
+  { "input": "Assets/Scenes/Café.unity", "normalized": "Assets/Scenes/Café.unity", "canonical": "assets/scenes/café.unity" },
+  { "input": "Assets/Scenes/Café.unity", "normalized": "Assets/Scenes/Café.unity", "canonical": "assets/scenes/café.unity" },
+  { "input": "Assets/Scenes/Σ.unity", "normalized": "Assets/Scenes/Σ.unity", "canonical": "assets/scenes/Σ.unity" },
+  { "input": "Assets/Scenes/ß.unity", "normalized": "Assets/Scenes/ß.unity", "canonical": "assets/scenes/ß.unity" }
+]

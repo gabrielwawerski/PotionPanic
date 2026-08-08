@@ -94,6 +94,31 @@ namespace PotionPanic.Tests.EditMode.Coordination
     }
 
     [Test]
+    public void ClampsTaskContextWithoutSplittingSurrogatePairs()
+    {
+      var fixture = new ViewModelFixture();
+      var value = new string('x', 254) + "\U0001F9EA" + "z";
+
+      fixture.ViewModel.TaskContext = value;
+
+      Assert.That(fixture.Settings.taskContext.Length,
+        Is.EqualTo(CoordinationProtocol.MaximumContextLength));
+      Assert.That(fixture.Settings.taskContext,
+        Is.EqualTo(new string('x', 254) + "\U0001F9EA"));
+      Assert.That(fixture.Store.SavedJson, Does.Not.Contain("z"));
+    }
+
+    [Test]
+    public void ClampsGitBranchContext()
+    {
+      var branch = new string('b', CoordinationProtocol.MaximumContextLength + 1);
+      var fixture = new ViewModelFixture(gitBranch: branch);
+
+      Assert.That(fixture.ViewModel.Branch.Length,
+        Is.EqualTo(CoordinationProtocol.MaximumContextLength));
+    }
+
+    [Test]
     public void UnsupportedPlatformForcesDisabledAndPreventsEnabling()
     {
       var fixture = new ViewModelFixture(isSupportedPlatform: false);
@@ -234,7 +259,7 @@ namespace PotionPanic.Tests.EditMode.Coordination
       public FakeClipboard Clipboard { get; } = new FakeClipboard();
       public CoordinationWindowViewModel ViewModel { get; }
 
-      public ViewModelFixture(bool isSupportedPlatform = true)
+      public ViewModelFixture(bool isSupportedPlatform = true, string gitBranch = null)
       {
         Service = new FakeWindowService(isSupportedPlatform);
         ViewModel = new CoordinationWindowViewModel(
@@ -252,7 +277,7 @@ namespace PotionPanic.Tests.EditMode.Coordination
               exclusive = true
             }
           },
-          new FakeGitContext(),
+          new FakeGitContext(gitBranch),
           Clipboard);
       }
     }
@@ -275,7 +300,14 @@ namespace PotionPanic.Tests.EditMode.Coordination
 
     private sealed class FakeGitContext : ICoordinationGitContext
     {
-      public string GetBranch() => "coordination-slice-08";
+      private readonly string branch;
+
+      public FakeGitContext(string branch = null)
+      {
+        this.branch = branch ?? "coordination-slice-08";
+      }
+
+      public string GetBranch() => branch;
     }
 
     private sealed class FakeWindowService : ICoordinationWindowService

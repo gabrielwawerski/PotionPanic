@@ -41,7 +41,7 @@ namespace PotionPanic.Editor.Coordination
         if (parsed == null || parsed.schemaVersion != CoordinationConfig.CurrentSchemaVersion
           || !HasJsonField(json, "serverBaseUrlOverride") || !HasJsonField(json, "taskContext")
           || !HasJsonField(json, "disabled") || parsed.serverBaseUrlOverride == null
-          || parsed.taskContext == null)
+          || !CoordinationProtocol.IsValidContext(parsed.taskContext))
         {
           error = "Settings contain missing or invalid required fields.";
           return false;
@@ -100,12 +100,16 @@ namespace PotionPanic.Editor.Coordination
       {
         throw new ArgumentNullException(nameof(settings));
       }
+      if (!CoordinationProtocol.IsValidContext(settings.taskContext))
+      {
+        throw new ArgumentException("Task context is invalid.", nameof(settings));
+      }
 
       var safe = new CoordinationUserSettings
       {
         schemaVersion = CoordinationConfig.CurrentSchemaVersion,
         serverBaseUrlOverride = settings.serverBaseUrlOverride ?? string.Empty,
-        taskContext = settings.taskContext ?? string.Empty,
+        taskContext = settings.taskContext,
         disabled = settings.disabled
       };
       return JsonUtility.ToJson(safe, true);

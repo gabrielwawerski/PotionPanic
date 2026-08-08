@@ -94,7 +94,9 @@ namespace PotionPanic.Editor.Coordination
         {
           var branch = process.StandardOutput.ReadToEnd().Trim();
           process.WaitForExit();
-          return process.ExitCode == 0 && branch != "HEAD" ? branch : string.Empty;
+          return process.ExitCode == 0 && branch != "HEAD"
+            ? CoordinationProtocol.ClampContext(branch)
+            : string.Empty;
         }
       }
       catch (Exception)

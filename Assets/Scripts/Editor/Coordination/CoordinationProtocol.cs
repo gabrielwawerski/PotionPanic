@@ -169,8 +169,8 @@ namespace PotionPanic.Editor.Coordination
           parsed.path = normalizedPath;
         }
 
-        if (RequiresContext(parsed.type) && (!HasValidContext(parsed.branch)
-          || !HasValidContext(parsed.task)))
+        if (RequiresContext(parsed.type) && (!IsValidContext(parsed.branch)
+          || !IsValidContext(parsed.task)))
         {
           error = "Client envelope has an invalid branch or task.";
           return false;
@@ -277,9 +277,30 @@ namespace PotionPanic.Editor.Coordination
         || type == "lease.override";
     }
 
-    private static bool HasValidContext(string value)
+    public static bool IsValidContext(string value)
     {
       return value != null && value.Length <= MaximumContextLength;
+    }
+
+    public static string ClampContext(string value)
+    {
+      if (value == null)
+      {
+        return string.Empty;
+      }
+
+      if (value.Length <= MaximumContextLength)
+      {
+        return value;
+      }
+
+      var length = MaximumContextLength;
+      if (char.IsHighSurrogate(value[length - 1]) && char.IsLowSurrogate(value[length]))
+      {
+        length--;
+      }
+
+      return value.Substring(0, length);
     }
 
     private static bool ContainsForbiddenClientIdentity(string json)

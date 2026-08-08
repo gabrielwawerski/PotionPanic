@@ -96,7 +96,7 @@ namespace PotionPanic.Tests.EditMode.Coordination
       var prompts = 0;
       var http = new FakeHttpClient();
       var service = CreateService(new MemoryCredentialStore(), http,
-        requestCredentials: () => prompts++);
+        requestCredentials: _ => prompts++);
 
       await service.ConnectAsync();
       await service.ConnectAsync();
@@ -112,8 +112,11 @@ namespace PotionPanic.Tests.EditMode.Coordination
     {
       var store = new MemoryCredentialStore();
       var target = CoordinationCredentialStore.GetDeveloperTokenTarget("potion-panic");
+      var callbacks = 0;
 
-      Assert.That(CoordinationCredentialWindow.TrySubmitToken(store, target, "developer-token"), Is.True);
+      Assert.That(CoordinationCredentialWindow.TrySubmitToken(store, target, "developer-token",
+        () => callbacks++), Is.True);
+      Assert.That(callbacks, Is.EqualTo(1));
       Assert.That(store.TryRead(target, out var token), Is.True);
       Assert.That(token, Is.EqualTo("developer-token"));
       Assert.That(CoordinationUserSettings.ToJson(CoordinationUserSettings.CreateDefault()),
@@ -313,12 +316,63 @@ namespace PotionPanic.Tests.EditMode.Coordination
     }
 
     [Test]
+    public async Task SocketCloseDrainsPendingRequestsExactlyOnce()
+    {
+      var dispatcher = new QueuedMainThreadDispatcher();
+      var socket = new FakeWebSocketClient();
+      var service = CreateService(Credentials(), new FakeHttpClient(), socket,
+        dispatcher: dispatcher);
+      var failures = new List<CoordinationRequestSendFailure>();
+      var completions = 0;
+      service.RequestSendFailed += failures.Add;
+      service.RequestCompleted += _ => completions++;
+
+      await service.ConnectAsync();
+      RaiseReady(socket, 1);
+      dispatcher.ExecutePending();
+      Assert.That(service.TryOpenPresence("Assets/Scenes/One.unity", out _), Is.True);
+      Assert.That(service.TryOpenPresence("Assets/Scenes/Two.unity", out _), Is.True);
+
+      socket.RaiseClosed(1006, "closed");
+      socket.RaiseClosed(1006, "closed");
+      dispatcher.ExecutePending();
+
+      Assert.That(failures, Has.Count.EqualTo(2));
+      Assert.That(failures, Has.All.Matches<CoordinationRequestSendFailure>(
+        value => value.Message == "The coordination socket closed."));
+      Assert.That(completions, Is.Zero);
+      await service.ShutdownAsync();
+    }
+
+    [Test]
+    public async Task SavedCredentialStartsOneConnectionAttempt()
+    {
+      var credentials = new MemoryCredentialStore();
+      var http = new FakeHttpClient();
+      var socket = new FakeWebSocketClient();
+      Action saved = null;
+      var service = CreateService(credentials, http, socket,
+        requestCredentials: callback => saved = callback);
+
+      await service.ConnectAsync();
+      Assert.That(saved, Is.Not.Null);
+      credentials.Write(CoordinationCredentialStore.GetDeveloperTokenTarget("potion-panic"),
+        "developer-token");
+      saved();
+      await Task.Yield();
+
+      Assert.That(http.Calls, Is.EqualTo(1));
+      Assert.That(socket.ConnectCalls, Is.EqualTo(1));
+      await service.ShutdownAsync();
+    }
+
+    [Test]
     public async Task CredentialReadFailureIsReportedWithoutPromptingForCredentials()
     {
       var prompts = 0;
       var errors = new List<CoordinationServerEnvelope>();
       var service = CreateService(new ThrowingCredentialStore(), new FakeHttpClient(),
-        requestCredentials: () => prompts++);
+        requestCredentials: _ => prompts++);
       service.ErrorReceived += errors.Add;
 
       await service.ConnectAsync();
@@ -854,7 +908,7 @@ namespace PotionPanic.Tests.EditMode.Coordination
       ICredentialStore credentials,
       ICoordinationHttpClient http,
       FakeWebSocketClient socket = null,
-      Action requestCredentials = null,
+      Action<Action> requestCredentials = null,
       ICoordinationDelay delay = null,
       IMainThreadDispatcher dispatcher = null,
       bool isSupportedPlatform = true)

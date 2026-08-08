@@ -1,3 +1,4 @@
+using System.Linq;
 using NUnit.Framework;
 using PotionPanic.Editor.Coordination;
 
@@ -44,6 +45,20 @@ namespace PotionPanic.Tests.EditMode.Coordination
     }
 
     [Test]
+    public void RejectsTaskContextLongerThan256Utf16CodeUnits()
+    {
+      var accepted = string.Concat(Enumerable.Repeat("\U0001F600", 128));
+      var rejected = string.Concat(Enumerable.Repeat("\U0001F600", 129));
+      var acceptedJson = "{\"schemaVersion\":1,\"serverBaseUrlOverride\":\"\","
+        + "\"taskContext\":\"" + accepted + "\",\"disabled\":false}";
+      var json = "{\"schemaVersion\":1,\"serverBaseUrlOverride\":\"\","
+        + "\"taskContext\":\"" + rejected + "\",\"disabled\":false}";
+
+      Assert.That(CoordinationUserSettings.TryParse(acceptedJson, out _, out _), Is.True);
+      Assert.That(CoordinationUserSettings.TryParse(json, out _, out _), Is.False);
+    }
+
+    [Test]
     public void PersistsOnlyTheApprovedLocalSettingsShape()
     {
       var json = CoordinationUserSettings.ToJson(new CoordinationUserSettings
@@ -57,6 +72,16 @@ namespace PotionPanic.Tests.EditMode.Coordination
       Assert.That(json, Does.Not.Contain("Token"));
       Assert.That(json, Does.Not.Contain("Session"));
       Assert.That(json, Does.Contain("serverBaseUrlOverride"));
+    }
+
+    [Test]
+    public void RejectsSerializingTaskContextLongerThan256Utf16CodeUnits()
+    {
+      var settings = CoordinationUserSettings.CreateDefault();
+      settings.taskContext = string.Concat(Enumerable.Repeat("\U0001F600", 129));
+
+      Assert.That(() => CoordinationUserSettings.ToJson(settings),
+        Throws.ArgumentException);
     }
   }
 }

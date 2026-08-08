@@ -105,9 +105,14 @@ namespace PotionPanic.Editor.Coordination
         string.IsNullOrEmpty(viewModel.Branch) ? "Unavailable" : viewModel.Branch);
       EditorGUILayout.LabelField("Connection", viewModel.ConnectionState.ToString());
 
-      EditorGUI.BeginChangeCheck();
-      var taskContext = EditorGUILayout.TextField("Task context", viewModel.TaskContext);
-      if (EditorGUI.EndChangeCheck())
+      var taskContextRect = EditorGUILayout.GetControlRect();
+      var taskContextTextRect = EditorGUI.PrefixLabel(taskContextRect,
+        new GUIContent("Task context"));
+      var taskContext = GUI.TextField(
+        taskContextTextRect,
+        viewModel.TaskContext,
+        CoordinationProtocol.MaximumContextLength);
+      if (taskContext != viewModel.TaskContext)
       {
         viewModel.TaskContext = taskContext;
       }

@@ -33,7 +33,15 @@ namespace PotionPanic.Editor.Coordination
 
     public static string ToCanonicalKey(string normalizedPath)
     {
-      return normalizedPath.ToLowerInvariant();
+      var builder = new StringBuilder(normalizedPath.Length);
+      foreach (var character in normalizedPath)
+      {
+        builder.Append(character >= 'A' && character <= 'Z'
+          ? (char)(character + ('a' - 'A'))
+          : character);
+      }
+
+      return builder.ToString();
     }
 
     private static bool TryNormalizePattern(string pattern, out string normalizedPattern)
