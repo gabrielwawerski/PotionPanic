@@ -480,6 +480,54 @@ sent to the older production protocol. No secret, token, credential,
 two-machine matrix, the new reservation-cancellation row, and filtered tail
 evidence remain incomplete, so Task 6 and PP-7 remain open.
 
+2026-08-08: Task 6 deployment resumed from clean `master` at
+`91b73ccfedbc0bb3cae68b6346e5d4564cb9fda6`, aligned with `origin/master`.
+The user explicitly authorized deployment from this commit. No
+`coordination.json` change was needed because the configured endpoint still
+matched the deployed Worker URL.
+
+Pre-deploy verification ran from `Tools/CoordinationServer`: `npm run
+typecheck` passed; `npm test` passed 104/104; `npm audit
+--audit-level=high` reported zero vulnerabilities; `npx wrangler --version`
+reported `4.120.0`; `npx wrangler whoami` confirmed the single authenticated
+account `d6fe2dd4378f5957461c683b9cd7cfbd`; `npx wrangler deployments list`
+showed the prior production version
+`be75c2fc-ad1b-4877-97bd-ca25a02155d7`, created
+`2026-08-08T11:24:00.829Z`, receiving 100 percent of traffic; `npx wrangler
+secret list` reported the required `ADMIN_TOKEN` and `TOKEN_HMAC_KEY` secret
+names without exposing values; and `npx wrangler deploy --dry-run` passed with
+the `COORDINATION_OBJECT (CoordinationObject)` Durable Object binding. The
+pre-deploy `/health` check returned HTTP 200, service
+`potion-panic-coordination`, and parseable server time
+`2026-08-08T12:58:36.213Z`.
+
+The authorized mutation was `npx wrangler deploy` only. Wrangler uploaded and
+deployed `potion-panic-coordination`, reported Worker startup time `4 ms`, the
+unchanged URL
+`https://potion-panic-coordination.gabriel-wawerski.workers.dev`, and current
+version ID `26f5eba2-29e2-4dcf-af6c-9cbafb0dd226`.
+
+Post-deploy verification returned HTTP 200 from `/health`, service
+`potion-panic-coordination`, and parseable server time
+`2026-08-08T12:59:12.769Z`. `npx wrangler deployments list` reported version
+`26f5eba2-29e2-4dcf-af6c-9cbafb0dd226`, created
+`2026-08-08T12:58:51.333Z`, receiving 100 percent of traffic. `npx wrangler
+secret list` still reported only the required secret names. A credential-free
+live protocol smoke, `POST /v1/projects/potion-panic/sessions` with an empty
+JSON body and no `Authorization` header, returned HTTP 401. No secret value,
+authorization header, developer token, opaque session token, Credential Manager
+content, secret provisioning, secret rotation, developer-token operation,
+coordination configuration change, GitHub mutation, or unrelated Cloudflare
+change occurred.
+
+No Task 6 two-machine acceptance row is completed by this deployment. Presence
+and reservation, reservation cancellation, simultaneous acquire, conflict,
+cancel, override, clean close, abrupt termination and 120-150 second expiry,
+outage fallback, 24-hour session recreation, hibernation, revocation, and
+filtered Wrangler-tail evidence still require dated observations from two
+Windows machines using Unity 6000.5.1f1 on different networks. PP-7 remains
+open.
+
 ## Definition of Done
 
 - [ ] Acceptance criteria met
