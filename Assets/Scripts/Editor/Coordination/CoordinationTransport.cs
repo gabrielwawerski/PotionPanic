@@ -9,7 +9,10 @@ namespace PotionPanic.Editor.Coordination
 {
   public interface ICoordinationHttpClient
   {
-    Task<CoordinationHttpResponse> CreateSessionAsync(Uri uri, string developerToken);
+    Task<CoordinationHttpResponse> CreateSessionAsync(
+      Uri uri,
+      string developerToken,
+      CancellationToken cancellationToken);
   }
 
   public interface ICoordinationWebSocketClient
@@ -44,23 +47,37 @@ namespace PotionPanic.Editor.Coordination
 
   public sealed class UnityWebRequestCoordinationHttpClient : ICoordinationHttpClient
   {
-    public async Task<CoordinationHttpResponse> CreateSessionAsync(Uri uri, string developerToken)
+    public async Task<CoordinationHttpResponse> CreateSessionAsync(
+      Uri uri,
+      string developerToken,
+      CancellationToken cancellationToken)
     {
       using (var request = new UnityWebRequest(uri, UnityWebRequest.kHttpVerbPOST))
       {
         request.uploadHandler = new UploadHandlerRaw(Array.Empty<byte>());
         request.downloadHandler = new DownloadHandlerBuffer();
         request.SetRequestHeader("Authorization", "Bearer " + developerToken);
-        await Await(request.SendWebRequest());
+        await Await(request.SendWebRequest(), request, cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
         return new CoordinationHttpResponse((int)request.responseCode, request.downloadHandler.text);
       }
     }
 
-    private static Task Await(UnityWebRequestAsyncOperation operation)
+    private static async Task Await(
+      UnityWebRequestAsyncOperation operation,
+      UnityWebRequest request,
+      CancellationToken cancellationToken)
     {
       var completion = new TaskCompletionSource<bool>();
       operation.completed += _ => completion.TrySetResult(true);
-      return completion.Task;
+      using (cancellationToken.Register(() =>
+      {
+        request.Abort();
+        completion.TrySetCanceled(cancellationToken);
+      }))
+      {
+        await completion.Task;
+      }
     }
   }
 

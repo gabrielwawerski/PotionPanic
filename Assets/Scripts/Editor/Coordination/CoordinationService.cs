@@ -71,9 +71,46 @@ namespace PotionPanic.Editor.Coordination
     }
   }
 
-  public sealed class CoordinationService : ICoordinationAssetService, ICoordinationSaveService
+  public interface ICoordinationWindowService
+  {
+    CoordinationConnectionState State { get; }
+    string DeveloperId { get; }
+    string DisplayName { get; }
+    string ConnectionId { get; }
+    bool IsSupportedPlatform { get; }
+    event Action<CoordinationConnectionState> StateChanged;
+
+    Task ConnectAsync();
+    Task ForgetCredentialsAsync();
+    Task SetDisabledAsync(bool disabled);
+    bool TryReserveLease(string path, out CoordinationRequestHandle request);
+    bool TryReleaseLease(string path, out CoordinationRequestHandle request);
+    bool TryOverrideLease(string path, out CoordinationRequestHandle request);
+  }
+
+  public interface ICoordinationNotificationSource
+  {
+    CoordinationConnectionState State { get; }
+    event Action<CoordinationConnectionState> StateChanged;
+    event Action<CoordinationServerEnvelope> LeaseResultReceived;
+    event Action<CoordinationServerEnvelope> ErrorReceived;
+  }
+
+  public interface ICoordinationWarningService
+  {
+    CoordinationConnectionState State { get; }
+    event Action<CoordinationConnectionState> StateChanged;
+    event Action<CoordinationServerEnvelope> SessionReady;
+  }
+
+  public sealed class CoordinationService : ICoordinationAssetService,
+    ICoordinationSaveService,
+    ICoordinationWindowService,
+    ICoordinationNotificationSource,
+    ICoordinationWarningService
   {
     private static readonly int[] ReconnectDelaysSeconds = { 1, 2, 4, 8, 16, 30 };
+    private static readonly TimeSpan CloseTimeout = TimeSpan.FromSeconds(2);
     private static readonly object RandomLock = new object();
     private static readonly System.Random Random = new System.Random();
 
@@ -91,6 +128,7 @@ namespace PotionPanic.Editor.Coordination
     private readonly CoordinationProtocolState protocolState = new CoordinationProtocolState();
     private readonly Dictionary<string, CoordinationRequestHandle> pendingRequests
       = new Dictionary<string, CoordinationRequestHandle>();
+    private readonly HashSet<Task> sendTasks = new HashSet<Task>();
     private readonly object lifecycleLock = new object();
 
     private CoordinationSessionResponse session;
@@ -102,9 +140,14 @@ namespace PotionPanic.Editor.Coordination
     private bool hasPromptedForCredentials;
     private bool credentialUnavailable;
     private bool shutdown;
+    private string currentConnectionId = string.Empty;
 
     public CoordinationConnectionState State { get; private set; }
     public bool HasSession => session != null;
+    public string DeveloperId => session?.DeveloperId ?? string.Empty;
+    public string DisplayName => session?.DisplayName ?? string.Empty;
+    public string ConnectionId => currentConnectionId;
+    public bool IsSupportedPlatform => isSupportedPlatform;
     public event Action<CoordinationConnectionState> StateChanged;
     public event Action<CoordinationServerEnvelope> SessionReady;
     public event Action<CoordinationServerEnvelope> SnapshotReceived;
@@ -183,7 +226,9 @@ namespace PotionPanic.Editor.Coordination
     public async Task ForgetCredentialsAsync()
     {
       credentialUnavailable = true;
+      hasPromptedForCredentials = false;
       session = null;
+      currentConnectionId = string.Empty;
       CancelConnectionWork();
       try
       {
@@ -196,7 +241,7 @@ namespace PotionPanic.Editor.Coordination
 
       try
       {
-        await webSocketClient.CloseAsync(CancellationToken.None);
+        await CloseSocketAsync();
       }
       catch (Exception exception)
       {
@@ -204,6 +249,40 @@ namespace PotionPanic.Editor.Coordination
       }
 
       SetState(IsDisabled ? CoordinationConnectionState.Disabled : CoordinationConnectionState.Offline);
+    }
+
+    public async Task SetDisabledAsync(bool disabled)
+    {
+      if (!isSupportedPlatform || shutdown)
+      {
+        return;
+      }
+
+      settings.disabled = disabled;
+      if (!disabled)
+      {
+        credentialUnavailable = false;
+        EnsureConnectionCancellation();
+        SetState(CoordinationConnectionState.Offline);
+        await ConnectAsync();
+        return;
+      }
+
+      session = null;
+      currentConnectionId = string.Empty;
+      CancelConnectionWork();
+      await AwaitQuietly(heartbeatLoop);
+      await AwaitQuietly(reconnectLoop);
+      await AwaitQuietly(activeConnectionAttempt);
+      try
+      {
+        await CloseSocketAsync();
+      }
+      catch (Exception exception)
+      {
+        PublishTransportError("connection_close_failed", exception.Message);
+      }
+      SetState(CoordinationConnectionState.Disabled);
     }
 
     public async Task ShutdownAsync()
@@ -217,17 +296,31 @@ namespace PotionPanic.Editor.Coordination
       CancelConnectionWork();
       try
       {
-        await webSocketClient.CloseAsync(CancellationToken.None);
+        await CloseSocketAsync().ConfigureAwait(false);
       }
       catch
       {
       }
 
-      await AwaitQuietly(heartbeatLoop);
-      await AwaitQuietly(reconnectLoop);
-      await AwaitQuietly(activeConnectionAttempt);
       webSocketClient.MessageReceived -= OnSocketMessage;
       webSocketClient.Closed -= OnSocketClosed;
+    }
+
+    public async Task FlushPendingSendsAsync(TimeSpan timeout)
+    {
+      if (timeout <= TimeSpan.Zero)
+      {
+        throw new ArgumentOutOfRangeException(nameof(timeout));
+      }
+
+      Task[] pending;
+      lock (sendTasks)
+      {
+        pending = new List<Task>(sendTasks).ToArray();
+      }
+
+      var allSends = Task.WhenAll(pending);
+      await Task.WhenAny(allSends, Task.Delay(timeout)).ConfigureAwait(false);
     }
 
     public bool TryOpenPresence(string path, out CoordinationRequestHandle request)
@@ -337,7 +430,8 @@ namespace PotionPanic.Editor.Coordination
       CoordinationHttpResponse response;
       try
       {
-        response = await httpClient.CreateSessionAsync(SessionUri(), developerToken);
+        response = await httpClient.CreateSessionAsync(
+          SessionUri(), developerToken, cancellationToken);
       }
       catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
       {
@@ -531,15 +625,33 @@ namespace PotionPanic.Editor.Coordination
         pendingRequests.Add(request.RequestId, request);
       }
 
-      _ = SendAsync(request, JsonUtility.ToJson(parsed));
+      QueueSend(request, JsonUtility.ToJson(parsed));
       return true;
+    }
+
+    private void QueueSend(CoordinationRequestHandle request, string json)
+    {
+      var task = SendAsync(request, json);
+      lock (sendTasks)
+      {
+        sendTasks.Add(task);
+      }
+
+      _ = task.ContinueWith(completed =>
+      {
+        lock (sendTasks)
+        {
+          sendTasks.Remove(completed);
+        }
+      }, TaskScheduler.Default);
     }
 
     private async Task SendAsync(CoordinationRequestHandle request, string json)
     {
       try
       {
-        await webSocketClient.SendAsync(json, connectionCancellation.Token);
+        await webSocketClient.SendAsync(json, connectionCancellation.Token)
+          .ConfigureAwait(false);
       }
       catch (OperationCanceledException) when (connectionCancellation.IsCancellationRequested)
       {
@@ -589,6 +701,7 @@ namespace PotionPanic.Editor.Coordination
       switch (envelope.type)
       {
         case "session.ready":
+          currentConnectionId = envelope.connectionId ?? string.Empty;
           SetState(CoordinationConnectionState.Connected);
           SessionReady?.Invoke(envelope);
           StartHeartbeat();
@@ -642,6 +755,7 @@ namespace PotionPanic.Editor.Coordination
       dispatcher.Post(() =>
       {
         session = null;
+        currentConnectionId = string.Empty;
         StopHeartbeat();
         if (shutdown || credentialUnavailable)
         {
@@ -696,6 +810,14 @@ namespace PotionPanic.Editor.Coordination
       }
       cancellation.Cancel();
       StopHeartbeat();
+    }
+
+    private async Task CloseSocketAsync()
+    {
+      using (var cancellation = new CancellationTokenSource(CloseTimeout))
+      {
+        await webSocketClient.CloseAsync(cancellation.Token).ConfigureAwait(false);
+      }
     }
 
     private void SetState(CoordinationConnectionState state)

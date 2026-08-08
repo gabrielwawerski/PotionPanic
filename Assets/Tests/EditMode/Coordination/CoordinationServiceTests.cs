@@ -73,6 +73,22 @@ namespace PotionPanic.Tests.EditMode.Coordination
     }
 
     [Test]
+    public async Task ShutdownCancelsAnInFlightSessionBeforeClosingTheSocket()
+    {
+      var http = new BlockingHttpClient();
+      var socket = new FakeWebSocketClient();
+      var service = CreateService(Credentials(), http, socket);
+
+      var connection = service.ConnectAsync();
+      await http.Started.Task;
+      await service.ShutdownAsync();
+
+      Assert.That(http.WasCancelled, Is.True);
+      Assert.That(socket.CloseCalls, Is.EqualTo(1));
+      Assert.That(connection.IsCompleted, Is.True);
+    }
+
+    [Test]
     public async Task MissingCredentialPromptsOnceWithoutCallingTheServer()
     {
       var prompts = 0;
@@ -345,7 +361,7 @@ namespace PotionPanic.Tests.EditMode.Coordination
 
     private static CoordinationService CreateService(
       ICredentialStore credentials,
-      FakeHttpClient http,
+      ICoordinationHttpClient http,
       FakeWebSocketClient socket = null,
       Action requestCredentials = null,
       ICoordinationDelay delay = null,
@@ -372,7 +388,10 @@ namespace PotionPanic.Tests.EditMode.Coordination
         }
       }
 
-      public Task<CoordinationHttpResponse> CreateSessionAsync(Uri uri, string developerToken)
+      public Task<CoordinationHttpResponse> CreateSessionAsync(
+        Uri uri,
+        string developerToken,
+        CancellationToken cancellationToken)
       {
         Calls++;
         var status = statuses.Count == 0 ? 201 : statuses.Dequeue();
@@ -382,6 +401,31 @@ namespace PotionPanic.Tests.EditMode.Coordination
             + "\"reservationTtlSeconds\":1800,\"stateVersion\":0}"
           : "Unavailable";
         return Task.FromResult(new CoordinationHttpResponse(status, body));
+      }
+    }
+
+    private sealed class BlockingHttpClient : ICoordinationHttpClient
+    {
+      public TaskCompletionSource<bool> Started { get; }
+        = new TaskCompletionSource<bool>();
+      public bool WasCancelled { get; private set; }
+
+      public async Task<CoordinationHttpResponse> CreateSessionAsync(
+        Uri uri,
+        string developerToken,
+        CancellationToken cancellationToken)
+      {
+        Started.TrySetResult(true);
+        try
+        {
+          await Task.Delay(Timeout.Infinite, cancellationToken);
+          throw new InvalidOperationException("The blocking request unexpectedly completed.");
+        }
+        catch (OperationCanceledException)
+        {
+          WasCancelled = true;
+          throw;
+        }
       }
     }
 

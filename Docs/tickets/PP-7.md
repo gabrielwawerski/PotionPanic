@@ -258,6 +258,66 @@ harness was removed, Unity closed cleanly, and no scene, prefab,
 save paths still need the planned editor smoke after UI control is available.
 Live Worker deployment and two-machine acceptance remain Slice 09 work.
 
+2026-08-08: Slice 08 coordination UI and lifecycle implemented under commit
+subject `feat(coordination): add editor coordination interface`. The editor-only
+runtime is the single owner of service startup, stage tracking, the Slice 07
+save guard and resume coordinator, warning clearance, filtered notifications,
+and shutdown. Compilation start, assembly reload, and editor quit converge on
+one idempotent shutdown path. If compilation finishes without a domain reload,
+a delayed callback creates one replacement runtime; an imminent assembly reload
+cancels that callback and lets the reloaded bootstrap own startup. The shutdown
+path uninstalls the save guard and subscriptions,
+queues presence closure and locally owned editing-lease release, allows up to
+two seconds for queued sends, starts cancellation without waiting for an
+in-flight startup task, cancels heartbeat, reconnect, and session work, and then
+closes the socket with a bounded wait. Lifecycle teardown clears and restores
+Unity's synchronization context around the synchronous reload hook; Unity event
+cleanup and release queuing stay on the main thread, while bounded network
+cleanup cannot deadlock waiting for that thread. Abrupt termination
+still relies on authoritative server expiry and connection-close cleanup.
+
+The `Window > Potion Panic > Coordination` window shows authenticated identity,
+the Git branch, editable task context, connection state, presence, editing
+leases, reservations, owner/branch/task/expiry details, uncoordinated-save
+warnings, and the local Disabled control. It exposes reconnect, reserve,
+release, override, canonical-path copy, and credential-forget actions with
+connection and ownership-based enablement. Only task context and Disabled are
+changed through the existing ignored local settings file; credentials remain in
+Windows Credential Manager and session tokens remain in memory. Notifications
+are limited to claims, conflicts, overrides, reservations, authentication
+failure, and disconnects lasting at least two minutes. Slice 07 retains every
+save decision. Editing-lease heartbeat updates do not repeat claim notices, and
+notices raised while the Coordination window is closed remain in a bounded
+in-memory queue until a window can display them. Manual lease actions also use
+the enabled coordination path rules, so the window cannot reserve or override
+an asset that tracking and the save guard treat as uncoordinated.
+
+Fresh verification passed. `Tools/CoordinationServer` passed `npm run
+typecheck`; focused auth, state, and WebSocket tests passed 6/6, 10/10, and
+12/12; the full suite passed 77/77; `npm audit --audit-level=moderate` reported
+zero vulnerabilities; and `npx wrangler deploy --dry-run` passed with Wrangler
+4.120.0. Unity 6000.5.1f1 passed the full Coordination EditMode suite 140/140,
+with zero failed, skipped, or inconclusive tests and no C# compiler errors or
+warnings in `Logs/coordination-slice08-final.log`.
+
+The editor smoke invoked the real menu command, found the Coordination window,
+and logged `SLICE08_FINAL_WINDOW_READY` with its bound rendered state as
+unauthenticated, branch
+`coordination-slice-08`, Offline, Disabled false, and empty presence, editing
+lease, reservation, and warning lists. It opened
+`Assets/Scenes/SampleScene.unity`, entered and exited Play Mode, and logged
+`SLICE08_FINAL_SMOKE_COMPLETE errors=0` in
+`Logs/coordination-slice08-manual-final.log`. The temporary harness and meta file were
+removed, Unity then closed normally, and no scene, prefab, `ProjectSettings`, or
+`Packages` file changed. After the completion marker, Unity emitted its internal
+shutdown-only `JobTempAlloc` allocation diagnostic; no error, assertion, or
+exception was recorded during the window and Play Mode smoke. The supported
+Windows inspector still failed with
+`node_repl exec context not found`, so no screenshot evidence exists and the
+authenticated/connected populated window states were not exercised against a
+live Worker. Live deployment, real credentials, two-machine acceptance, and
+evergreen documentation remain Slice 09 work.
+
 ## Definition of Done
 
 - [ ] Acceptance criteria met

@@ -242,6 +242,25 @@ namespace PotionPanic.Editor.Coordination
       isDisposed = true;
     }
 
+    public void ReleaseOwnedCoordination()
+    {
+      foreach (var key in activeStageOrder)
+      {
+        var stage = activeStages[key];
+        service.TryClosePresence(stage.Stage.Path, out _);
+        if (!StateStore.TryGetLease(stage.Stage.Path, out var lease))
+        {
+          continue;
+        }
+
+        stage.ApplyLease(lease, localIdentity);
+        if (stage.LeaseOwnership == CoordinationLeaseOwnership.OwnedEditing)
+        {
+          service.TryReleaseLease(stage.Stage.Path, out _);
+        }
+      }
+    }
+
     private void HandleTransition(CoordinationStageTransition transition)
     {
       if (transition == null || transition.Stage == null)
@@ -434,6 +453,7 @@ namespace PotionPanic.Editor.Coordination
       = new Dictionary<string, CoordinationLeaseRecord>();
 
     public long NewestStateVersion { get; private set; } = -1;
+    public event Action Changed;
 
     public bool ApplySessionReady(CoordinationServerEnvelope envelope)
     {
@@ -445,6 +465,7 @@ namespace PotionPanic.Editor.Coordination
       presence.Clear();
       leases.Clear();
       NewestStateVersion = envelope.stateVersion;
+      Changed?.Invoke();
       return true;
     }
 
@@ -467,6 +488,7 @@ namespace PotionPanic.Editor.Coordination
       }
 
       NewestStateVersion = envelope.stateVersion;
+      Changed?.Invoke();
       return true;
     }
 
@@ -483,6 +505,7 @@ namespace PotionPanic.Editor.Coordination
       }
 
       NewestStateVersion = envelope.stateVersion;
+      Changed?.Invoke();
       return true;
     }
 
@@ -497,6 +520,7 @@ namespace PotionPanic.Editor.Coordination
 
       presence.Remove(PresenceKey(path, envelope.connectionId));
       NewestStateVersion = envelope.stateVersion;
+      Changed?.Invoke();
       return true;
     }
 
@@ -562,6 +586,16 @@ namespace PotionPanic.Editor.Coordination
       return records;
     }
 
+    public IReadOnlyCollection<CoordinationPresenceRecord> GetAllPresence()
+    {
+      return new List<CoordinationPresenceRecord>(presence.Values);
+    }
+
+    public IReadOnlyCollection<CoordinationLeaseRecord> GetAllLeases()
+    {
+      return new List<CoordinationLeaseRecord>(leases.Values);
+    }
+
     private bool ApplyLeaseEnvelope(CoordinationServerEnvelope envelope, bool isStaleReplay)
     {
       if (isStaleReplay || !CanApplyLease(envelope))
@@ -594,6 +628,7 @@ namespace PotionPanic.Editor.Coordination
       }
 
       NewestStateVersion = envelope.stateVersion;
+      Changed?.Invoke();
       return true;
     }
 
