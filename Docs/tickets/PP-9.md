@@ -58,6 +58,19 @@ acceptance procedure.
 
 ## Implementation Notes
 
+- 2026-08-09: Current step: Implement. Work continues on
+  `fix/coordination-outage-policy` from clean `master` at `359e9e6` or later.
+- 2026-08-09: Approved the Current Asset First IMGUI workflow. The active scene
+  or Prefab Stage is the default action target; explicit Project-selection and
+  manual targets stay session-only; inspecting team rows does not replace the
+  action target.
+- 2026-08-09: Team rows remain visible as clearly stale, read-only data while
+  Manual, Offline, Reconnecting, or AuthenticationFailed. Lease mutations
+  require Connected state and a complete authoritative snapshot for the
+  current session.
+- 2026-08-09: The selected generated mock is directional only. Production must
+  use real Coordination fields and Unity-native controls, remain usable at
+  430, 560, and 900 pixel widths, and pass a recorded visual comparison.
 - 2026-08-09: Approved **Coordinated** and **Manual** as the user-facing modes.
   Manual mode is an intentional opt-out, not the recommended response to a
   temporary outage.

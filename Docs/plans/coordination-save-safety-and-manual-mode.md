@@ -9,7 +9,7 @@ status: active
 
 **Goal:** Make every save of a coordinated Unity asset follow one explicit safety policy, including intentional Manual mode and temporary Coordination failures, while keeping a durable local record of every uncoordinated save until a developer reconciles it.
 
-**Architecture:** `CoordinationSaveResumeCoordinator` remains the save-policy boundary. It classifies each save from current Coordination state, obtains an editing lease where possible, and invokes the existing two-step local-save confirmation only for approved fallback states. A new local store records successful uncoordinated saves by normalized asset path. `CoordinationWindowViewModel` exposes the user-facing Coordinated and Manual modes and requires explicit reconciliation of each warning.
+**Architecture:** `CoordinationSaveResumeCoordinator` remains the save-policy boundary. It classifies each save from current Coordination state, obtains an editing lease where possible, and invokes the existing two-step local-save confirmation only for approved fallback states. A new local store records successful uncoordinated saves by normalized asset path. `CoordinationWindowViewModel` exposes the user-facing Coordinated and Manual modes, authoritative team-data freshness, active-stage-first targeting, contextual actions, and explicit reconciliation. The existing IMGUI window implements the approved **Current Asset First** workflow without changing the Coordination protocol.
 
 **Tech Stack:** Unity 6000.5.1f1, C# editor assemblies, Unity Test Framework EditMode tests, JSON under `UserSettings/`, VitePress documentation, npm verification scripts.
 
@@ -26,6 +26,9 @@ status: active
 - Unity batch test commands must omit `-quit`; wait for the process to exit, then inspect both the XML result and editor log.
 - Never place developer tokens, session tokens, admin secrets, or authorization headers in the warning store, tests, logs, or documentation.
 - Do not archive PP-9 or PP-7 as part of this implementation. PP-7 still requires its separate release and two-machine acceptance evidence.
+- Retain IMGUI and the current view-model boundary. Do not migrate the window to UI Toolkit.
+- Treat the selected Current Asset First mock as directional visual evidence. Do not add the generated image to the repository or copy its invented assets, developers, timestamps, counts, file metadata, or claim states into production.
+- At 430 pixels of docked width, the Coordination window must show its status and primary action without clipped labels or a horizontal scrollbar.
 
 ## Decision Record
 
@@ -74,9 +77,11 @@ The fallback remains two separate decisions:
 - `Assets/Scripts/Editor/Coordination/CoordinationBootstrap.cs`
   - Construct the local store and warning state, inject branch and task metadata providers, and retain warning state across connection lifecycle changes.
 - `Assets/Scripts/Editor/Coordination/CoordinationWindowViewModel.cs`
-  - Add Coordinated and Manual mode commands, warning presentation, persistence errors, and explicit reconciliation.
+  - Add Coordinated and Manual mode commands, warning presentation, persistence errors, data freshness, active-stage-first target selection, contextual primary actions, row inspection, and explicit reconciliation.
 - `Assets/Scripts/Editor/Coordination/CoordinationWindow.cs`
-  - Replace the Disabled checkbox with a Mode selector and render actionable warning records.
+  - Implement the responsive Current Asset First layout, contextual recovery and claim actions, actionable warning records, and compact team-activity foldouts.
+- `Assets/Scripts/Editor/Coordination/CoordinationAssetTracking.cs`
+  - Track whether a complete authoritative snapshot has been applied for the current session without discarding last-known rows when the connection later becomes unavailable.
 - `Assets/Scripts/Editor/Coordination/CoordinationUncoordinatedWarningController.cs`
   - Remove this lifecycle-cleared warning controller after all callers use the durable warning state.
 
@@ -85,7 +90,9 @@ The fallback remains two separate decisions:
 - `Assets/Tests/EditMode/Coordination/CoordinationSaveGuardTests.cs`
   - State matrix, confirmation sequence, dirty-state preservation, reason metadata, and one-shot resume authorization.
 - `Assets/Tests/EditMode/Coordination/CoordinationWindowViewModelTests.cs`
-  - Mode transitions, confirmation behavior, display terminology, record rendering, and reconciliation.
+  - Mode transitions, confirmation behavior, target-source behavior, freshness gating, contextual actions, row independence, record rendering, and reconciliation.
+- `Assets/Tests/EditMode/Coordination/CoordinationAssetTrackerTests.cs`
+  - Current-session authoritative-snapshot freshness transitions.
 - `Assets/Tests/EditMode/Coordination/CoordinationLifecycleTests.cs`
   - Verify close, reconnect, and lease acquisition do not clear warnings.
 - `Assets/Tests/EditMode/Coordination/CoordinationServiceTests.cs`
@@ -285,14 +292,16 @@ git add -- Assets/Scripts/Editor/Coordination/CoordinationSaveResumeCoordinator.
 git commit -m "fix(coordination): guard every uncoordinated save"
 ```
 
-## Task 3: Replace Disabled with Coordinated and Manual Modes
+## Task 3: Add Coordinated/Manual Current-Asset Workflow
 
 **Files:**
 
 - Modify: `Assets/Scripts/Editor/Coordination/CoordinationWindowViewModel.cs`
 - Modify: `Assets/Scripts/Editor/Coordination/CoordinationWindow.cs`
+- Modify: `Assets/Scripts/Editor/Coordination/CoordinationAssetTracking.cs`
 - Modify: `Assets/Scripts/Editor/Coordination/CoordinationBootstrap.cs`
 - Modify: `Assets/Tests/EditMode/Coordination/CoordinationWindowViewModelTests.cs`
+- Modify: `Assets/Tests/EditMode/Coordination/CoordinationAssetTrackerTests.cs`
 - Modify: `Assets/Tests/EditMode/Coordination/CoordinationServiceTests.cs`
 - Modify: `Assets/Tests/EditMode/Coordination/CoordinationUserSettingsTests.cs`
 
@@ -322,7 +331,51 @@ Test that:
 
 Keep the service's internal disabled-state tests. This plan changes developer language, not the established local persistence field or internal state machine.
 
-### Step 2: Add failing warning and reconciliation tests
+### Step 2: Add failing freshness and target-source tests
+
+Define editor presentation types:
+
+```csharp
+internal enum CoordinationTargetSource
+{
+  ActiveStage,
+  ProjectSelection,
+  ManualPath,
+}
+
+internal enum CoordinationDataFreshness
+{
+  WaitingForSnapshot,
+  Live,
+  Stale,
+  Unavailable,
+}
+
+internal enum CoordinationPrimaryAction
+{
+  None,
+  Reserve,
+  ReleaseEditingLease,
+  CancelReservation,
+}
+```
+
+Add tests that require:
+
+- `CoordinationStateStore.HasAuthoritativeSnapshot` is false after `session.ready` and true only after a complete snapshot;
+- Connected without a current-session snapshot is `WaitingForSnapshot` and cannot mutate claims;
+- Connected with a current-session snapshot is `Live`;
+- Manual, Offline, Reconnecting, and AuthenticationFailed states retain any last-known rows as `Stale` and reject every claim mutation;
+- an unavailable state with no rows is `Unavailable`;
+- the default action target follows the active scene or Prefab Stage;
+- choosing the Project selection or a manual path pins that target for the current editor session until `Follow active stage` is selected;
+- selecting or expanding a presence, lease, or reservation row never changes the current action target;
+- row actions re-resolve the current authoritative lease at click time;
+- the primary action is exactly one of Reserve, Release editing lease, Cancel reservation, or None, based on the current target and authoritative ownership;
+- Override remains a secondary confirmed action and is unavailable for stale data;
+- the existing serialized settings do not persist target source, expanded rows, or other presentation state.
+
+### Step 3: Add failing warning and reconciliation tests
 
 Require the view model to expose each outstanding record with:
 
@@ -343,7 +396,7 @@ Test that `Mark reconciled`:
 - keeps the record visible on write failure;
 - has no bulk-clear action.
 
-### Step 3: Implement testable confirmation boundaries
+### Step 4: Implement testable confirmation boundaries
 
 Add an injected confirmation interface to the view model for entering Manual mode and marking a record reconciled. Keep Unity modal APIs inside the window adapter so view-model tests do not depend on editor dialogs.
 
@@ -354,21 +407,52 @@ The Manual confirmation must say:
 - reservations may remain until released or expired;
 - every coordinated-asset save will require two confirmations and create a warning.
 
-### Step 4: Update the window
+Forgetting the saved developer credential must also require a confirmation. Keep the existing Windows Credential Manager target and connection flow unchanged.
 
-Replace the Disabled checkbox with a Coordinated/Manual selector. Display internal `ConnectionState.Disabled` as Manual. Show a compact warning section with one reconciliation action per asset and a persistent error panel when loading, quarantine, or saving fails.
+### Step 5: Implement freshness and target behavior
+
+Set `HasAuthoritativeSnapshot` to false when the state store accepts `session.ready` and true when it accepts a complete snapshot. Derive user-facing freshness from the connection state plus this flag:
+
+- Connected plus no current-session snapshot: Waiting for team data;
+- Connected plus a current-session snapshot: Live;
+- non-connected plus retained rows: Last-known data, read-only;
+- non-connected plus no retained rows: Team data unavailable.
+
+Claim mutation requires Coordinated mode, Connected state, Live freshness, a configured path rule, and currently applicable ownership. Do not add a client-supplied state version or change any network message.
+
+Track the active stage from the existing editor update path. Project-selection and manual targets remain pinned only in memory until the developer selects `Follow active stage`. Keep row expansion separate from the action target, and re-resolve lease state directly from the row path immediately before an action is sent.
+
+### Step 6: Update the window
+
+Implement the approved Current Asset First hierarchy:
+
+1. compact mode, connection, identity, branch, task, and freshness status;
+2. durable warning summary and per-record reconciliation;
+3. Current asset path, source, ownership explanation, and one full-width primary action;
+4. secondary path, copy, reconnect, override, and credential actions kept out of the primary action row;
+5. compact foldouts for Presence, Editing leases, and Reservations, with one vertically expanded detail row at a time.
+
+Replace the Disabled checkbox with a Coordinated/Manual selector. Display internal `ConnectionState.Disabled` as Manual. Use only Unity-native IMGUI styling and controls. Use wrapped path and help text, text alongside status color, standard keyboard focus, and descriptive tooltips.
+
+Use vertical flow below 560 pixels. Verify 430, 560, and 900 pixel widths. Do not create fixed-width multi-button rows or horizontal content overflow.
 
 Do not add an action that deletes all warnings. Do not imply that entering Coordinated mode resolves existing records.
 
-### Step 5: Run focused and complete Coordination EditMode suites
+### Step 7: Run focused and complete Coordination EditMode suites
 
-Run the view-model, service, user-settings, and storage fixtures, followed by the full Coordination EditMode suite. Inspect XML and logs.
+Run the state-store, view-model, service, user-settings, and storage fixtures, followed by the full Coordination EditMode suite. Inspect XML and logs.
 
-### Step 6: Commit the mode and reconciliation slice
+### Step 8: Perform visual and interaction acceptance
+
+Capture the rendered window at 430, 560, and 900 pixel widths. Exercise Manual/stale, Offline, WaitingForSnapshot, Live unclaimed, local editing, local reservation, remote claim, invalid-path, empty, and durable-warning states. Verify keyboard traversal and every confirmation flow.
+
+Compare the rendered 560-pixel window with the selected Current Asset First mock in one comparison image. Record typography, spacing, color, copy, image/icon, and interaction findings in `design-qa.md`. Fix all P0, P1, and P2 findings before handoff. The report must end with `final result: passed` or name a genuine blocker.
+
+### Step 9: Commit the mode, workflow, and reconciliation slice
 
 ```powershell
-git add -- Assets/Scripts/Editor/Coordination/CoordinationWindowViewModel.cs Assets/Scripts/Editor/Coordination/CoordinationWindow.cs Assets/Scripts/Editor/Coordination/CoordinationBootstrap.cs Assets/Tests/EditMode/Coordination/CoordinationWindowViewModelTests.cs Assets/Tests/EditMode/Coordination/CoordinationServiceTests.cs Assets/Tests/EditMode/Coordination/CoordinationUserSettingsTests.cs
-git commit -m "feat(coordination): add explicit manual mode"
+git add -- Assets/Scripts/Editor/Coordination/CoordinationWindowViewModel.cs Assets/Scripts/Editor/Coordination/CoordinationWindow.cs Assets/Scripts/Editor/Coordination/CoordinationAssetTracking.cs Assets/Scripts/Editor/Coordination/CoordinationBootstrap.cs Assets/Tests/EditMode/Coordination/CoordinationWindowViewModelTests.cs Assets/Tests/EditMode/Coordination/CoordinationAssetTrackerTests.cs Assets/Tests/EditMode/Coordination/CoordinationServiceTests.cs Assets/Tests/EditMode/Coordination/CoordinationUserSettingsTests.cs design-qa.md
+git commit -m "feat(coordination): add current asset workflow"
 ```
 
 ## Task 4: Align Developer and Operator Documentation
@@ -495,6 +579,8 @@ Run:
 
 Record exact commands, counts, XML/log paths, manual observations, and remaining risks in PP-9. Do not describe the separate two-machine PP-7 gate as complete.
 
+Also repeat the 430, 560, and 900 pixel layout checks against the final build and confirm that no horizontal scrollbar, clipped primary action, or stale-data mutation control is present.
+
 ### Step 7: Commit acceptance evidence
 
 ```powershell
@@ -513,6 +599,11 @@ git commit -m "docs(coordination): record save safety acceptance"
 - Only explicit, successful per-record reconciliation removes a warning.
 - The warning file contains no credentials or authorization data.
 - Developer-facing UI and documentation use Coordinated and Manual consistently.
+- The active scene or Prefab Stage is the default action target; explicit alternate targets remain session-only and team-row selection does not replace the target.
+- Claim mutations are unavailable until a complete authoritative snapshot has been applied for the current connected session.
+- Last-known team rows remain visible but clearly stale and read-only whenever Coordination is not live.
+- The rendered window has no clipped primary action or horizontal scrollbar at 430, 560, or 900 pixels.
+- `design-qa.md` compares the selected mock with the final implementation and ends with `final result: passed`.
 - Focused and full Coordination EditMode suites pass with inspected XML and logs.
 - Repository tests, documentation build, and `git diff --check` pass.
 - The manual temporary-asset smoke passes and leaves no protected or generated artifacts.
