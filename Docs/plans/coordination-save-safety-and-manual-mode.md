@@ -21,7 +21,7 @@ status: active
 - A coordinated asset may save without a warning only when the current connection owns its editing lease, or when the save resumes through the existing path-scoped, one-shot authorization after both fallback confirmations.
 - A fallback save does not establish ownership, update server history, or prove that conflicting changes do not exist.
 - Keep manual work announcements mandatory. Reservations communicate planned work; editing leases represent currently open shared assets.
-- Do not implement this plan in parallel with [Discard Local Scene Changes on Save Conflict](./coordinated-file-leasing-discard-local-changes.md). Both plans modify the coordinator, save dialog, tests, and guide. Complete this safety foundation first, then rebase the discard-local-changes work.
+- Do not implement this plan in parallel with [Coordinated Save-Conflict Recovery](./coordinated-file-leasing-save-conflict-recovery.md). Both plans modify the coordinator, save dialog, tests, and guide. Complete this safety foundation first, then rebase the save-conflict recovery work.
 - Follow test-driven development. Add each failing EditMode case before changing production behavior.
 - Unity batch test commands must omit `-quit`; wait for the process to exit, then inspect both the XML result and editor log.
 - Never place developer tokens, session tokens, admin secrets, or authorization headers in the warning store, tests, logs, or documentation.
