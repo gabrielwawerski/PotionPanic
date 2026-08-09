@@ -183,12 +183,37 @@ consistent lockfile.
 
 ## Review Unity files in Git
 
-Before committing:
+Before committing, inspect the complete change set and the exact files or hunks
+selected for the commit. The IDE diff is the normal human review path.
+
+### Rider or WebStorm
+
+1. Open the Commit tool window.
+2. Inspect every changelist and unversioned file, including files that will not
+   be committed.
+3. Select only the task's files and hunks.
+4. Open the diff for every selected scene, prefab, `.meta`, setting, package,
+   material, or asset file.
+5. Confirm the selected commit contains no generated or unrelated files.
+
+### VS Code
+
+1. Open Source Control and inspect both **Changes** and **Staged Changes**.
+2. Stage only the task's files or selected ranges.
+3. Open every staged file in the diff editor.
+4. Confirm the staged set contains the expected Unity asset and its `.meta`
+   file when applicable.
+5. Leave unrelated and generated files unstaged.
+
+<details>
+<summary>PowerShell diagnostic fallback</summary>
 
 ```powershell
 git status --short
 git diff -- Assets ProjectSettings Packages
 ```
+
+</details>
 
 Check for:
 
@@ -197,11 +222,16 @@ Check for:
 - missing or extra `.meta` files;
 - broad prefab override application;
 - references to deleted GUIDs;
-- generated folders or Rider project files that should not be tracked.
+- generated folders or IDE project files that should not be tracked.
 
 Text diffs can be large because Unity records object graphs. Review the type of
 change, affected object names, components, references, and file set rather than
 approving a diff because it is hard to read.
+
+A clean text diff does not prove that the Unity object graph is valid. After a
+serialized conflict or broad asset change, open the result in Unity, wait for
+import and compilation, inspect references and overrides, and run the affected
+behavior.
 
 ## Recover from a merge conflict
 

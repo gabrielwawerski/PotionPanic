@@ -18,11 +18,12 @@ For the required content and authority of each evergreen page, use the
 ## Setup and recurring work
 
 - [`onboarding/getting-started.md`](onboarding/getting-started.md): complete
-  first-machine setup for Git, Docboard, Unity, Rider, the smoke test, and a
-  Coordination identity.
+  first-machine setup for Git, Docboard, Unity, Rider or VS Code, the smoke
+  test, and a Coordination identity.
 - [`collaboration/team-workflow.md`](collaboration/team-workflow.md): move a
-  normal task from worktree review through branch, implementation, verification,
-  handoff, review, and merge.
+  normal task through the GUI-first JetBrains or VS Code Git workflow, shared
+  asset coordination, implementation, verification, handoff, review, and local
+  merge.
 
 ## Project truth
 

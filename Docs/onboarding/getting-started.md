@@ -1,7 +1,7 @@
 # Project setup
 
 Complete this guide once on each development machine. At the end, the local
-checkout, editable documentation, Unity project, Rider integration, smoke-test
+checkout, editable documentation, Unity project, chosen code editor, smoke-test
 scene, and your Coordination identity should all work independently.
 
 Use [Daily Workflow](../collaboration/team-workflow.md) after setup. It covers
@@ -16,13 +16,14 @@ Potion Panic uses several tools with different responsibilities:
 | Git and Git LFS | Version source, Markdown, Unity assets, and large binary assets. | Local repository and remote Git host. |
 | Docboard and VitePress | Render documentation and provide the editable local task board. | Sibling `Docboard` checkout plus this repository's `Docs/`. |
 | Unity | Import assets, serialize scenes and prefabs, compile Unity assemblies, and run the game. | Repository plus generated local folders such as `Library/`. |
-| Rider | Edit C# through the Unity-generated solution and project files. | `PotionPanic.sln` and generated project files. |
+| Rider or VS Code | Edit and debug C# through Unity-generated solution and project data. | `PotionPanic.sln`, generated project files, and local editor state. |
+| WebStorm | Edit Markdown and Node tooling and use the JetBrains Git interface. | Repository files and local editor state. |
 | Coordination | Show scene presence and claims and guard coordinated saves. | Unity editor, Windows Credential Manager, and the remote service. |
 
 A failure in one part does not automatically mean the others are broken. For
 example, the published docs can remain readable while the local Docboard
-checkout is missing, and Rider can open a stale solution while Unity is still
-importing packages.
+checkout is missing, and a code editor can show stale project data while Unity
+is still importing packages.
 
 ## Install the tools
 
@@ -30,10 +31,16 @@ Install these on the machine:
 
 - Unity Hub
 - Unity Editor `6000.5.1f1`
-- JetBrains Rider
+- JetBrains Rider or Visual Studio Code for Unity C# work
+- JetBrains WebStorm when you want its Markdown, Node, or Git tools
 - Git
 - Git LFS
 - Node.js with npm
+
+If you use VS Code for Unity C#, install Microsoft's
+[Unity extension](https://marketplace.visualstudio.com/items?itemName=visualstudiotoolsforunity.vstuc).
+It installs the required C# extension dependencies. Do not install Unity's
+legacy `Visual Studio Code Editor` package into the project.
 
 Verify the command-line tools in PowerShell:
 
@@ -47,6 +54,10 @@ npm --version
 Each command must print a version. The repository does not currently pin an
 exact Node.js version, but Node and npm must be recent enough to install the
 checked-in lockfile and run VitePress.
+
+Run `git lfs install` once before cloning the repositories. Git LFS configures
+Git's large-file filters on the machine; an IDE clone still relies on those
+filters.
 
 ## Prepare the sibling checkouts
 
@@ -65,21 +76,64 @@ C:\Dev\
   PotionPanic\
 ```
 
-Example clone sequence using the team-provided repository URLs:
+### Clone with Rider or WebStorm
+
+1. From the welcome screen, choose **Get from VCS**.
+2. Enter the team-provided Docboard repository URL and set **Directory** to
+   `C:\Dev\Docboard`.
+3. Repeat for PotionPanic, using `C:\Dev\PotionPanic`.
+4. Open the PotionPanic repository root and use **Git > Fetch**.
+5. Confirm the branch control shows `master` and the Commit tool window contains
+   no local changes.
+
+### Clone with VS Code
+
+1. Open the Command Palette and run **Git: Clone**.
+2. Enter the Docboard repository URL, choose `C:\Dev` as the parent directory,
+   and confirm the clone is created as `C:\Dev\Docboard`.
+3. Run **Git: Clone** again for PotionPanic, choose the same parent, and confirm
+   the clone is created as `C:\Dev\PotionPanic`.
+4. Open the PotionPanic repository root.
+5. Open Source Control, use **Fetch**, and confirm the status bar shows
+   `master` while **Changes** and **Staged Changes** are empty.
+
+Both IDEs use the configured Git credential helper for the private remote. Do
+not place a Git hosting token in a repository file or clone URL. A successful
+fetch proves the current IDE session can authenticate to `origin`.
+
+<details>
+<summary>PowerShell clone fallback</summary>
 
 ```powershell
 Set-Location C:\Dev
 git clone <docboard-repo-url> Docboard
 git clone <potionpanic-repo-url> PotionPanic
 Set-Location PotionPanic
-git lfs install
 git status
 ```
 
+</details>
+
+Verify the local identity and remote before the first commit:
+
+```powershell
+git config --get user.name
+git config --get user.email
+git remote get-url origin
+git lfs env
+```
+
+The name and email must identify the developer, `origin` must be the team
+PotionPanic repository, and Git LFS must report an initialized environment. If
+name or email is empty, configure it through the IDE prompt on first commit or
+with the team-approved Git configuration before creating project history.
+
 Expected result:
 
-- `git status` reports a clean checkout.
-- `git lfs install` completes without an error.
+- The IDE reports `master` with no local changes.
+- Fetch succeeds using the developer's Git hosting identity.
+- Git reports the expected author identity and `origin` URL.
+- `git lfs install` and `git lfs env` complete without an error.
 - `C:\Dev\Docboard\package.json` exists.
 - Generated Unity folders such as `Library/`, `Temp/`, and `Logs/` are absent
   before the first Unity import or remain ignored afterward.
@@ -152,10 +206,17 @@ Current scene names:
 Stop setup and fix compilation before feature work if Unity reports missing
 packages, assembly errors, or a failed import.
 
-## Connect Rider to Unity
+## Connect a code editor to Unity
+
+Unity owns package import, assembly definitions, scenes, and serialized
+references. Rider and VS Code consume project information generated by Unity.
+Choose one Unity C# editor path on each machine.
+
+### Rider
 
 1. Open `PotionPanic.sln` in Rider.
-2. In Unity, confirm Rider is the External Script Editor.
+2. In Unity, open `Edit > Preferences > External Tools` and select Rider as
+   **External Script Editor**.
 3. If Rider lacks Unity context or shows stale projects, use Unity's
    `Open C# Project` action to regenerate the solution.
 4. Wait for Rider indexing to finish before treating unresolved references as
@@ -170,6 +231,38 @@ Expected result:
 - Rider recognizes the Unity project and its assemblies.
 - Core Unity types resolve.
 - Saving a C# file and returning focus to Unity triggers compilation.
+
+### VS Code
+
+The repository already uses `com.unity.ide.visualstudio` version `2.0.27`.
+Microsoft's
+[Unity development guidance](https://code.visualstudio.com/docs/other/unity)
+requires version `2.0.20` or newer for VS Code and identifies
+`com.unity.ide.vscode` as an unmaintained legacy package. Do not change the
+project packages for this setup.
+
+1. Install VS Code and Microsoft's Unity extension.
+2. Open the PotionPanic repository root in VS Code.
+3. In Unity, open `Edit > Preferences > External Tools` and select Visual
+   Studio Code as **External Script Editor**.
+4. Use Unity's `Open C# Project` action to regenerate project files when VS Code
+   shows stale or missing Unity references.
+5. Wait for the Unity extension and C# project loading to finish.
+6. Open **Run and Debug**, choose an attach-to-Unity configuration, and confirm
+   it can find the Unity Editor instance that has PotionPanic open.
+
+Expected result:
+
+- VS Code resolves core Unity types and project assemblies.
+- Opening a script from Unity opens it in VS Code.
+- Saving a C# file and returning focus to Unity triggers compilation.
+- The debugger can attach to the running Unity Editor.
+
+### WebStorm
+
+WebStorm can open the repository for Markdown, VitePress, Node tooling, and the
+JetBrains Git interface. Use Rider or VS Code for Unity C# project loading,
+Unity-aware code analysis, and debugging.
 
 ## Run the first smoke test
 
@@ -217,12 +310,12 @@ the protected-file edit, and reconnect after service health is restored.
 
 The machine is ready when all of these statements are true:
 
-- Git, Git LFS, Node.js, npm, Unity Hub, Unity `6000.5.1f1`, and Rider are
-  installed.
+- Git, Git LFS, Node.js, npm, Unity Hub, Unity `6000.5.1f1`, and the selected
+  supported C# editor are installed.
 - Docboard and PotionPanic are sibling checkouts.
 - `npm install`, the local board, and `npm run docs:build` work.
 - Unity imports the repository without relevant compile errors.
-- Rider resolves the Unity assemblies.
+- Rider or VS Code resolves the Unity assemblies and connects to Unity.
 - `Assets/Scenes/SampleScene.unity` enters Play Mode cleanly.
 - `git status` contains no unexplained generated files.
 - The Coordination window recognizes your own credential.
@@ -236,11 +329,18 @@ The machine is ready when all of these statements are true:
 Install `6000.5.1f1` and explicitly select it for this project. The recorded
 version comes from `ProjectSettings/ProjectVersion.txt`.
 
-### Rider shows stale or missing Unity references
+### The code editor shows stale or missing Unity references
 
-Wait for Unity compilation, set Rider as the external editor, and regenerate
-the C# project from Unity. Opening the solution repeatedly does not repair a
-failed Unity import.
+Wait for Unity compilation, select the intended External Script Editor, and
+regenerate the C# project from Unity. Reopening Rider or VS Code repeatedly does
+not repair a failed Unity import.
+
+### VS Code cannot attach to Unity
+
+Confirm PotionPanic is open in Unity, the Microsoft Unity extension is enabled,
+and VS Code opened the repository root rather than only `Assets/`. Regenerate
+project files from Unity, wait for C# loading, and try the attach configuration
+again. Do not add the legacy VS Code Editor package as a recovery step.
 
 ### npm cannot resolve Docboard
 

@@ -97,6 +97,8 @@ before treating it as available.
 ## Repository rules
 
 - PowerShell is the primary shell for local project commands.
+- Human contributors normally use the Git interface in Rider, WebStorm, or
+  VS Code; PowerShell Git commands remain the diagnostic and recovery fallback.
 - The browser board is the default human task workflow.
 - AI collaborators follow `AGENTS.md`; `CLAUDE.md` and `GEMINI.md` point to it.
 - Announce before editing scenes, prefabs, project settings, or package files.

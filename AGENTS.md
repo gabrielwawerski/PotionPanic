@@ -24,8 +24,9 @@ Use PowerShell from the repo root.
 - `npm run docs:startup:uninstall` removes the optional Windows startup shortcut.
 - `npm run docs:stop` stops the docs server process listening on port `6420`.
 - `npm run docs:build` builds the static docs site for verification.
-- Open the repo in Unity Hub with editor `6000.5.1f1`, then open
-  `PotionPanic.sln` in Rider for code work.
+- Open the repo in Unity Hub with editor `6000.5.1f1`, then use Rider or
+  VS Code through the Unity integration in
+  `Docs/onboarding/getting-started.md`.
 - For a smoke test, open `Assets/Scenes/SampleScene.unity`, press Play, and
   confirm no new Console errors.
 
