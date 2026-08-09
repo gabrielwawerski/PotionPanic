@@ -13,6 +13,260 @@ namespace PotionPanic.Tests.EditMode.Coordination
     private static readonly string Arena = "Assets/Scenes/Arena.unity";
 
     [Test]
+    public void ManualSaveRequiresBothConfirmationsBeforeSaving()
+    {
+      // Catches restoring the Disabled pass-through that bypasses guarded Manual saves.
+      using var fixture = new SaveFixture(CoordinationConnectionState.Disabled);
+      fixture.Prompt.ChooseResult = true;
+      fixture.Prompt.ConfirmResult = true;
+
+      var returned = fixture.AttemptSave(Laboratory);
+      fixture.Scheduler.RunImmediate();
+
+      Assert.That(returned, Is.Empty);
+      Assert.That(fixture.Prompt.ChooseCount, Is.EqualTo(1));
+      Assert.That(fixture.Prompt.ConfirmCount, Is.EqualTo(1));
+      Assert.That(fixture.Saves.Paths, Is.EqualTo(new[] { Laboratory }));
+      Assert.That(fixture.WarningState.Records.Single().reason, Is.EqualTo("Manual"));
+      Assert.That(fixture.Saves.IsDirty(Laboratory), Is.False);
+    }
+
+    [Test]
+    public void AuthenticationFailureRequiresBothConfirmationsBeforeSaving()
+    {
+      // Catches dropping AuthenticationFailed saves through the non-connected branch.
+      using var fixture = new SaveFixture(
+        CoordinationConnectionState.AuthenticationFailed);
+      fixture.Service.RaiseError(
+        "authentication_failed",
+        "The saved developer credential was rejected.");
+      fixture.Prompt.ChooseResult = true;
+      fixture.Prompt.ConfirmResult = true;
+
+      var returned = fixture.AttemptSave(Laboratory);
+      fixture.Scheduler.RunImmediate();
+
+      Assert.That(returned, Is.Empty);
+      Assert.That(fixture.Prompt.ChooseCount, Is.EqualTo(1));
+      Assert.That(fixture.Prompt.ConfirmCount, Is.EqualTo(1));
+      Assert.That(fixture.Prompt.LastRequest.Reason,
+        Is.EqualTo(CoordinationUncoordinatedSaveReason.AuthenticationFailed));
+      Assert.That(fixture.Prompt.LastRequest.Detail,
+        Is.EqualTo("The saved developer credential was rejected."));
+      Assert.That(fixture.Saves.Paths, Is.EqualTo(new[] { Laboratory }));
+      Assert.That(fixture.Saves.IsDirty(Laboratory), Is.False);
+    }
+
+    [Test]
+    public void AuthenticationFailureDoesNotExposeAnArbitraryTransportMessage()
+    {
+      // Catches displaying credential material supplied by a transport error.
+      using var fixture = new SaveFixture(
+        CoordinationConnectionState.AuthenticationFailed);
+      fixture.Service.RaiseError(
+        "authentication_failed",
+        "Bearer secret-developer-token");
+      fixture.Prompt.ChooseResult = false;
+
+      var returned = fixture.AttemptSave(Laboratory);
+      fixture.Scheduler.RunImmediate();
+
+      Assert.That(returned, Is.Empty);
+      Assert.That(fixture.Prompt.LastRequest.Detail,
+        Is.EqualTo("The saved developer credential was rejected."));
+      Assert.That(fixture.Prompt.LastRequest.Detail,
+        Does.Not.Contain("secret-developer-token"));
+      Assert.That(fixture.Saves.IsDirty(Laboratory), Is.True);
+    }
+
+    [TestCase(
+      CoordinationConnectionState.Offline,
+      "Offline")]
+    [TestCase(
+      CoordinationConnectionState.Reconnecting,
+      "Reconnecting")]
+    [TestCase(
+      CoordinationConnectionState.AuthenticationFailed,
+      "AuthenticationFailed")]
+    [TestCase(
+      CoordinationConnectionState.Disabled,
+      "Manual")]
+    public void ConnectionFallbackRecordsItsExactStableReason(
+      CoordinationConnectionState state,
+      string expectedReason)
+    {
+      // Catches collapsing distinct connection states into a generic outage reason.
+      using var fixture = new SaveFixture(state);
+      fixture.Prompt.ChooseResult = true;
+      fixture.Prompt.ConfirmResult = true;
+
+      var returned = fixture.AttemptSave(Laboratory);
+      fixture.Scheduler.RunImmediate();
+
+      Assert.That(returned, Is.Empty);
+      Assert.That(fixture.Prompt.ChooseCount, Is.EqualTo(1));
+      Assert.That(fixture.Prompt.ConfirmCount, Is.EqualTo(1));
+      Assert.That(fixture.WarningState.Records.Single().reason,
+        Is.EqualTo(expectedReason));
+      Assert.That(fixture.Saves.IsDirty(Laboratory), Is.False);
+    }
+
+    [TestCase(false, false, 0)]
+    [TestCase(true, false, 1)]
+    public void DecliningEitherFallbackConfirmationLeavesTheWholeBatchDirty(
+      bool choose,
+      bool confirm,
+      int expectedConfirmCount)
+    {
+      // Catches clearing dirty work when either fallback confirmation is declined.
+      using var fixture = new SaveFixture(CoordinationConnectionState.Offline);
+      fixture.Prompt.ChooseResult = choose;
+      fixture.Prompt.ConfirmResult = confirm;
+
+      var returned = fixture.AttemptSave(Laboratory, Arena);
+      fixture.Scheduler.RunImmediate();
+
+      Assert.That(returned, Is.Empty);
+      Assert.That(fixture.Prompt.ChooseCount, Is.EqualTo(1));
+      Assert.That(fixture.Prompt.ConfirmCount, Is.EqualTo(expectedConfirmCount));
+      Assert.That(fixture.Saves.IsDirty(Laboratory), Is.True);
+      Assert.That(fixture.Saves.IsDirty(Arena), Is.True);
+      Assert.That(fixture.WarningState.Records, Is.Empty);
+    }
+
+    [Test]
+    public void FallbackAuthorizationIsExactAndCannotAuthorizeALaterSave()
+    {
+      // Catches retaining a fallback authorization after its one resumed save attempt.
+      using var fixture = new SaveFixture(CoordinationConnectionState.Offline);
+      fixture.Prompt.ChooseResult = true;
+      fixture.Prompt.ConfirmResult = true;
+      string[] firstCallback = null;
+      string[] laterCallback = null;
+      fixture.Saves.OnSave = paths =>
+      {
+        firstCallback = fixture.Filter.FilterPaths(new[] { paths[0] });
+        fixture.Saves.AcceptImmediate(firstCallback);
+      };
+
+      var returned = fixture.AttemptSave(Laboratory);
+      fixture.Scheduler.RunNextImmediate();
+      fixture.Scheduler.RunNextImmediate();
+      fixture.Saves.MarkDirty(Laboratory);
+      laterCallback = fixture.Filter.FilterPaths(new[] { Laboratory });
+
+      Assert.That(returned, Is.Empty);
+      Assert.That(firstCallback, Is.EqualTo(new[] { Laboratory }));
+      Assert.That(laterCallback, Is.Empty);
+      Assert.That(fixture.Saves.Calls, Is.EqualTo(new[] { Laboratory }));
+      Assert.That(fixture.Saves.IsDirty(Laboratory), Is.True);
+    }
+
+    [Test]
+    public void MixedBatchCannotUseOnePathsAuthorizationForAnotherPath()
+    {
+      // Catches broadening one path's authorization to the rest of its save batch.
+      using var fixture = new SaveFixture(CoordinationConnectionState.Offline);
+      fixture.Prompt.ChooseResult = true;
+      fixture.Prompt.ConfirmResult = true;
+      string[] firstCallback = null;
+      fixture.Saves.OnSave = paths =>
+      {
+        if (paths[0] == Laboratory)
+        {
+          firstCallback = fixture.Filter.FilterPaths(new[] { Laboratory, Arena });
+          fixture.Saves.AcceptImmediate(firstCallback);
+        }
+      };
+
+      var returned = fixture.AttemptSave(Laboratory, Arena);
+      fixture.Scheduler.RunImmediate();
+
+      Assert.That(returned, Is.Empty);
+      Assert.That(firstCallback, Is.EqualTo(new[] { Laboratory }));
+      Assert.That(fixture.Saves.Calls, Is.EqualTo(new[] { Laboratory, Arena }));
+      Assert.That(fixture.Saves.IsDirty(Laboratory), Is.False);
+      Assert.That(fixture.Saves.IsDirty(Arena), Is.False);
+    }
+
+    [Test]
+    public void SuccessfulFallbackRecordsOwnerBranchAndTaskMetadata()
+    {
+      // Catches omitting available snapshot, Git, or local task metadata.
+      using var fixture = new SaveFixture(CoordinationConnectionState.Offline);
+      fixture.SetRemoteLease(Laboratory, "Morgan");
+      fixture.GitContext.Branch = "feature/save-policy";
+      fixture.TaskContext = "PP-9 Task 2";
+      fixture.Prompt.ChooseResult = true;
+      fixture.Prompt.ConfirmResult = true;
+
+      var returned = fixture.AttemptSave(Laboratory);
+      fixture.Scheduler.RunImmediate();
+
+      var record = fixture.WarningState.Records.Single();
+      Assert.That(returned, Is.Empty);
+      Assert.That(record.lastKnownOwner, Is.EqualTo("Morgan"));
+      Assert.That(record.branch, Is.EqualTo("feature/save-policy"));
+      Assert.That(record.task, Is.EqualTo("PP-9 Task 2"));
+      Assert.That(fixture.Saves.IsDirty(Laboratory), Is.False);
+    }
+
+    [Test]
+    public void MissingFallbackMetadataIsStoredAsEmpty()
+    {
+      // Catches inventing placeholder values in the durable warning ledger.
+      using var fixture = new SaveFixture(CoordinationConnectionState.Offline);
+      fixture.GitContext.Branch = null;
+      fixture.TaskContext = null;
+      fixture.Prompt.ChooseResult = true;
+      fixture.Prompt.ConfirmResult = true;
+
+      var returned = fixture.AttemptSave(Laboratory);
+      fixture.Scheduler.RunImmediate();
+
+      var record = fixture.WarningState.Records.Single();
+      Assert.That(returned, Is.Empty);
+      Assert.That(record.lastKnownOwner, Is.Empty);
+      Assert.That(record.branch, Is.Empty);
+      Assert.That(record.task, Is.Empty);
+      Assert.That(fixture.Saves.IsDirty(Laboratory), Is.False);
+    }
+
+    [Test]
+    public void SuccessfulFallbackPersistsLastKnownOwnerMetadata()
+    {
+      // Catches replacing the durable warning ledger with memory-only warning state.
+      var path = "Assets/Scenes/Task2Metadata-" + Guid.NewGuid().ToString("N")
+        + ".unity";
+      var store = new CoordinationUncoordinatedSaveStore();
+      var clock = new SystemCoordinationClock();
+      var cleanupLedger = new CoordinationUncoordinatedSaveLedger(store, clock);
+      cleanupLedger.ReconcilePath(path);
+      try
+      {
+        using var fixture = new SaveFixture(
+          CoordinationConnectionState.Offline,
+          new CoordinationUncoordinatedSaveState());
+        fixture.SetRemoteLease(path, "Morgan");
+        fixture.Prompt.ChooseResult = true;
+        fixture.Prompt.ConfirmResult = true;
+
+        var returned = fixture.Filter.FilterPaths(new[] { path });
+        fixture.Scheduler.RunImmediate();
+
+        var record = store.Load().Records.Single(value => value.path == path);
+        Assert.That(returned, Is.Empty);
+        Assert.That(fixture.Saves.Paths, Is.EqualTo(new[] { path }));
+        Assert.That(record.reason, Is.EqualTo("Offline"));
+        Assert.That(record.lastKnownOwner, Is.EqualTo("Morgan"));
+      }
+      finally
+      {
+        new CoordinationUncoordinatedSaveLedger(store, clock).ReconcilePath(path);
+      }
+    }
+
+    [Test]
     public void RemoteConflictReturnsSafePathsBeforeSchedulingAnAcquire()
     {
       using var fixture = new SaveFixture();
@@ -62,6 +316,7 @@ namespace PotionPanic.Tests.EditMode.Coordination
     [Test]
     public void AuthoritativelyOwnedPathReturnsImmediatelyWithoutScheduling()
     {
+      // Catches prompting or deferring a save already authorized by the local lease.
       using var fixture = new SaveFixture();
       fixture.StateStore.ApplyLeaseUpdate(Granted(
         2,
@@ -69,11 +324,13 @@ namespace PotionPanic.Tests.EditMode.Coordination
         "dev-local",
         "connection-local"));
 
-      var returned = fixture.Filter.FilterPaths(new[] { Laboratory });
+      var returned = fixture.AttemptSave(Laboratory);
 
       Assert.That(returned, Is.EqualTo(new[] { Laboratory }));
       fixture.Scheduler.RunImmediate();
       Assert.That(fixture.Service.Requests, Is.Empty);
+      Assert.That(fixture.Prompt.ChooseCount, Is.Zero);
+      Assert.That(fixture.Saves.IsDirty(Laboratory), Is.False);
     }
 
     [Test]
@@ -139,8 +396,11 @@ namespace PotionPanic.Tests.EditMode.Coordination
     [Test]
     public void AuthoritativeGrantResumesTheOmittedPath()
     {
+      // Catches resuming a different or unnormalized path after lease acquisition.
       using var fixture = new SaveFixture();
-      Assert.That(fixture.Filter.FilterPaths(new[] { Laboratory }), Is.Empty);
+      var returned = fixture.AttemptSave("Assets\\Scenes\\Laboratory.unity");
+      Assert.That(returned, Is.Empty);
+      Assert.That(fixture.Saves.IsDirty(Laboratory), Is.True);
       fixture.Scheduler.RunImmediate();
       var request = fixture.Service.RequestFor("lease.acquire", Laboratory);
 
@@ -148,6 +408,7 @@ namespace PotionPanic.Tests.EditMode.Coordination
         request, Granted(2, Laboratory, "dev-local", "connection-local"), false));
 
       Assert.That(fixture.Saves.Paths, Is.EqualTo(new[] { Laboratory }));
+      Assert.That(fixture.Saves.IsDirty(Laboratory), Is.False);
     }
 
     [Test]
@@ -186,9 +447,8 @@ namespace PotionPanic.Tests.EditMode.Coordination
 
       Assert.That(fixture.Prompt.ChooseCount, Is.EqualTo(1));
       Assert.That(fixture.Prompt.ConfirmCount, Is.EqualTo(1));
-      Assert.That(fixture.Prompt.LastPaths.Select(value => value.Path),
+      Assert.That(fixture.Prompt.LastRequest.AssetPaths,
         Is.EqualTo(new[] { Laboratory }));
-      Assert.That(fixture.Prompt.LastPaths.Single().LastKnownOwner, Is.EqualTo("Morgan"));
       Assert.That(fixture.Saves.Paths, Is.EqualTo(new[] { Laboratory }));
       Assert.That(fixture.WarningState.Warnings.Single().AffectedPaths,
         Is.EqualTo(new[] { Laboratory }));
@@ -253,49 +513,59 @@ namespace PotionPanic.Tests.EditMode.Coordination
     [Test]
     public void ReconnectBeforeTheOutagePromptDisablesTheLocalSaveChoice()
     {
+      // Catches showing stale fallback UI after a coordinated retry becomes possible.
       using var fixture = new SaveFixture(CoordinationConnectionState.Offline);
       fixture.Prompt.ChooseResult = true;
       fixture.Prompt.ConfirmResult = true;
-      fixture.Filter.FilterPaths(new[] { Laboratory });
+      var returned = fixture.AttemptSave(Laboratory);
       fixture.Scheduler.RunNextImmediate();
 
       fixture.Service.SetState(CoordinationConnectionState.Connected);
       fixture.Scheduler.RunImmediate();
 
       Assert.That(fixture.Prompt.ChooseCount, Is.Zero);
+      Assert.That(returned, Is.Empty);
       Assert.That(fixture.Service.Requests, Is.EqualTo(new[]
       {
         "lease.acquire:" + Laboratory
       }));
       Assert.That(fixture.Saves.Paths, Is.Empty);
+      Assert.That(fixture.Saves.IsDirty(Laboratory), Is.True);
     }
 
     [Test]
     public void AcquireTimeoutOffersLocalSaveWithoutTreatingTimeoutAsOwnership()
     {
+      // Catches recording a request timeout under the wrong durable reason.
       using var fixture = new SaveFixture();
       fixture.Prompt.ChooseResult = true;
       fixture.Prompt.ConfirmResult = true;
-      fixture.Filter.FilterPaths(new[] { Laboratory });
+      var returned = fixture.AttemptSave(Laboratory);
       fixture.Scheduler.RunImmediate();
 
       fixture.Scheduler.RunDelayed();
       fixture.Scheduler.RunImmediate();
 
       Assert.That(fixture.Prompt.ChooseCount, Is.EqualTo(1));
+      Assert.That(fixture.Prompt.ConfirmCount, Is.EqualTo(1));
       Assert.That(fixture.Saves.Paths, Is.EqualTo(new[] { Laboratory }));
       Assert.That(fixture.StateStore.TryGetLease(Laboratory, out _), Is.False);
+      Assert.That(returned, Is.Empty);
+      Assert.That(fixture.WarningState.Records.Single().reason,
+        Is.EqualTo("RequestTimeout"));
+      Assert.That(fixture.Saves.IsDirty(Laboratory), Is.False);
     }
 
     [Test]
     public void OverrideTransportFailureOffersTheTwoStepLocalSave()
     {
+      // Catches recording a failed override transport under a generic outage reason.
       using var fixture = new SaveFixture();
       fixture.SetRemoteLease(Laboratory, "Morgan");
       fixture.Dialog.Result = SaveConflictAction.OverrideAndSave;
       fixture.Prompt.ChooseResult = true;
       fixture.Prompt.ConfirmResult = true;
-      fixture.Filter.FilterPaths(new[] { Laboratory });
+      var returned = fixture.AttemptSave(Laboratory);
       fixture.Scheduler.RunImmediate();
       var acquire = fixture.Service.RequestFor("lease.acquire", Laboratory);
       fixture.Service.RaiseCompletion(Completion(
@@ -309,15 +579,20 @@ namespace PotionPanic.Tests.EditMode.Coordination
       Assert.That(fixture.Prompt.ChooseCount, Is.EqualTo(1));
       Assert.That(fixture.Prompt.ConfirmCount, Is.EqualTo(1));
       Assert.That(fixture.Saves.Paths, Is.EqualTo(new[] { Laboratory }));
+      Assert.That(returned, Is.Empty);
+      Assert.That(fixture.WarningState.Records.Single().reason,
+        Is.EqualTo("OverrideTransportFailure"));
+      Assert.That(fixture.Saves.IsDirty(Laboratory), Is.False);
     }
 
     [Test]
     public void AcquireSendFailureDoesNotEnableLocalSaveWhileStillConnected()
     {
+      // Catches treating a connected acquire send failure as fallback authorization.
       using var fixture = new SaveFixture();
       fixture.Prompt.ChooseResult = true;
       fixture.Prompt.ConfirmResult = true;
-      fixture.Filter.FilterPaths(new[] { Laboratory });
+      var returned = fixture.AttemptSave(Laboratory);
       fixture.Scheduler.RunImmediate();
       var acquire = fixture.Service.RequestFor("lease.acquire", Laboratory);
 
@@ -326,6 +601,8 @@ namespace PotionPanic.Tests.EditMode.Coordination
 
       Assert.That(fixture.Prompt.ChooseCount, Is.Zero);
       Assert.That(fixture.Saves.Paths, Is.Empty);
+      Assert.That(returned, Is.Empty);
+      Assert.That(fixture.Saves.IsDirty(Laboratory), Is.True);
     }
 
     [Test]
@@ -359,10 +636,11 @@ namespace PotionPanic.Tests.EditMode.Coordination
       SaveConflictAction action,
       int expectedOverrideCount)
     {
+      // Catches routing a connected remote-owner decision through fallback prompts.
       using var fixture = new SaveFixture();
       fixture.SetRemoteLease(Laboratory, "Morgan");
       fixture.Dialog.Result = action;
-      fixture.Filter.FilterPaths(new[] { Laboratory });
+      var returned = fixture.AttemptSave(Laboratory);
       fixture.Scheduler.RunImmediate();
       var acquire = fixture.Service.RequestFor("lease.acquire", Laboratory);
 
@@ -379,6 +657,8 @@ namespace PotionPanic.Tests.EditMode.Coordination
       Assert.That(overrideCount,
         Is.EqualTo(expectedOverrideCount));
       Assert.That(fixture.Prompt.ChooseCount, Is.Zero);
+      Assert.That(returned, Is.Empty);
+      Assert.That(fixture.Saves.IsDirty(Laboratory), Is.True);
       if (action != SaveConflictAction.OverrideAndSave)
       {
         Assert.That(fixture.Saves.Paths, Is.Empty);
@@ -388,31 +668,37 @@ namespace PotionPanic.Tests.EditMode.Coordination
     [Test]
     public void FailedResumeDoesNotRecordAnUncoordinatedSaveOrRetryRecursively()
     {
+      // Catches recording a warning before Unity accepts the resumed save.
       using var fixture = new SaveFixture(CoordinationConnectionState.Offline);
       fixture.Prompt.ChooseResult = true;
       fixture.Prompt.ConfirmResult = true;
       fixture.Saves.Result = false;
 
-      fixture.Filter.FilterPaths(new[] { Laboratory });
+      var returned = fixture.AttemptSave(Laboratory);
       fixture.Scheduler.RunImmediate();
 
+      Assert.That(returned, Is.Empty);
       Assert.That(fixture.Saves.Paths, Is.EqualTo(new[] { Laboratory }));
       Assert.That(fixture.WarningState.Warnings, Is.Empty);
+      Assert.That(fixture.WarningState.Records, Is.Empty);
       Assert.That(fixture.Logger.Messages, Is.Empty);
+      Assert.That(fixture.Saves.IsDirty(Laboratory), Is.True);
     }
 
     [Test]
     public void PartialOfflineBatchWarnsOnlyForThePathThatActuallySaved()
     {
+      // Catches recording failed paths from a partially accepted fallback batch.
       using var fixture = new SaveFixture(CoordinationConnectionState.Offline);
       fixture.Prompt.ChooseResult = true;
       fixture.Prompt.ConfirmResult = true;
       fixture.Saves.Results.Enqueue(true);
       fixture.Saves.Results.Enqueue(false);
 
-      fixture.Filter.FilterPaths(new[] { Laboratory, Arena });
+      var returned = fixture.AttemptSave(Laboratory, Arena);
       fixture.Scheduler.RunImmediate();
 
+      Assert.That(returned, Is.Empty);
       Assert.That(fixture.Saves.Calls, Is.EqualTo(new[]
       {
         Laboratory,
@@ -422,10 +708,12 @@ namespace PotionPanic.Tests.EditMode.Coordination
         Is.EqualTo(new[] { Laboratory }));
       Assert.That(fixture.Logger.Messages.Single(), Does.Contain(Laboratory));
       Assert.That(fixture.Logger.Messages.Single(), Does.Not.Contain(Arena));
+      Assert.That(fixture.Saves.IsDirty(Laboratory), Is.False);
+      Assert.That(fixture.Saves.IsDirty(Arena), Is.True);
     }
 
     [Test]
-    public void AuthoritativeOwnershipClearsThePathFromUncoordinatedSaveWarnings()
+    public void AuthoritativeOwnershipDoesNotClearUncoordinatedSaveWarnings()
     {
       using var fixture = new SaveFixture(CoordinationConnectionState.Offline);
       fixture.Prompt.ChooseResult = true;
@@ -443,7 +731,8 @@ namespace PotionPanic.Tests.EditMode.Coordination
         Granted(2, Laboratory, "dev-local", "connection-local"),
         false));
 
-      Assert.That(fixture.WarningState.Warnings, Is.Empty);
+      Assert.That(fixture.WarningState.Warnings.Single().AffectedPaths,
+        Is.EqualTo(new[] { Laboratory }));
     }
 
     [Test]
@@ -466,19 +755,25 @@ namespace PotionPanic.Tests.EditMode.Coordination
       public FakeSaveService Service { get; }
       public CoordinationStateStore StateStore { get; } = new CoordinationStateStore();
       public CoordinationUncoordinatedSaveState WarningState { get; }
-        = new CoordinationUncoordinatedSaveState();
       public ManualScheduler Scheduler { get; } = new ManualScheduler();
       public FakeConflictDialog Dialog { get; } = new FakeConflictDialog();
       public FakeLocalSavePrompt Prompt { get; } = new FakeLocalSavePrompt();
       public FakeSaveInvoker Saves { get; } = new FakeSaveInvoker();
       public FakeWarningLogger Logger { get; } = new FakeWarningLogger();
+      public FakeGitContext GitContext { get; } = new FakeGitContext();
+      public string TaskContext { get; set; } = "PP-9";
       public CoordinationSaveResumeCoordinator Coordinator { get; }
       public CoordinationSavePathFilter Filter { get; }
 
       public SaveFixture(
-        CoordinationConnectionState state = CoordinationConnectionState.Connected)
+        CoordinationConnectionState state = CoordinationConnectionState.Connected,
+        CoordinationUncoordinatedSaveState warningState = null)
       {
         Service = new FakeSaveService(state);
+        WarningState = warningState ?? new CoordinationUncoordinatedSaveState(
+          new CoordinationUncoordinatedSaveLedger(
+            new FakeUncoordinatedSaveStore(),
+            new SystemCoordinationClock()));
         Coordinator = new CoordinationSaveResumeCoordinator(
           Service,
           StateStore,
@@ -488,6 +783,8 @@ namespace PotionPanic.Tests.EditMode.Coordination
           Prompt,
           Saves,
           Logger,
+          GitContext,
+          () => TaskContext,
           TimeSpan.FromSeconds(5));
         Coordinator.Enable();
         Service.RaiseSessionReady(1, "dev-local", "connection-local");
@@ -512,10 +809,20 @@ namespace PotionPanic.Tests.EditMode.Coordination
         });
       }
 
+      public string[] AttemptSave(params string[] paths)
+      {
+        Saves.MarkDirty(paths);
+        var immediate = Filter.FilterPaths(paths);
+        Saves.AcceptImmediate(immediate);
+        return immediate;
+      }
+
       public void Dispose() => Coordinator.Dispose();
     }
 
-    private sealed class FakeSaveService : ICoordinationSaveService
+    private sealed class FakeSaveService
+      : ICoordinationSaveService,
+        ICoordinationNotificationSource
     {
       private readonly List<CoordinationRequestHandle> requests
         = new List<CoordinationRequestHandle>();
@@ -525,6 +832,13 @@ namespace PotionPanic.Tests.EditMode.Coordination
       public event Action<CoordinationServerEnvelope> SessionReady;
       public event Action<CoordinationRequestCompletion> RequestCompleted;
       public event Action<CoordinationRequestSendFailure> RequestSendFailed;
+      public event Action<CoordinationServerEnvelope> ErrorReceived;
+      event Action<CoordinationServerEnvelope>
+        ICoordinationNotificationSource.LeaseResultReceived
+      {
+        add { }
+        remove { }
+      }
 
       public CoordinationConnectionState State { get; private set; }
       public List<string> Requests { get; } = new List<string>();
@@ -567,6 +881,15 @@ namespace PotionPanic.Tests.EditMode.Coordination
         => RequestCompleted?.Invoke(completion);
       public void RaiseSendFailure(CoordinationRequestSendFailure failure)
         => RequestSendFailed?.Invoke(failure);
+      public void RaiseError(string code, string message)
+      {
+        ErrorReceived?.Invoke(new CoordinationServerEnvelope
+        {
+          type = "error",
+          code = code,
+          message = message
+        });
+      }
 
       private bool Record(
         string type,
@@ -636,25 +959,54 @@ namespace PotionPanic.Tests.EditMode.Coordination
       public bool ConfirmResult { get; set; }
       public int ChooseCount { get; private set; }
       public int ConfirmCount { get; private set; }
-      public IReadOnlyList<CoordinationSavePathInfo> LastPaths { get; private set; }
+      public CoordinationUncoordinatedSaveRequest LastRequest { get; private set; }
 
-      public bool ChooseLocalSave(IReadOnlyList<CoordinationSavePathInfo> paths)
+      public bool ChooseLocalSave(CoordinationUncoordinatedSaveRequest request)
       {
         ChooseCount += 1;
-        LastPaths = paths;
+        LastRequest = request;
         return ChooseResult;
       }
 
-      public bool ConfirmLocalSave(IReadOnlyList<CoordinationSavePathInfo> paths)
+      public bool ConfirmLocalSave(CoordinationUncoordinatedSaveRequest request)
       {
         ConfirmCount += 1;
-        LastPaths = paths;
+        LastRequest = request;
         return ConfirmResult;
+      }
+    }
+
+    private sealed class FakeGitContext : ICoordinationGitContext
+    {
+      public string Branch { get; set; } = "feature/task-2";
+      public string GetBranch() => Branch;
+    }
+
+    private sealed class FakeUncoordinatedSaveStore
+      : ICoordinationUncoordinatedSaveStore
+    {
+      private List<CoordinationUncoordinatedSaveRecord> records
+        = new List<CoordinationUncoordinatedSaveRecord>();
+
+      public CoordinationUncoordinatedSaveLoadResult Load()
+      {
+        return new CoordinationUncoordinatedSaveLoadResult(
+          records.Select(record => record.Copy()).ToArray(),
+          null,
+          null);
+      }
+
+      public CoordinationUncoordinatedSaveWriteResult Save(
+        IReadOnlyList<CoordinationUncoordinatedSaveRecord> next)
+      {
+        records = next.Select(record => record.Copy()).ToList();
+        return CoordinationUncoordinatedSaveWriteResult.Success();
       }
     }
 
     private sealed class FakeSaveInvoker : ICoordinationSaveInvoker
     {
+      private readonly HashSet<string> dirtyPaths = new HashSet<string>();
       public List<string> Paths { get; } = new List<string>();
       public List<string> Calls { get; } = new List<string>();
       public Queue<bool> Results { get; } = new Queue<bool>();
@@ -666,7 +1018,36 @@ namespace PotionPanic.Tests.EditMode.Coordination
         Paths.AddRange(paths);
         Calls.Add(string.Join("|", paths));
         OnSave?.Invoke(paths);
-        return Results.Count > 0 ? Results.Dequeue() : Result;
+        var result = Results.Count > 0 ? Results.Dequeue() : Result;
+        if (result)
+        {
+          AcceptImmediate(paths);
+        }
+        return result;
+      }
+
+      public void MarkDirty(params string[] paths)
+      {
+        foreach (var path in paths)
+        {
+          dirtyPaths.Add(Canonical(path));
+        }
+      }
+
+      public void AcceptImmediate(IEnumerable<string> paths)
+      {
+        foreach (var path in paths)
+        {
+          dirtyPaths.Remove(Canonical(path));
+        }
+      }
+
+      public bool IsDirty(string path) => dirtyPaths.Contains(Canonical(path));
+
+      private static string Canonical(string path)
+      {
+        CoordinationPathMatcher.TryNormalize(path, out var normalized);
+        return CoordinationPathMatcher.ToCanonicalKey(normalized);
       }
     }
 

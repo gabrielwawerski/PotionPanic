@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -49,29 +49,44 @@ namespace PotionPanic.Tests.EditMode.Coordination
     }
 
     [Test]
-    public void WarningClearsOnAssetCloseOrAuthoritativeLocalOwnership()
+    public void WarningSurvivesAssetCloseAndReopen()
     {
+      // Catches reintroducing asset-lifecycle warning clearance.
       var source = new FakeStageSource();
-      var service = new FakeWarningService();
-      var state = new CoordinationStateStore();
-      var warnings = new CoordinationUncoordinatedSaveState();
+      var warnings = CreateWarningState();
       using var lifecycle = new CoordinationStageLifecycleAdapter(source);
-      using var controller = new CoordinationUncoordinatedWarningController(
-        lifecycle, service, state, warnings);
       lifecycle.Enable();
-      controller.Enable();
-      AddWarning(warnings, new[]
-      {
-        new CoordinationSavePathInfo("Assets/Scenes/First.unity", "Sol"),
-        new CoordinationSavePathInfo("Assets/Scenes/Second.unity", "Sol")
-      });
+      warnings.RecordSave(
+        "Assets/Scenes/First.unity",
+        CoordinationUncoordinatedSaveReason.Offline,
+        "Sol",
+        "feature/task-2",
+        "PP-9");
 
       source.RaiseSceneOpened(1, "Assets/Scenes/First.unity");
       source.RaiseSceneClosed(1, "Assets/Scenes/First.unity");
+      source.RaiseSceneOpened(2, "Assets/Scenes/First.unity");
 
-      Assert.That(warnings.Warnings[0].AffectedPaths,
-        Is.EqualTo(new[] { "Assets/Scenes/Second.unity" }));
+      Assert.That(warnings.Records.Single().path,
+        Is.EqualTo("Assets/Scenes/First.unity"));
+    }
 
+    [Test]
+    public void WarningSurvivesReconnectAndAuthoritativeLeaseAcquisition()
+    {
+      // Catches reintroducing connection or lease-based warning clearance.
+      var service = new FakeWarningService();
+      var state = new CoordinationStateStore();
+      var warnings = CreateWarningState();
+      warnings.RecordSave(
+        "Assets/Scenes/Second.unity",
+        CoordinationUncoordinatedSaveReason.Reconnecting,
+        "Sol",
+        "feature/task-2",
+        "PP-9");
+
+      service.RaiseState(CoordinationConnectionState.Reconnecting);
+      service.RaiseState(CoordinationConnectionState.Connected);
       service.RaiseSessionReady("dev-local", "connection-local");
       state.ApplyLeaseUpdate(new CoordinationServerEnvelope
       {
@@ -89,7 +104,8 @@ namespace PotionPanic.Tests.EditMode.Coordination
         }
       });
 
-      Assert.That(warnings.Warnings, Is.Empty);
+      Assert.That(warnings.Records.Single().path,
+        Is.EqualTo("Assets/Scenes/Second.unity"));
     }
 
     [Test]
@@ -203,15 +219,12 @@ namespace PotionPanic.Tests.EditMode.Coordination
       };
     }
 
-    private static void AddWarning(
-      CoordinationUncoordinatedSaveState warnings,
-      IReadOnlyList<CoordinationSavePathInfo> paths)
+    private static CoordinationUncoordinatedSaveState CreateWarningState()
     {
-      var method = typeof(CoordinationUncoordinatedSaveState).GetMethod(
-        "Add",
-        BindingFlags.Instance | BindingFlags.NonPublic);
-      Assert.That(method, Is.Not.Null);
-      method.Invoke(warnings, new object[] { paths });
+      return new CoordinationUncoordinatedSaveState(
+        new CoordinationUncoordinatedSaveLedger(
+          new FakeUncoordinatedSaveStore(),
+          new SystemCoordinationClock()));
     }
 
     private static CoordinationLeaseRecord EditingLease(
@@ -372,6 +385,12 @@ namespace PotionPanic.Tests.EditMode.Coordination
       public event Action<CoordinationConnectionState> StateChanged;
       public event Action<CoordinationServerEnvelope> SessionReady;
 
+      public void RaiseState(CoordinationConnectionState state)
+      {
+        State = state;
+        StateChanged?.Invoke(state);
+      }
+
       public void RaiseSessionReady(string developerId, string connectionId)
       {
         SessionReady?.Invoke(new CoordinationServerEnvelope
@@ -386,6 +405,28 @@ namespace PotionPanic.Tests.EditMode.Coordination
           reservationTtlSeconds = 1800,
           serverTime = "2026-08-08T10:00:00Z"
         });
+      }
+    }
+
+    private sealed class FakeUncoordinatedSaveStore
+      : ICoordinationUncoordinatedSaveStore
+    {
+      private List<CoordinationUncoordinatedSaveRecord> records
+        = new List<CoordinationUncoordinatedSaveRecord>();
+
+      public CoordinationUncoordinatedSaveLoadResult Load()
+      {
+        return new CoordinationUncoordinatedSaveLoadResult(
+          records.Select(record => record.Copy()).ToArray(),
+          null,
+          null);
+      }
+
+      public CoordinationUncoordinatedSaveWriteResult Save(
+        IReadOnlyList<CoordinationUncoordinatedSaveRecord> next)
+      {
+        records = next.Select(record => record.Copy()).ToList();
+        return CoordinationUncoordinatedSaveWriteResult.Success();
       }
     }
 

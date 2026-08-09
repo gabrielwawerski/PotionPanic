@@ -48,47 +48,58 @@ namespace PotionPanic.Editor.Coordination
   public sealed class CoordinationUncoordinatedSaveState
     : ICoordinationUncoordinatedSaveState
   {
-    private readonly List<CoordinationUncoordinatedSaveWarning> warnings
-      = new List<CoordinationUncoordinatedSaveWarning>();
+    private readonly CoordinationUncoordinatedSaveLedger ledger;
 
     public event Action Changed;
     public IReadOnlyList<CoordinationUncoordinatedSaveWarning> Warnings
-      => warnings.ToArray();
-
-    internal void Add(IReadOnlyList<CoordinationSavePathInfo> paths)
     {
-      warnings.Add(new CoordinationUncoordinatedSaveWarning(paths));
+      get
+      {
+        var paths = ledger.Records.Select(record =>
+          new CoordinationSavePathInfo(record.path, record.lastKnownOwner)).ToArray();
+        return paths.Length == 0
+          ? Array.Empty<CoordinationUncoordinatedSaveWarning>()
+          : new[] { new CoordinationUncoordinatedSaveWarning(paths) };
+      }
+    }
+    internal IReadOnlyList<CoordinationUncoordinatedSaveRecord> Records
+      => ledger.Records;
+    internal string PersistentError => ledger.PersistentError;
+
+    public CoordinationUncoordinatedSaveState()
+      : this(new CoordinationUncoordinatedSaveLedger(
+        new CoordinationUncoordinatedSaveStore(),
+        new SystemCoordinationClock()))
+    {
+    }
+
+    internal CoordinationUncoordinatedSaveState(
+      CoordinationUncoordinatedSaveLedger ledger)
+    {
+      this.ledger = ledger ?? throw new ArgumentNullException(nameof(ledger));
+    }
+
+    internal bool RecordSave(
+      string path,
+      CoordinationUncoordinatedSaveReason reason,
+      string lastKnownOwner,
+      string branch,
+      string task)
+    {
+      var succeeded = ledger.RecordSave(
+        path,
+        reason,
+        lastKnownOwner,
+        branch,
+        task);
       Changed?.Invoke();
+      return succeeded;
     }
 
     public void ClearPath(string path)
     {
-      if (!CoordinationPathMatcher.TryNormalize(path, out var normalizedPath))
-      {
-        return;
-      }
-
-      var canonicalPath = CoordinationPathMatcher.ToCanonicalKey(normalizedPath);
-      var changed = false;
-      for (var index = warnings.Count - 1; index >= 0; index -= 1)
-      {
-        var warning = warnings[index];
-        var remaining = warning.PathDetails.Where(value =>
-          CoordinationPathMatcher.ToCanonicalKey(value.Path) != canonicalPath).ToArray();
-        if (remaining.Length == warning.PathDetails.Count)
-        {
-          continue;
-        }
-
-        warnings.RemoveAt(index);
-        if (remaining.Length > 0)
-        {
-          warnings.Insert(index, new CoordinationUncoordinatedSaveWarning(remaining));
-        }
-        changed = true;
-      }
-
-      if (changed)
+      var count = ledger.Records.Count;
+      if (ledger.ReconcilePath(path) && ledger.Records.Count != count)
       {
         Changed?.Invoke();
       }
@@ -105,6 +116,9 @@ namespace PotionPanic.Editor.Coordination
     private readonly IUncoordinatedSavePrompt localSavePrompt;
     private readonly ICoordinationSaveInvoker saveInvoker;
     private readonly ICoordinationSaveWarningLogger warningLogger;
+    private readonly ICoordinationGitContext gitContext;
+    private readonly Func<string> taskProvider;
+    private readonly ICoordinationNotificationSource notificationSource;
     private readonly TimeSpan requestTimeout;
     private readonly Dictionary<PendingSaveKey, PendingRequest> pendingRequests
       = new Dictionary<PendingSaveKey, PendingRequest>();
@@ -113,10 +127,11 @@ namespace PotionPanic.Editor.Coordination
     private readonly HashSet<string> pendingPaths = new HashSet<string>();
     private readonly HashSet<string> resumeAuthorizations = new HashSet<string>();
     private CoordinationLocalIdentity localIdentity;
+    private string authenticationDetail = string.Empty;
     private bool isEnabled;
     private bool isDisposed;
 
-    public CoordinationSaveResumeCoordinator(
+    internal CoordinationSaveResumeCoordinator(
       ICoordinationSaveService service,
       CoordinationStateStore stateStore,
       CoordinationUncoordinatedSaveState warningState,
@@ -125,6 +140,8 @@ namespace PotionPanic.Editor.Coordination
       IUncoordinatedSavePrompt localSavePrompt,
       ICoordinationSaveInvoker saveInvoker,
       ICoordinationSaveWarningLogger warningLogger,
+      ICoordinationGitContext gitContext,
+      Func<string> taskProvider,
       TimeSpan requestTimeout)
     {
       this.service = service ?? throw new ArgumentNullException(nameof(service));
@@ -140,6 +157,9 @@ namespace PotionPanic.Editor.Coordination
         ?? throw new ArgumentNullException(nameof(saveInvoker));
       this.warningLogger = warningLogger
         ?? throw new ArgumentNullException(nameof(warningLogger));
+      this.gitContext = gitContext ?? throw new ArgumentNullException(nameof(gitContext));
+      this.taskProvider = taskProvider ?? throw new ArgumentNullException(nameof(taskProvider));
+      notificationSource = service as ICoordinationNotificationSource;
       if (requestTimeout <= TimeSpan.Zero)
       {
         throw new ArgumentOutOfRangeException(
@@ -162,6 +182,10 @@ namespace PotionPanic.Editor.Coordination
       service.SessionReady += HandleSessionReady;
       service.RequestCompleted += HandleRequestCompleted;
       service.RequestSendFailed += HandleRequestSendFailed;
+      if (notificationSource != null)
+      {
+        notificationSource.ErrorReceived += HandleTransportError;
+      }
       isEnabled = true;
     }
 
@@ -176,11 +200,16 @@ namespace PotionPanic.Editor.Coordination
       service.SessionReady -= HandleSessionReady;
       service.RequestCompleted -= HandleRequestCompleted;
       service.RequestSendFailed -= HandleRequestSendFailed;
+      if (notificationSource != null)
+      {
+        notificationSource.ErrorReceived -= HandleTransportError;
+      }
       pendingRequests.Clear();
       requestKeys.Clear();
       pendingPaths.Clear();
       resumeAuthorizations.Clear();
       localIdentity = null;
+      authenticationDetail = string.Empty;
       isEnabled = false;
     }
 
@@ -199,11 +228,6 @@ namespace PotionPanic.Editor.Coordination
 
       var canonicalPath = CoordinationPathMatcher.ToCanonicalKey(normalizedPath);
       if (resumeAuthorizations.Remove(canonicalPath))
-      {
-        return SavePathDecision.Allow;
-      }
-
-      if (service.State == CoordinationConnectionState.Disabled)
       {
         return SavePathDecision.Allow;
       }
@@ -258,10 +282,9 @@ namespace PotionPanic.Editor.Coordination
           continue;
         }
 
-        if (service.State == CoordinationConnectionState.Offline
-          || service.State == CoordinationConnectionState.Reconnecting)
+        if (TryGetStateFallbackReason(service.State, out var fallbackReason))
         {
-          QueueLocalFallback(save, LocalFallbackReason.Outage);
+          QueueLocalFallback(save, fallbackReason, StateDetail(fallbackReason));
           return;
         }
 
@@ -300,6 +323,7 @@ namespace PotionPanic.Editor.Coordination
       localIdentity = new CoordinationLocalIdentity(
         envelope.developerId,
         envelope.connectionId);
+      authenticationDetail = string.Empty;
     }
 
     private void HandleStateChanged(CoordinationConnectionState state)
@@ -309,8 +333,7 @@ namespace PotionPanic.Editor.Coordination
         localIdentity = null;
       }
 
-      if (state != CoordinationConnectionState.Offline
-        && state != CoordinationConnectionState.Reconnecting)
+      if (!TryGetStateFallbackReason(state, out var fallbackReason))
       {
         return;
       }
@@ -321,7 +344,15 @@ namespace PotionPanic.Editor.Coordination
         .ToArray();
       foreach (var save in pendingSaves)
       {
-        QueueLocalFallback(save, LocalFallbackReason.Outage);
+        QueueLocalFallback(save, fallbackReason, StateDetail(fallbackReason));
+      }
+    }
+
+    private void HandleTransportError(CoordinationServerEnvelope envelope)
+    {
+      if (envelope?.code == "authentication_failed")
+      {
+        authenticationDetail = "The saved developer credential was rejected.";
       }
     }
 
@@ -363,7 +394,8 @@ namespace PotionPanic.Editor.Coordination
       {
         QueueLocalFallback(
           pending.Save,
-          LocalFallbackReason.OverrideTransportFailure);
+          CoordinationUncoordinatedSaveReason.OverrideTransportFailure,
+          failure.Message);
         return;
       }
 
@@ -380,7 +412,10 @@ namespace PotionPanic.Editor.Coordination
       if (service.State == CoordinationConnectionState.Offline
         || service.State == CoordinationConnectionState.Reconnecting)
       {
-        QueueLocalFallback(pending.Save, LocalFallbackReason.Outage);
+        var reason = service.State == CoordinationConnectionState.Offline
+          ? CoordinationUncoordinatedSaveReason.Offline
+          : CoordinationUncoordinatedSaveReason.Reconnecting;
+        QueueLocalFallback(pending.Save, reason, StateDetail(reason));
         return;
       }
 
@@ -394,7 +429,10 @@ namespace PotionPanic.Editor.Coordination
         return;
       }
 
-      QueueLocalFallback(pending.Save, LocalFallbackReason.Timeout);
+      QueueLocalFallback(
+        pending.Save,
+        CoordinationUncoordinatedSaveReason.RequestTimeout,
+        "No editing-lease response arrived before the request timeout.");
     }
 
     private bool TryTakeRequest(string requestId, out PendingRequest pending)
@@ -434,7 +472,8 @@ namespace PotionPanic.Editor.Coordination
           {
             QueueLocalFallback(
               save,
-              LocalFallbackReason.OverrideTransportFailure);
+              CoordinationUncoordinatedSaveReason.OverrideTransportFailure,
+              "The override request could not be sent.");
           }
           else
           {
@@ -447,7 +486,10 @@ namespace PotionPanic.Editor.Coordination
       });
     }
 
-    private void QueueLocalFallback(PreparedSave save, LocalFallbackReason reason)
+    private void QueueLocalFallback(
+      PreparedSave save,
+      CoordinationUncoordinatedSaveReason reason,
+      string detail)
     {
       if (save == null || save.FallbackQueued)
       {
@@ -456,19 +498,24 @@ namespace PotionPanic.Editor.Coordination
 
       save.FallbackQueued = true;
       RemoveRequests(save);
-      scheduler.Post(() => OfferLocalFallback(save, reason));
+      scheduler.Post(() => OfferLocalFallback(save, reason, detail));
     }
 
-    private void OfferLocalFallback(PreparedSave save, LocalFallbackReason reason)
+    private void OfferLocalFallback(
+      PreparedSave save,
+      CoordinationUncoordinatedSaveReason reason,
+      string detail)
     {
       if (isDisposed)
       {
         return;
       }
 
-      if (reason == LocalFallbackReason.Outage
+      if (IsConnectionStateReason(reason)
         && service.State != CoordinationConnectionState.Offline
-        && service.State != CoordinationConnectionState.Reconnecting)
+        && service.State != CoordinationConnectionState.Reconnecting
+        && service.State != CoordinationConnectionState.AuthenticationFailed
+        && service.State != CoordinationConnectionState.Disabled)
       {
         save.FallbackQueued = false;
         if (service.State == CoordinationConnectionState.Connected)
@@ -484,8 +531,14 @@ namespace PotionPanic.Editor.Coordination
 
       var paths = save.Paths.Where(save.Contains).ToArray();
       var pathInfo = CreatePathInfo(paths);
-      if (pathInfo.Count == 0 || !localSavePrompt.ChooseLocalSave(pathInfo)
-        || !localSavePrompt.ConfirmLocalSave(pathInfo))
+      var request = new CoordinationUncoordinatedSaveRequest
+      {
+        Reason = reason,
+        AssetPaths = paths,
+        Detail = detail ?? string.Empty
+      };
+      if (pathInfo.Count == 0 || !localSavePrompt.ChooseLocalSave(request)
+        || !localSavePrompt.ConfirmLocalSave(request))
       {
         CompleteAll(save);
         return;
@@ -515,7 +568,17 @@ namespace PotionPanic.Editor.Coordination
         return;
       }
 
-      warningState.Add(savedPathInfo);
+      var branch = gitContext.GetBranch() ?? string.Empty;
+      var task = taskProvider() ?? string.Empty;
+      foreach (var path in savedPathInfo)
+      {
+        warningState.RecordSave(
+          path.Path,
+          reason,
+          OwnerMetadataFor(path.Path),
+          branch,
+          task);
+      }
       warningLogger.LogWarning(
         "Saved locally without coordination: "
           + string.Join(", ", savedPathInfo.Select(value => value.Path)));
@@ -530,7 +593,6 @@ namespace PotionPanic.Editor.Coordination
       }
 
       CompletePath(save, path);
-      warningState.ClearPath(path);
       var canonicalPath = Canonical(path);
       resumeAuthorizations.Add(canonicalPath);
       try
@@ -589,6 +651,57 @@ namespace PotionPanic.Editor.Coordination
           : "No owner known";
     }
 
+    private string OwnerMetadataFor(string path)
+    {
+      if (!stateStore.TryGetLease(path, out var lease))
+      {
+        return string.Empty;
+      }
+
+      return !string.IsNullOrWhiteSpace(lease.displayName)
+        ? lease.displayName
+        : lease.developerId ?? string.Empty;
+    }
+
+    private string StateDetail(CoordinationUncoordinatedSaveReason reason)
+    {
+      return reason == CoordinationUncoordinatedSaveReason.AuthenticationFailed
+        ? authenticationDetail
+        : string.Empty;
+    }
+
+    private static bool IsConnectionStateReason(
+      CoordinationUncoordinatedSaveReason reason)
+    {
+      return reason == CoordinationUncoordinatedSaveReason.Offline
+        || reason == CoordinationUncoordinatedSaveReason.Reconnecting
+        || reason == CoordinationUncoordinatedSaveReason.AuthenticationFailed;
+    }
+
+    private static bool TryGetStateFallbackReason(
+      CoordinationConnectionState state,
+      out CoordinationUncoordinatedSaveReason reason)
+    {
+      switch (state)
+      {
+        case CoordinationConnectionState.Disabled:
+          reason = CoordinationUncoordinatedSaveReason.Manual;
+          return true;
+        case CoordinationConnectionState.Offline:
+          reason = CoordinationUncoordinatedSaveReason.Offline;
+          return true;
+        case CoordinationConnectionState.Reconnecting:
+          reason = CoordinationUncoordinatedSaveReason.Reconnecting;
+          return true;
+        case CoordinationConnectionState.AuthenticationFailed:
+          reason = CoordinationUncoordinatedSaveReason.AuthenticationFailed;
+          return true;
+        default:
+          reason = default;
+          return false;
+      }
+    }
+
     private void RemoveRequests(PreparedSave save)
     {
       var requestsForSave = pendingRequests
@@ -636,13 +749,6 @@ namespace PotionPanic.Editor.Coordination
       Allow,
       BlockPending,
       BlockAndSchedule
-    }
-
-    private enum LocalFallbackReason
-    {
-      Outage,
-      Timeout,
-      OverrideTransportFailure
     }
 
     internal sealed class PreparedSave

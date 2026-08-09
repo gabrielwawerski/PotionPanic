@@ -1,7 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using UnityEditor;
+
+namespace System.Runtime.CompilerServices
+{
+  internal static class IsExternalInit
+  {
+  }
+}
 
 namespace PotionPanic.Editor.Coordination
 {
@@ -36,10 +44,17 @@ namespace PotionPanic.Editor.Coordination
     SaveConflictAction Show(IReadOnlyList<CoordinationSavePathInfo> paths);
   }
 
-  public interface IUncoordinatedSavePrompt
+  internal sealed class CoordinationUncoordinatedSaveRequest
   {
-    bool ChooseLocalSave(IReadOnlyList<CoordinationSavePathInfo> paths);
-    bool ConfirmLocalSave(IReadOnlyList<CoordinationSavePathInfo> paths);
+    public CoordinationUncoordinatedSaveReason Reason { get; init; }
+    public IReadOnlyList<string> AssetPaths { get; init; }
+    public string Detail { get; init; }
+  }
+
+  internal interface IUncoordinatedSavePrompt
+  {
+    bool ChooseLocalSave(CoordinationUncoordinatedSaveRequest request);
+    bool ConfirmLocalSave(CoordinationUncoordinatedSaveRequest request);
   }
 
   public interface ICoordinationEditorDialogBackend
@@ -127,15 +142,30 @@ namespace PotionPanic.Editor.Coordination
       this.backend = backend ?? throw new ArgumentNullException(nameof(backend));
     }
 
-    public bool ChooseLocalSave(IReadOnlyList<CoordinationSavePathInfo> paths)
+    bool IUncoordinatedSavePrompt.ChooseLocalSave(
+      CoordinationUncoordinatedSaveRequest request)
     {
       return backend.ShowConfirmation(
         "Coordination unavailable",
-        SaveConflictDialog.BuildMessage(
-          "Coordination is unavailable. The affected files remain unsaved.",
-          paths),
+        BuildUnavailableMessage(request),
         "Save locally without coordination",
         "Keep working");
+    }
+
+    bool IUncoordinatedSavePrompt.ConfirmLocalSave(
+      CoordinationUncoordinatedSaveRequest request)
+    {
+      return backend.ShowConfirmation(
+        "Confirm uncoordinated save",
+        BuildConfirmationMessage(request),
+        "Save locally",
+        "Cancel");
+    }
+
+    public bool ChooseLocalSave(IReadOnlyList<CoordinationSavePathInfo> paths)
+    {
+      return ((IUncoordinatedSavePrompt)this).ChooseLocalSave(
+        LegacyRequest(paths));
     }
 
     public bool ConfirmLocalSave(IReadOnlyList<CoordinationSavePathInfo> paths)
@@ -143,11 +173,83 @@ namespace PotionPanic.Editor.Coordination
       return backend.ShowConfirmation(
         "Confirm uncoordinated save",
         SaveConflictDialog.BuildMessage(
-          "This save will proceed without an editing lease. "
-            + "Confirm the paths and owners.",
+          "This save can still conflict with another developer's work. "
+            + "A local reconciliation warning will remain.",
           paths),
         "Save locally",
         "Cancel");
+    }
+
+    private static string BuildUnavailableMessage(
+      CoordinationUncoordinatedSaveRequest request)
+    {
+      var reason = request?.Reason ?? CoordinationUncoordinatedSaveReason.Offline;
+      var explanation = ReasonExplanation(reason);
+      if (!string.IsNullOrWhiteSpace(request?.Detail))
+      {
+        explanation += " " + request.Detail.Trim();
+      }
+
+      return BuildPathMessage(
+        explanation + " Coordination cannot authorize this save.",
+        request?.AssetPaths);
+    }
+
+    private static string BuildConfirmationMessage(
+      CoordinationUncoordinatedSaveRequest request)
+    {
+      return BuildPathMessage(
+        "This local save can still conflict with another developer's work. "
+          + "A local reconciliation warning will remain until these paths "
+          + "are reconciled.",
+        request?.AssetPaths);
+    }
+
+    private static string BuildPathMessage(
+      string introduction,
+      IReadOnlyList<string> paths)
+    {
+      var message = new StringBuilder(introduction);
+      foreach (var path in paths ?? Array.Empty<string>())
+      {
+        message.AppendLine();
+        message.AppendLine();
+        message.Append(path);
+      }
+
+      return message.ToString();
+    }
+
+    private static string ReasonExplanation(CoordinationUncoordinatedSaveReason reason)
+    {
+      switch (reason)
+      {
+        case CoordinationUncoordinatedSaveReason.Manual:
+          return "Coordination is in Manual mode.";
+        case CoordinationUncoordinatedSaveReason.Reconnecting:
+          return "Coordination is reconnecting.";
+        case CoordinationUncoordinatedSaveReason.AuthenticationFailed:
+          return "Coordination authentication failed.";
+        case CoordinationUncoordinatedSaveReason.RequestTimeout:
+          return "The editing-lease request timed out.";
+        case CoordinationUncoordinatedSaveReason.OverrideTransportFailure:
+          return "The editing-lease override could not be sent.";
+        default:
+          return "Coordination is offline.";
+      }
+    }
+
+    private static CoordinationUncoordinatedSaveRequest LegacyRequest(
+      IReadOnlyList<CoordinationSavePathInfo> paths)
+    {
+      return new CoordinationUncoordinatedSaveRequest
+      {
+        Reason = CoordinationUncoordinatedSaveReason.Offline,
+        AssetPaths = (paths ?? Array.Empty<CoordinationSavePathInfo>())
+          .Select(path => path.Path)
+          .ToArray(),
+        Detail = string.Empty
+      };
     }
   }
 

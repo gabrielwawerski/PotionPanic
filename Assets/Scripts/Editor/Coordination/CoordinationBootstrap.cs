@@ -293,7 +293,6 @@ namespace PotionPanic.Editor.Coordination
     private readonly CoordinationAssetTracker tracker;
     private readonly CoordinationSaveResumeCoordinator saveCoordinator;
     private readonly CoordinationSavePathFilter saveFilter;
-    private readonly CoordinationUncoordinatedWarningController warningController;
     private readonly CoordinationNotificationController notifications;
     private readonly UnityCoordinationNotificationSink notificationSink;
     private bool started;
@@ -307,7 +306,6 @@ namespace PotionPanic.Editor.Coordination
       CoordinationAssetTracker tracker,
       CoordinationSaveResumeCoordinator saveCoordinator,
       CoordinationSavePathFilter saveFilter,
-      CoordinationUncoordinatedWarningController warningController,
       CoordinationNotificationController notifications,
       UnityCoordinationNotificationSink notificationSink,
       CoordinationWindowViewModel viewModel)
@@ -317,7 +315,6 @@ namespace PotionPanic.Editor.Coordination
       this.tracker = tracker;
       this.saveCoordinator = saveCoordinator;
       this.saveFilter = saveFilter;
-      this.warningController = warningController;
       this.notifications = notifications;
       this.notificationSink = notificationSink;
       ViewModel = viewModel;
@@ -333,6 +330,7 @@ namespace PotionPanic.Editor.Coordination
       }
 
       var credentialStore = new WindowsCredentialStore();
+      var gitContext = new GitCoordinationContext();
       var service = new CoordinationService(
         configuration,
         settings,
@@ -340,7 +338,7 @@ namespace PotionPanic.Editor.Coordination
         new UnityWebRequestCoordinationHttpClient(),
         new ClientWebSocketCoordinationClient(),
         new UnityMainThreadDispatcher(),
-        new GitCoordinationContext(),
+        gitContext,
         Application.platform == RuntimePlatform.WindowsEditor,
         onSaved => CoordinationCredentialWindow.ShowForProject(
           configuration.projectId, credentialStore, onSaved));
@@ -359,11 +357,11 @@ namespace PotionPanic.Editor.Coordination
         new UncoordinatedSavePrompt(),
         new UnityCoordinationSaveInvoker(),
         new UnityCoordinationSaveWarningLogger(),
+        gitContext,
+        () => settings.taskContext,
         SaveRequestTimeout);
       var saveFilter = new CoordinationSavePathFilter(
         saveCoordinator, configuration.rules, new UnityCoordinationSaveScheduler());
-      var warningController = new CoordinationUncoordinatedWarningController(
-        lifecycle, service, stateStore, warnings);
       var notificationSink = new UnityCoordinationNotificationSink();
       var notifications = new CoordinationNotificationController(
         service,
@@ -377,7 +375,7 @@ namespace PotionPanic.Editor.Coordination
         settings,
         new UnityCoordinationUserSettingsStore(),
         configuration.rules,
-        new GitCoordinationContext(),
+        gitContext,
         new UnityCoordinationClipboard(),
         new UnityCoordinationWindowPathSource(),
         new UnityCoordinationOverrideConfirmation());
@@ -387,7 +385,6 @@ namespace PotionPanic.Editor.Coordination
         tracker,
         saveCoordinator,
         saveFilter,
-        warningController,
         notifications,
         notificationSink,
         viewModel);
@@ -404,7 +401,6 @@ namespace PotionPanic.Editor.Coordination
 
       started = true;
       tracker.Enable();
-      warningController.Enable();
       saveCoordinator.Enable();
       CoordinationSaveGuard.Install(saveFilter);
       ViewModel.Enable();
@@ -425,7 +421,6 @@ namespace PotionPanic.Editor.Coordination
       notifications.Disable();
       CoordinationSaveGuard.Uninstall(saveFilter);
       saveCoordinator.Disable();
-      warningController.Disable();
       ViewModel.Disable();
       if (started)
       {
