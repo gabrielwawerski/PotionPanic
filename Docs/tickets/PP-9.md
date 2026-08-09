@@ -7,6 +7,7 @@ documentation:
   - guides/coordinated-leasing.md
   - onboarding/getting-started.md
   - collaboration/team-workflow.md
+  - plans/coordination-save-safety-and-manual-mode.md
 affectedFiles:
   - Assets/Scripts/Editor/Coordination
   - Assets/Tests/EditMode/Coordination
@@ -36,7 +37,7 @@ not claim that either policy is correct.
   against the current Unity source and focused tests.
 - [ ] Record the consequences of recommending the enabled fallback,
   recommending the explicit Disabled opt-out, or changing runtime behavior.
-- [ ] Obtain an explicit team decision for one consistent policy.
+- [x] Obtain an explicit team decision for one consistent policy.
 - [ ] Implement any approved runtime and test changes without discarding local
   Unity work.
 - [ ] Update the Unity Coordination Guide, Project Setup, Daily Workflow, and
@@ -49,24 +50,30 @@ not claim that either policy is correct.
 
 ## Implementation Plan
 
-1. Audit the current save guard, resume coordinator, local settings, warning
-   state, and focused EditMode tests.
-2. Write a short decision record comparing the three policy options and their
-   failure consequences.
-3. Obtain approval before changing behavior or guidance.
-4. Implement the approved runtime and test changes, if any.
-5. Align all four evergreen and operator documents with the verified behavior.
-6. Run focused EditMode tests, the full Coordination EditMode suite, root docs
-   tests, the VitePress build, and the two-path manual editor smoke.
+Follow the active
+[Coordination Save Safety and Manual Mode](../plans/coordination-save-safety-and-manual-mode.md)
+implementation plan. It records the approved save-state matrix, persistence
+contract, test-first implementation order, documentation changes, and manual
+acceptance procedure.
 
 ## Implementation Notes
 
-Opened after the Evergreen Documentation V2 rework. No outage-policy passage or
-Unity runtime behavior was changed or validated by V2.
+- 2026-08-09: Approved **Coordinated** and **Manual** as the user-facing modes.
+  Manual mode is an intentional opt-out, not the recommended response to a
+  temporary outage.
+- 2026-08-09: Approved the same two-step guarded local-save flow for Manual,
+  Offline, Reconnecting, authentication failure, request timeout, and failed
+  override transport. A connected remote owner still has no direct local-save
+  bypass.
+- 2026-08-09: Approved durable, per-asset local warnings that remain until
+  explicit reconciliation. Reconnection, later lease acquisition, and editor
+  restart do not clear them.
+- Opened after the Evergreen Documentation V2 rework. No outage-policy passage
+  or Unity runtime behavior was changed or validated by V2.
 
 ## Definition of Done
 
-- [ ] Policy decision approved and recorded
+- [x] Policy decision approved and recorded
 - [ ] Runtime behavior and documentation agree
 - [ ] Automated verification passes
 - [ ] Manual Disabled and enabled-outage observations recorded
