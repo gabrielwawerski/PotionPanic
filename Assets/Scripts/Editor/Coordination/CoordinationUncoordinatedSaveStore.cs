@@ -104,15 +104,27 @@ namespace PotionPanic.Editor.Coordination
 
     private readonly string destinationPath;
     private readonly ICoordinationClock clock;
+    private readonly Func<string, string> readAllText;
 
     public CoordinationUncoordinatedSaveStore()
-      : this(GetDefaultDestinationPath(), new SystemCoordinationClock())
+      : this(
+        GetDefaultDestinationPath(),
+        new SystemCoordinationClock(),
+        File.ReadAllText)
     {
     }
 
     public CoordinationUncoordinatedSaveStore(
       string destinationPath,
       ICoordinationClock clock)
+      : this(destinationPath, clock, File.ReadAllText)
+    {
+    }
+
+    public CoordinationUncoordinatedSaveStore(
+      string destinationPath,
+      ICoordinationClock clock,
+      Func<string, string> readAllText)
     {
       if (string.IsNullOrWhiteSpace(destinationPath))
       {
@@ -121,19 +133,15 @@ namespace PotionPanic.Editor.Coordination
 
       this.destinationPath = Path.GetFullPath(destinationPath);
       this.clock = clock ?? throw new ArgumentNullException(nameof(clock));
+      this.readAllText = readAllText ?? throw new ArgumentNullException(nameof(readAllText));
     }
 
     public CoordinationUncoordinatedSaveLoadResult Load()
     {
-      if (!File.Exists(destinationPath))
-      {
-        return EmptyLoadResult();
-      }
-
       try
       {
         var document = JsonUtility.FromJson<CoordinationUncoordinatedSaveDocument>(
-          File.ReadAllText(destinationPath));
+          readAllText(destinationPath));
         if (!TryValidateDocument(document, out var records, out var error))
         {
           return QuarantineInvalidFile(error);
@@ -143,6 +151,14 @@ namespace PotionPanic.Editor.Coordination
           records,
           null,
           null);
+      }
+      catch (FileNotFoundException)
+      {
+        return EmptyLoadResult();
+      }
+      catch (DirectoryNotFoundException)
+      {
+        return EmptyLoadResult();
       }
       catch (ArgumentException exception)
       {

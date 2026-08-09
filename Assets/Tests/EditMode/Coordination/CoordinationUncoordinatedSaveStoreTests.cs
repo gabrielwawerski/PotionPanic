@@ -241,6 +241,52 @@ namespace PotionPanic.Tests.EditMode.Coordination
     }
 
     [Test]
+    public void InaccessibleExistingDestinationCannotBeOverwrittenByAnUnreadLedger()
+    {
+      var persistedLedger = new CoordinationUncoordinatedSaveLedger(store, clock);
+      persistedLedger.RecordSave(
+        "Assets/Scenes/Laboratory.unity", "Offline", "", "", "");
+      var inaccessibleStore = new CoordinationUncoordinatedSaveStore(
+        destinationPath,
+        clock,
+        _ => throw new UnauthorizedAccessException("Access denied by test reader."));
+      var unreadLedger = new CoordinationUncoordinatedSaveLedger(inaccessibleStore, clock);
+
+      Assert.That(unreadLedger.PersistentError, Is.Not.Null.And.Not.Empty);
+      Assert.That(unreadLedger.RecordSave(
+        "Assets/Prefabs/Player.prefab", "Manual", "", "", ""), Is.False);
+      Assert.That(store.Load().Records.Select(record => record.path), Is.EqualTo(new[]
+      {
+        "Assets/Scenes/Laboratory.unity"
+      }));
+    }
+
+    [Test]
+    public void UnconfirmedDestinationStillAttemptsReadAndBlocksWrites()
+    {
+      var unconfirmedPath = Path.Combine(
+        temporaryDirectory,
+        "unconfirmed",
+        StoreFileName);
+      var readAttempted = false;
+      var inaccessibleStore = new CoordinationUncoordinatedSaveStore(
+        unconfirmedPath,
+        clock,
+        _ =>
+        {
+          readAttempted = true;
+          throw new UnauthorizedAccessException("Access denied by test reader.");
+        });
+      var unreadLedger = new CoordinationUncoordinatedSaveLedger(inaccessibleStore, clock);
+
+      Assert.That(readAttempted, Is.True);
+      Assert.That(unreadLedger.PersistentError, Is.Not.Null.And.Not.Empty);
+      Assert.That(unreadLedger.RecordSave(
+        "Assets/Prefabs/Player.prefab", "Manual", "", "", ""), Is.False);
+      Assert.That(File.Exists(unconfirmedPath), Is.False);
+    }
+
+    [Test]
     public void ReconciliationCannotSucceedWhilePersistedWarningsAreUnread()
     {
       var persistedLedger = new CoordinationUncoordinatedSaveLedger(store, clock);
