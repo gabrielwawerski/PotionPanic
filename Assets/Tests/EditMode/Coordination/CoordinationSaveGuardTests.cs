@@ -11,6 +11,23 @@ namespace PotionPanic.Tests.EditMode.Coordination
   {
     private static readonly string Laboratory = "Assets/Scenes/Laboratory.unity";
     private static readonly string Arena = "Assets/Scenes/Arena.unity";
+    private static readonly object[] PromptReasons =
+    {
+      new object[] { "Manual", "Coordination is in Manual mode." },
+      new object[] { "Offline", "Coordination is offline." },
+      new object[] { "Reconnecting", "Coordination is reconnecting." },
+      new object[]
+      {
+        "AuthenticationFailed",
+        "Coordination authentication failed."
+      },
+      new object[] { "RequestTimeout", "The editing-lease request timed out." },
+      new object[]
+      {
+        "OverrideTransportFailure",
+        "The editing-lease override could not be sent."
+      }
+    };
 
     [Test]
     public void ManualSaveRequiresBothConfirmationsBeforeSaving()
@@ -534,6 +551,30 @@ namespace PotionPanic.Tests.EditMode.Coordination
     }
 
     [Test]
+    public void ReconnectBeforeTheManualPromptRetriesTheCoordinatedPath()
+    {
+      // Catches treating a queued Manual fallback as valid after reconnecting.
+      using var fixture = new SaveFixture(CoordinationConnectionState.Disabled);
+      fixture.Prompt.ChooseResult = true;
+      fixture.Prompt.ConfirmResult = true;
+      var returned = fixture.AttemptSave("Assets\\Scenes\\Laboratory.unity");
+      fixture.Scheduler.RunNextImmediate();
+
+      fixture.Service.SetState(CoordinationConnectionState.Connected);
+      fixture.Scheduler.RunImmediate();
+
+      Assert.That(returned, Is.Empty);
+      Assert.That(fixture.Prompt.ChooseCount, Is.Zero);
+      Assert.That(fixture.Prompt.ConfirmCount, Is.Zero);
+      Assert.That(fixture.Service.Requests, Is.EqualTo(new[]
+      {
+        "lease.acquire:" + Laboratory
+      }));
+      Assert.That(fixture.Saves.Paths, Is.Empty);
+      Assert.That(fixture.Saves.IsDirty(Laboratory), Is.True);
+    }
+
+    [Test]
     public void AcquireTimeoutOffersLocalSaveWithoutTreatingTimeoutAsOwnership()
     {
       // Catches recording a request timeout under the wrong durable reason.
@@ -583,6 +624,103 @@ namespace PotionPanic.Tests.EditMode.Coordination
       Assert.That(fixture.WarningState.Records.Single().reason,
         Is.EqualTo("OverrideTransportFailure"));
       Assert.That(fixture.Saves.IsDirty(Laboratory), Is.False);
+    }
+
+    [Test]
+    public void OverrideTransportFailureDoesNotExposeItsStructuredDetail()
+    {
+      // Catches forwarding arbitrary override transport text into the request.
+      var backend = new FakeEditorDialogBackend { ConfirmationResult = false };
+      var recordingPrompt = new RecordingLocalSavePrompt(
+        (IUncoordinatedSavePrompt)new UncoordinatedSavePrompt(backend));
+      using var fixture = RunOverrideTransportFailure(recordingPrompt);
+
+      Assert.That(recordingPrompt.LastRequest.Detail,
+        Is.EqualTo("The override request could not be sent."));
+      Assert.That(recordingPrompt.LastRequest.Detail,
+        Does.Not.Contain("secret-developer-token"));
+      Assert.That(fixture.Saves.Paths, Is.Empty);
+      Assert.That(fixture.Saves.IsDirty(Laboratory), Is.True);
+    }
+
+    [Test]
+    public void OverrideTransportFailureDoesNotExposeItsRenderedMessage()
+    {
+      // Catches rendering arbitrary override transport text in the first dialog.
+      var backend = new FakeEditorDialogBackend { ConfirmationResult = false };
+      var recordingPrompt = new RecordingLocalSavePrompt(
+        (IUncoordinatedSavePrompt)new UncoordinatedSavePrompt(backend));
+      using var fixture = RunOverrideTransportFailure(recordingPrompt);
+
+      Assert.That(backend.Confirmations, Has.Count.EqualTo(1));
+      Assert.That(backend.Confirmations[0].Message,
+        Does.Not.Contain("secret-developer-token"));
+      Assert.That(backend.Confirmations[0].Message, Does.Contain(Laboratory));
+      Assert.That(fixture.Saves.Paths, Is.Empty);
+      Assert.That(fixture.Saves.IsDirty(Laboratory), Is.True);
+    }
+
+    [TestCaseSource(nameof(PromptReasons))]
+    public void RealPromptExplainsEveryStableReasonAndAffectedPath(
+      string reasonName,
+      string expectedExplanation)
+    {
+      // Catches losing reason or affected-path text in the real first dialog.
+      Assert.That(
+        Enum.TryParse(reasonName, out CoordinationUncoordinatedSaveReason reason),
+        Is.True);
+      var backend = new FakeEditorDialogBackend { ConfirmationResult = true };
+      var prompt = (IUncoordinatedSavePrompt)new UncoordinatedSavePrompt(backend);
+      var request = new CoordinationUncoordinatedSaveRequest
+      {
+        Reason = reason,
+        AssetPaths = new[] { Laboratory, Arena },
+        Detail = string.Empty
+      };
+
+      var choseLocalSave = prompt.ChooseLocalSave(request);
+
+      Assert.That(choseLocalSave, Is.True);
+      Assert.That(backend.Confirmations, Has.Count.EqualTo(1));
+      AssertContainsAll(
+        backend.Confirmations[0].Message,
+        expectedExplanation,
+        Laboratory,
+        Arena);
+      Assert.That(backend.Confirmations[0].Message,
+        Does.Not.Contain("secret-developer-token"));
+    }
+
+    [TestCaseSource(nameof(PromptReasons))]
+    public void RealPromptConfirmsConflictAndPersistentReconciliationWarning(
+      string reasonName,
+      string expectedExplanation)
+    {
+      // Catches losing path, conflict, or persistence text in the real second dialog.
+      Assert.That(
+        Enum.TryParse(reasonName, out CoordinationUncoordinatedSaveReason reason),
+        Is.True);
+      var backend = new FakeEditorDialogBackend { ConfirmationResult = true };
+      var prompt = (IUncoordinatedSavePrompt)new UncoordinatedSavePrompt(backend);
+      var request = new CoordinationUncoordinatedSaveRequest
+      {
+        Reason = reason,
+        AssetPaths = new[] { Laboratory, Arena },
+        Detail = string.Empty
+      };
+
+      var confirmedLocalSave = prompt.ConfirmLocalSave(request);
+
+      Assert.That(confirmedLocalSave, Is.True);
+      Assert.That(backend.Confirmations, Has.Count.EqualTo(1));
+      AssertContainsAll(
+        backend.Confirmations[0].Message,
+        Laboratory,
+        Arena,
+        "still conflict",
+        "local reconciliation warning will remain");
+      Assert.That(backend.Confirmations[0].Message,
+        Does.Not.Contain("secret-developer-token"));
     }
 
     [Test]
@@ -750,6 +888,40 @@ namespace PotionPanic.Tests.EditMode.Coordination
       Assert.That(fixture.Prompt.ChooseCount, Is.Zero);
     }
 
+    private static SaveFixture RunOverrideTransportFailure(
+      IUncoordinatedSavePrompt prompt)
+    {
+      var fixture = new SaveFixture(
+        CoordinationConnectionState.Connected,
+        null,
+        prompt);
+      fixture.SetRemoteLease(Laboratory, "Morgan");
+      fixture.Dialog.Result = SaveConflictAction.OverrideAndSave;
+      fixture.AttemptSave(Laboratory);
+      fixture.Scheduler.RunImmediate();
+      var acquire = fixture.Service.RequestFor("lease.acquire", Laboratory);
+      fixture.Service.RaiseCompletion(Completion(
+        acquire,
+        Denied(2, Laboratory, RemoteLease(Laboratory, "Morgan")),
+        false));
+      fixture.Scheduler.RunImmediate();
+      var overrideRequest = fixture.Service.RequestFor("lease.override", Laboratory);
+      fixture.Service.RaiseSendFailure(SendFailure(
+        overrideRequest,
+        "Bearer secret-developer-token"));
+      fixture.Scheduler.RunImmediate();
+      return fixture;
+    }
+
+    private static void AssertContainsAll(string message, params string[] fragments)
+    {
+      var missing = fragments.Where(fragment => !message.Contains(fragment)).ToArray();
+      Assert.That(
+        missing,
+        Is.Empty,
+        "Missing message fragments: " + string.Join(", ", missing));
+    }
+
     private sealed class SaveFixture : IDisposable
     {
       public FakeSaveService Service { get; }
@@ -767,7 +939,8 @@ namespace PotionPanic.Tests.EditMode.Coordination
 
       public SaveFixture(
         CoordinationConnectionState state = CoordinationConnectionState.Connected,
-        CoordinationUncoordinatedSaveState warningState = null)
+        CoordinationUncoordinatedSaveState warningState = null,
+        IUncoordinatedSavePrompt localSavePrompt = null)
       {
         Service = new FakeSaveService(state);
         WarningState = warningState ?? new CoordinationUncoordinatedSaveState(
@@ -780,7 +953,7 @@ namespace PotionPanic.Tests.EditMode.Coordination
           WarningState,
           Scheduler,
           Dialog,
-          Prompt,
+          localSavePrompt ?? Prompt,
           Saves,
           Logger,
           GitContext,
@@ -973,6 +1146,80 @@ namespace PotionPanic.Tests.EditMode.Coordination
         ConfirmCount += 1;
         LastRequest = request;
         return ConfirmResult;
+      }
+    }
+
+    private sealed class RecordingLocalSavePrompt : IUncoordinatedSavePrompt
+    {
+      private readonly IUncoordinatedSavePrompt inner;
+
+      public CoordinationUncoordinatedSaveRequest LastRequest { get; private set; }
+
+      public RecordingLocalSavePrompt(IUncoordinatedSavePrompt inner)
+      {
+        this.inner = inner;
+      }
+
+      public bool ChooseLocalSave(CoordinationUncoordinatedSaveRequest request)
+      {
+        LastRequest = request;
+        return inner.ChooseLocalSave(request);
+      }
+
+      public bool ConfirmLocalSave(CoordinationUncoordinatedSaveRequest request)
+      {
+        LastRequest = request;
+        return inner.ConfirmLocalSave(request);
+      }
+    }
+
+    private sealed class FakeEditorDialogBackend : ICoordinationEditorDialogBackend
+    {
+      public List<ConfirmationCall> Confirmations { get; }
+        = new List<ConfirmationCall>();
+      public Queue<bool> ConfirmationResults { get; } = new Queue<bool>();
+      public bool ConfirmationResult { get; set; }
+
+      public int ShowComplex(
+        string title,
+        string message,
+        string primary,
+        string cancel,
+        string alternate)
+      {
+        return 0;
+      }
+
+      public bool ShowConfirmation(
+        string title,
+        string message,
+        string confirm,
+        string cancel)
+      {
+        Confirmations.Add(new ConfirmationCall(title, message, confirm, cancel));
+        return ConfirmationResults.Count > 0
+          ? ConfirmationResults.Dequeue()
+          : ConfirmationResult;
+      }
+    }
+
+    private sealed class ConfirmationCall
+    {
+      public string Title { get; }
+      public string Message { get; }
+      public string Confirm { get; }
+      public string Cancel { get; }
+
+      public ConfirmationCall(
+        string title,
+        string message,
+        string confirm,
+        string cancel)
+      {
+        Title = title;
+        Message = message;
+        Confirm = confirm;
+        Cancel = cancel;
       }
     }
 

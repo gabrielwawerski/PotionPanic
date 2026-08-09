@@ -395,7 +395,7 @@ namespace PotionPanic.Editor.Coordination
         QueueLocalFallback(
           pending.Save,
           CoordinationUncoordinatedSaveReason.OverrideTransportFailure,
-          failure.Message);
+          "The override request could not be sent.");
         return;
       }
 
@@ -675,7 +675,8 @@ namespace PotionPanic.Editor.Coordination
     {
       return reason == CoordinationUncoordinatedSaveReason.Offline
         || reason == CoordinationUncoordinatedSaveReason.Reconnecting
-        || reason == CoordinationUncoordinatedSaveReason.AuthenticationFailed;
+        || reason == CoordinationUncoordinatedSaveReason.AuthenticationFailed
+        || reason == CoordinationUncoordinatedSaveReason.Manual;
     }
 
     private static bool TryGetStateFallbackReason(
