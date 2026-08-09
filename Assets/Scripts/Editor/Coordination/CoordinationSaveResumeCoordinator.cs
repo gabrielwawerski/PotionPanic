@@ -409,12 +409,8 @@ namespace PotionPanic.Editor.Coordination
         return;
       }
 
-      if (service.State == CoordinationConnectionState.Offline
-        || service.State == CoordinationConnectionState.Reconnecting)
+      if (TryGetStateFallbackReason(service.State, out var reason))
       {
-        var reason = service.State == CoordinationConnectionState.Offline
-          ? CoordinationUncoordinatedSaveReason.Offline
-          : CoordinationUncoordinatedSaveReason.Reconnecting;
         QueueLocalFallback(pending.Save, reason, StateDetail(reason));
         return;
       }
@@ -529,7 +525,20 @@ namespace PotionPanic.Editor.Coordination
         return;
       }
 
+      var newlyOwnedPaths = save.Paths
+        .Where(path => save.Contains(path) && IsAuthoritativelyOwned(path))
+        .ToArray();
+      foreach (var path in newlyOwnedPaths)
+      {
+        Resume(save, path);
+      }
+
       var paths = save.Paths.Where(save.Contains).ToArray();
+      if (paths.Length == 0)
+      {
+        return;
+      }
+
       var pathInfo = CreatePathInfo(paths);
       var request = new CoordinationUncoordinatedSaveRequest
       {
@@ -537,7 +546,7 @@ namespace PotionPanic.Editor.Coordination
         AssetPaths = paths,
         Detail = detail ?? string.Empty
       };
-      if (pathInfo.Count == 0 || !localSavePrompt.ChooseLocalSave(request)
+      if (!localSavePrompt.ChooseLocalSave(request)
         || !localSavePrompt.ConfirmLocalSave(request))
       {
         CompleteAll(save);

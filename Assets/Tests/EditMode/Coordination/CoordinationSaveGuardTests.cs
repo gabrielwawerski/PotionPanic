@@ -598,6 +598,37 @@ namespace PotionPanic.Tests.EditMode.Coordination
     }
 
     [Test]
+    public void LateLocalGrantCancelsQueuedTimeoutFallbackAndSavesOnce()
+    {
+      // Catches prompting after a late authoritative grant resolves the timed-out path.
+      using var fixture = new SaveFixture();
+      fixture.Prompt.ChooseResult = true;
+      fixture.Prompt.ConfirmResult = true;
+      var returned = fixture.AttemptSave(Laboratory);
+      fixture.Scheduler.RunImmediate();
+
+      fixture.Scheduler.RunDelayed();
+      fixture.StateStore.ApplyLeaseUpdate(Granted(
+        2,
+        Laboratory,
+        "dev-local",
+        "connection-local"));
+
+      Assert.That(fixture.Prompt.ChooseCount, Is.Zero);
+      Assert.That(fixture.Saves.Paths, Is.Empty);
+      Assert.That(fixture.Saves.IsDirty(Laboratory), Is.True);
+
+      fixture.Scheduler.RunImmediate();
+
+      Assert.That(returned, Is.Empty);
+      Assert.That(fixture.Prompt.ChooseCount, Is.Zero);
+      Assert.That(fixture.Prompt.ConfirmCount, Is.Zero);
+      Assert.That(fixture.WarningState.Records, Is.Empty);
+      Assert.That(fixture.Saves.Paths, Is.EqualTo(new[] { Laboratory }));
+      Assert.That(fixture.Saves.IsDirty(Laboratory), Is.False);
+    }
+
+    [Test]
     public void OverrideTransportFailureOffersTheTwoStepLocalSave()
     {
       // Catches recording a failed override transport under a generic outage reason.
@@ -741,6 +772,41 @@ namespace PotionPanic.Tests.EditMode.Coordination
       Assert.That(fixture.Saves.Paths, Is.Empty);
       Assert.That(returned, Is.Empty);
       Assert.That(fixture.Saves.IsDirty(Laboratory), Is.True);
+    }
+
+    [TestCase(
+      CoordinationConnectionState.AuthenticationFailed,
+      "AuthenticationFailed")]
+    [TestCase(CoordinationConnectionState.Disabled, "Manual")]
+    public void AcquireSendFailureUsesStateObservedByPostedResolver(
+      CoordinationConnectionState state,
+      string expectedReason)
+    {
+      // Catches losing fallback when connection state changes before resolution.
+      using var fixture = new SaveFixture();
+      fixture.Prompt.ChooseResult = true;
+      fixture.Prompt.ConfirmResult = true;
+      var returned = fixture.AttemptSave(Laboratory);
+      fixture.Scheduler.RunImmediate();
+      var acquire = fixture.Service.RequestFor("lease.acquire", Laboratory);
+
+      fixture.Service.RaiseSendFailure(SendFailure(acquire, "socket closed"));
+      fixture.Service.SetState(state);
+
+      Assert.That(returned, Is.Empty);
+      Assert.That(fixture.Prompt.ChooseCount, Is.Zero);
+      Assert.That(fixture.Prompt.ConfirmCount, Is.Zero);
+      Assert.That(fixture.Saves.Paths, Is.Empty);
+      Assert.That(fixture.Saves.IsDirty(Laboratory), Is.True);
+
+      fixture.Scheduler.RunImmediate();
+
+      Assert.That(fixture.Prompt.ChooseCount, Is.EqualTo(1));
+      Assert.That(fixture.Prompt.ConfirmCount, Is.EqualTo(1));
+      Assert.That(fixture.WarningState.Records.Single().reason,
+        Is.EqualTo(expectedReason));
+      Assert.That(fixture.Saves.Paths, Is.EqualTo(new[] { Laboratory }));
+      Assert.That(fixture.Saves.IsDirty(Laboratory), Is.False);
     }
 
     [Test]
