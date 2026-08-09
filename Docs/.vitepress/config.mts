@@ -37,15 +37,15 @@ export default createDocsConfig(defineDocsProject({
         {text: "Project Overview", link: "/project/"},
         {text: "Game Design", link: "/project/game-design"},
         {text: "MVP Scope", link: "/project/mvp-scope"},
-        {text: "Runtime Contract", link: "/project/technical-architecture"},
+        {text: "Target Runtime Design", link: "/project/technical-architecture"},
       ],
     },
     {
       text: "Guides",
       items: [
         {text: "Guide Index", link: "/guides/"},
-        {text: "Coordinated Leasing", link: "/guides/coordinated-leasing"},
-        {text: "Unity Guides", link: "/unity-guides/"},
+        {text: "Unity Coordination", link: "/guides/coordinated-leasing"},
+        {text: "Unity Guides", link: "/guides/unity/"},
         {text: "Design Research", link: "/research/game-design-and-psychology"},
       ],
     },
@@ -71,11 +71,6 @@ export default createDocsConfig(defineDocsProject({
         text: "Guides",
         includeDirs: ["guides"],
         items: [{text: "Guide Index", link: "/guides/"}],
-      },
-      {
-        text: "Unity Guides",
-        includeDirs: ["unity-guides"],
-        items: [{text: "Unity guides", link: "/unity-guides/"}],
       },
       {
         text: "Research",

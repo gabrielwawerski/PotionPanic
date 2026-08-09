@@ -7,6 +7,18 @@ It owns binding MVP scope, tuning, and delivery order. It does not replace
 task acceptance criteria, implementation plans, or the player-experience
 intent in [Game Design](game-design.md).
 
+## How to read this document
+
+This page separates three kinds of truth:
+
+- **Current repository state:** what exists in the checkout now.
+- **Accepted MVP target:** behavior and content the team has approved.
+- **Delivery sequence:** the dependency order for reaching that target.
+
+An accepted target is binding for implementation decisions, but it is not
+evidence that the feature already exists. Use the board and tickets for current
+status.
+
 ## Current Repo Note
 
 The current Unity scaffold still uses `Assets/Scenes/SampleScene.unity` as the
@@ -126,6 +138,28 @@ Additional rules:
 The detailed milestones below preserve the delivery commitments for each
 stage. Use the board for current task status.
 
+### Why the order matters
+
+Each milestone creates evidence or reusable behavior needed by the next one:
+
+```text
+movement and room
+  -> reusable interaction
+  -> ingredient and brewing loop
+  -> one complete disaster
+  -> repeatable run and fail state
+  -> remaining content on proven systems
+  -> difficulty and score
+  -> menus and full run flow
+  -> presentation feedback
+  -> final balance and stability
+```
+
+Moving directly to full content would multiply unproven prefabs and data.
+Building menus before the run loop works would polish a flow that may still
+change. The sequence keeps each milestone playable and makes later work reuse a
+verified foundation.
+
 ## Milestones
 
 ### Milestone 1: movement and camera
@@ -243,6 +277,11 @@ The following are out of scope until MVP is complete:
 If a new idea does not help the current milestone become playable, add it to
 the [board](../board.md) instead of implementing it now.
 
+Hard boundaries protect completion capacity. They are not claims that the
+excluded ideas are bad; they prevent networking, authored content, progression,
+or world expansion from adding new production disciplines before the core game
+can ship.
+
 ## Post-MVP Candidates
 
 Possible expansion ideas after the MVP ships:
@@ -269,6 +308,9 @@ Potion Panic is complete when a player can:
 - restart and play again
 
 without gameplay-breaking bugs.
+
+This is the game-level finish line. Individual milestones and tickets need
+their own narrower acceptance criteria and verification evidence.
 
 ## Related pages
 

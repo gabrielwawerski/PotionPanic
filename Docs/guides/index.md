@@ -1,28 +1,25 @@
 # Guides
 
-Use these task-focused guides while working in the project. They explain how
-to work safely and consistently; the [Project overview](../project/) owns
-Potion Panic's binding game, scope, and runtime decisions.
+Use these pages while doing project work. Guides teach reusable methods and
+tool behavior. The [Project Overview](../project/) owns Potion Panic's binding
+game, scope, and target runtime decisions.
 
-## Choose a guide
+## Choose by task
 
-| If you are about to... | Open |
+| You need to... | Open |
 | --- | --- |
-| Edit a coordinated scene or resolve a Coordination window warning | [Coordinated Leasing](coordinated-leasing.md) |
-| Design a Unity component boundary or ownership model | [Architecture Primer](../unity-guides/runtime-architecture.md) |
-| Turn a feature into a small, verifiable implementation slice | [Coding and implementation](../unity-guides/coding-and-implementation.md) |
-| Change scenes, prefabs, inspector wiring, or project-wide settings | [Editor Safety](../unity-guides/editor-safety.md) |
-| Work on UI, animation, models, materials, VFX, or visual feedback | [Presentation workflows](../unity-guides/presentation-workflows.md) |
-| Evaluate design ideas against research and small-team risk | [Design Research](../research/game-design-and-psychology.md) |
+| Understand or operate the Unity Coordination tool | [Unity Coordination Guide](coordinated-leasing.md) |
+| Choose a Unity architecture, implementation, editor, or presentation guide | [Unity Guides](unity/) |
+| Evaluate a design idea against evidence, ethics, production risk, or market communication | [Game Design and Player Psychology](../research/game-design-and-psychology.md) |
 
-## How guides relate to project truth
+## Authority
 
-Guides provide reusable working methods. When a guide and a project document
-appear to differ, the project document wins for Potion Panic-specific scope,
-behavior, and architecture.
+Guides explain how to reason and work. If reusable guidance conflicts with an
+accepted Potion Panic decision, the owning project document wins. If a guide
+describes implemented tool behavior, code, tests, and configuration win.
 
 ## Related pages
 
-- [Project overview](../project/)
+- [Project Overview](../project/)
 - [Daily Workflow](../collaboration/team-workflow.md)
-- [Documentation Atlas](../ATLAS.md)
+- [Evergreen Documentation Contract](../evergreen-documentation.md)

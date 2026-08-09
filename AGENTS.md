@@ -9,6 +9,7 @@ Keep gameplay code in `Assets/Scripts/Runtime` and editor-only helpers in
 and `Packages/` as shared configuration. The current shared prototype scene is
 `Assets/Scenes/SampleScene.unity`; docs also reference the planned rename to
 `Laboratory.unity`.
+Use `Docs/evergreen-documentation.md` when changing long-lived documentation.
 
 ## Build, Test, And Development Commands
 

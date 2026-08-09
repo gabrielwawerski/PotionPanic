@@ -7,7 +7,7 @@ documentation:
   - plans/coordinated-file-leasing-system.md
   - onboarding/getting-started.md
   - collaboration/team-workflow.md
-  - unity-guides/editor-safety.md
+  - guides/unity/editor-safety.md
 affectedFiles:
   - coordination.json
   - Assets/Scripts/Editor/Coordination

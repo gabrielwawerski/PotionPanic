@@ -26,8 +26,8 @@ features:
   - title: Working Guides
     details: Choose practical guidance for coordination, Unity architecture, implementation, editor safety, presentation, and design research.
     link: /guides/
-  - title: Game Truth
-    details: Read the design, MVP scope, and technical architecture that define the current project.
+  - title: Project Truth
+    details: Separate the current gameplay scaffold from the accepted design, scope, milestones, and target runtime contracts.
     link: /project/
   - title: Atlas
     details: Route a recurring question to the document that owns the current answer.

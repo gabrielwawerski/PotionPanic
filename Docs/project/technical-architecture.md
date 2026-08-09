@@ -1,4 +1,4 @@
-# Potion Panic Runtime Contract
+# Potion Panic target runtime design
 
 Version: 1.0
 Target engine: Unity
@@ -9,12 +9,24 @@ implementation boundaries. Use [`game-design.md`](game-design.md) for
 player-facing intent and [`mvp-scope.md`](mvp-scope.md) for milestone order
 and locked MVP rules.
 
+## Current state and target status
+
+The gameplay runtime is currently a scaffold: the gameplay assembly and marker
+exist, but the data assets, components, and systems described below are not yet
+implemented as a complete loop. This document is the accepted target design
+that future milestone work should implement incrementally.
+
+Names, ownership boundaries, and binding MVP behavior are requirements where
+this page states them directly. Example fields and code labelled “possible,”
+“suggested,” or “example” illustrate the intended responsibility and may be
+adjusted by an approved implementation plan.
+
 ## What this contract owns
 
 This contract names the specific data assets, runtime components, coordinating
 systems, dependencies, repository locations, and completion criteria that the
 MVP needs. It does not teach general Unity architecture patterns; use the
-[Architecture Primer](../unity-guides/runtime-architecture.md) for that.
+[Unity Runtime Foundations](../guides/unity/runtime-architecture.md) for that.
 
 | Area | Contract |
 | --- | --- |
@@ -22,6 +34,11 @@ MVP needs. It does not teach general Unity architecture patterns; use the
 | Runtime | Components own movement, interaction, inventory, brewing, disaster behavior, Panic, score, and presentation updates. |
 | Coordination | Managers coordinate systems; they do not absorb individual gameplay rules. |
 | Delivery | Create only the systems needed for the current milestone and retain one reusable disaster loop. |
+
+It does not claim that every listed type should be created at once. It also
+does not teach Unity fundamentals; use
+[Unity Runtime Foundations](../guides/unity/runtime-architecture.md) for scenes,
+components, prefabs, ScriptableObjects, lifecycle, references, and events.
 
 ## Delivery rule
 
@@ -39,9 +56,48 @@ this order:
 A playable vertical slice is more valuable than a complete-looking architecture
 with no finished game loop.
 
+## End-to-end runtime flow
+
+The target responsibilities connect like this:
+
+```text
+Player input
+  -> PlayerController moves the player
+  -> InteractionController selects and activates an IInteractable
+  -> IngredientStation or BrewingStation changes PlayerInventory
+  -> DisasterInstance validates an applied PotionData
+  -> PanicSystem and ScoreSystem apply the result
+  -> UI and audio present state changes
+
+GameManager owns run state
+  -> DisasterManager schedules and tracks DisasterInstance objects
+  -> reaching 100 Panic asks GameManager to enter GameOver
+  -> restart establishes a clean run
+```
+
+The flow keeps rule ownership close to the state it changes. A station does not
+calculate global score, UI does not decide whether a potion is correct, and the
+disaster scheduler does not implement one disaster's internal escalation.
+
+### Worked example: Cooling Potion
+
+1. `InteractionController` invokes the Blue Mushroom station.
+2. `IngredientStation` asks `PlayerInventory` to carry its `IngredientData`.
+3. At the brewing station, `BrewingStation` reads the ingredient's configured
+   `resultingPotion` and replaces the carried item with that `PotionData`.
+4. Applying the potion invokes the active Overheated Cauldron's
+   `DisasterInstance`.
+5. The instance compares the carried `PotionData` with its configured required
+   potion, resolves itself, and reports the result.
+6. `PanicSystem` reduces Panic, `ScoreSystem` awards the accepted points, and
+   presentation components react to those state changes.
+
+The same path supports the other MVP disasters by changing data and prefab
+content rather than creating another unrelated gameplay framework.
+
 ## Data Assets
 
-Recommended ScriptableObject types:
+Required target ScriptableObject responsibilities:
 
 ### `IngredientData`
 
@@ -51,7 +107,7 @@ Purpose:
 - points at the resulting potion
 - provides UI and visual metadata
 
-Example fields:
+Illustrative fields:
 
 ```csharp
 string ingredientName;
@@ -67,7 +123,7 @@ Purpose:
 - defines a brewed item the player can carry
 - provides UI and visual metadata
 
-Example fields:
+Illustrative fields:
 
 ```csharp
 string potionName;
@@ -84,7 +140,7 @@ Purpose:
 - defines Panic behavior and escalation values
 - provides warning and prefab metadata
 
-Example fields:
+Illustrative fields:
 
 ```csharp
 string disasterName;
@@ -230,7 +286,7 @@ Responsibilities:
 - restart a run
 - pause and unpause
 
-Suggested state model:
+Accepted run states, shown as an illustrative enum:
 
 ```csharp
 public enum GameState
@@ -367,4 +423,4 @@ when it supports the playable game loop.
 - [Project Overview](index.md)
 - [Game Design](game-design.md)
 - [MVP Scope](mvp-scope.md)
-- [Architecture Primer](../unity-guides/runtime-architecture.md)
+- [Unity Runtime Foundations](../guides/unity/runtime-architecture.md)

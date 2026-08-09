@@ -104,7 +104,7 @@ function Invoke-CoordinationEditMode {
 | `Tools/CoordinationServer/test/protocol.test.ts` | Consume the shared path fixture rather than maintaining a TypeScript-only vector list. |
 | `Tools/CoordinationServer/wrangler.jsonc` | Declarative Durable Object export, required secret names, public `workers.dev`, disabled preview URLs, and full observability. |
 | `Tools/CoordinationServer/.dev.vars.example` | Tracked local-secret shape with no secret values. |
-| `Tools/CoordinationServer/README.md`, `README.md`, [Docs/onboarding/getting-started.md](../../onboarding/getting-started.md), [Docs/collaboration/team-workflow.md](../../collaboration/team-workflow.md), [Docs/unity-guides/editor-safety.md](../../unity-guides/editor-safety.md) | Server operation and evergreen user guidance. |
+| `Tools/CoordinationServer/README.md`, `README.md`, [Docs/onboarding/getting-started.md](../../onboarding/getting-started.md), [Docs/collaboration/team-workflow.md](../../collaboration/team-workflow.md), [Docs/guides/unity/editor-safety.md](../../guides/unity/editor-safety.md) | Server operation and evergreen user guidance. |
 | [Docs/tickets/PP-7.md](../../tickets/PP-7.md) | Dated commands, results, reviewer result, external blockers, and later two-machine acceptance evidence. |
 | `coordination.json` | Replace the example endpoint only after an actual authenticated deployment has supplied the exact URL. |
 | `.github/workflows/coordination-server.yml` | Remains verification-only: `npm ci`, typecheck, tests, and `wrangler deploy --dry-run`; no Cloudflare credential, secret, or deployment step. |
@@ -592,7 +592,7 @@ function Invoke-CoordinationEditMode {
 - Modify: `README.md`
 - Modify: [Docs/onboarding/getting-started.md](../../onboarding/getting-started.md)
 - Modify: [Docs/collaboration/team-workflow.md](../../collaboration/team-workflow.md)
-- Modify: [Docs/unity-guides/editor-safety.md](../../unity-guides/editor-safety.md)
+- Modify: [Docs/guides/unity/editor-safety.md](../../guides/unity/editor-safety.md)
 
 **Interfaces:**
 

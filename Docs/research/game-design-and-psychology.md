@@ -6,12 +6,7 @@ originalPath: 'Docs/project/game-design-and-psychology.md'
 
 # Game Design and Player Psychology
 
-This research guide is advisory reference material. It is not a Potion Panic
-design specification and does not override current project requirements.
-
-## Purpose
-
-This document is a research and reference guide for evaluating:
+Use this advisory research guide to evaluate:
 
 - player motivation and attention
 - game feel and feedback
@@ -22,18 +17,15 @@ This document is a research and reference guide for evaluating:
 - market communication
 - prototype and playtest evidence
 
-It is not a design specification and does not override current project
-requirements.
-
-For authoritative Potion Panic decisions, use:
+It does not define Potion Panic. For binding project decisions, use:
 
 - [`../project/game-design.md`](../project/game-design.md) for player-facing design
 - [`../project/mvp-scope.md`](../project/mvp-scope.md) for locked scope, tuning, and milestone order
 - [`../project/technical-architecture.md`](../project/technical-architecture.md) for implementation
   boundaries and runtime ownership
 
-Recommendations in this guide are heuristics, not mandatory rules. Test them
-against the project, audience, team, budget, and current market.
+Recommendations here remain hypotheses until evidence supports them in the
+project's audience, budget, implementation, and current market.
 
 ## Choose by question
 
@@ -45,21 +37,35 @@ against the project, audience, team, budget, and current market.
 | Genre positioning, market communication, and small-team risk | [Genre and market considerations](#genre-and-market-considerations) |
 | Playtests, prototype questions, and evidence quality | [Prototype validation](#prototype-validation) |
 
-## How to Use This Guide
+## How to read the evidence
 
 The document uses several kinds of statements:
 
-- **Research finding:** tied to published research or an established external
-  definition.
-- **Industry guidance:** advice from a platform holder, developer, or industry
-  organization.
-- **Design heuristic:** useful in many projects but not universally correct.
-- **Project decision:** binding only when recorded in a project's canonical
-  design, scope, or architecture documents.
+| Label | Meaning | Authority |
+| --- | --- | --- |
+| **Research finding** | A claim tied to published research or an established external definition. | The cited source establishes what was studied or defined. It does not choose the project design. |
+| **Industry guidance** | Advice from a platform holder, developer, or industry organization. | Useful external practice, subject to platform changes and project fit. |
+| **Design heuristic** | A reusable judgment that may help many projects. | Advisory until Potion Panic adopts a concrete decision. |
+| **Project decision** | An accepted choice recorded in the canonical project docs. | Binding for current work until that owner changes it. |
 
 Treat market observations as time-sensitive. Treat psychology research as a
 framework for asking better questions, not as a recipe for manipulating
 players.
+
+## How Potion Panic applies this research
+
+The project documents use this material to explain the reasoning behind
+accepted choices. For example, the game design applies readable threats,
+meaningful priorities, and strong feedback to a controlled-chaos loop. The MVP
+scope constrains content and milestones so those core decisions can be tested
+before the project expands. The technical architecture assigns runtime
+ownership that can deliver those behaviors without turning a research heuristic
+into an engine contract.
+
+Those applications are summaries, not a second specification. If this guide
+and an accepted project document differ, follow the project document and review
+whether the research discussion needs an update. If new research suggests a
+design change, record and approve that change in the owning project document.
 
 ## Executive Summary
 

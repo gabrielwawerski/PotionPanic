@@ -1,216 +1,287 @@
-# Daily Workflow
+# Daily workflow
 
-Use this guide for recurring team work after completing
-[Project Setup](../onboarding/getting-started.md). It explains how a task moves
-from the board to a tested handoff while keeping shared Unity files safe.
+Use this guide for recurring work after completing
+[Project Setup](../onboarding/getting-started.md). A normal task should move
+through one visible sequence:
 
-## Before Starting Work
+```text
+understand current state -> choose work -> announce -> branch -> implement
+-> verify -> hand off -> review -> merge
+```
 
-1. Confirm the repository is clean enough to identify your own changes.
-2. Update master:
+Skipping an early step usually creates work later. A silent scene edit becomes
+a merge conflict; an unexplained dirty worktree becomes an accidental commit;
+an unverified handoff becomes another developer's debugging session.
 
-       git checkout master
-       git pull --ff-only
+## 1. Understand the worktree
 
-3. Confirm the active milestone in
-   [MVP Scope](../project/mvp-scope.md).
-4. Choose one small, clear task from To do on the board.
-5. Read the task's goal, acceptance criteria, likely files, and open blockers.
-6. Keep unrelated ideas in Backlog instead of interrupting the milestone.
+Start from the repository root:
 
-## Start Safely
+```powershell
+git branch --show-current
+git status --short
+git log -1 --oneline
+```
 
-### Announce the Work
+Read the output before switching branches or pulling:
 
-Do not work silently on shared parts of the project. Before starting, post:
+- A clean worktree has no `git status --short` entries.
+- Existing changes belong to their current owner until proven otherwise.
+- Unrelated changes are not permission to reset, delete, stage, or include
+  them in the new task.
+- If the current branch already contains unfinished work, finish or hand off
+  that work before starting another task in the same checkout.
 
-    Working on:
-    Owner:
-    Branch:
-    Milestone:
-    Files/scenes/prefabs likely affected:
-    Expected result:
-    Risk/blocker:
+Do not use destructive Git cleanup to manufacture a clean start. Ask the owner
+when a local change cannot be explained.
 
-Say directly when you will edit a shared Unity file, for example:
+## 2. Update the shared base
 
-    I am editing SampleScene.unity for the next hour.
-    I am changing the Player prefab.
+With a clean worktree, update `master` without creating a merge commit:
 
-After Milestone 1 renames or replaces the shared gameplay scene, use its real
-name instead of SampleScene.unity.
+```powershell
+git checkout master
+git pull --ff-only
+```
 
-### Create a Focused Branch
+`--ff-only` stops when local and remote history have diverged. That stop is
+useful: it prevents a routine update from silently creating a merge that needs
+review.
 
-Create a short-lived branch after updating master:
+Confirm the active milestone in [MVP Scope](../project/mvp-scope.md). Only one
+major milestone should drive feature work at a time.
 
-    git checkout -b feature/my-task
+## 3. Choose a task that is ready
 
-Use names that describe the task, such as feature/player-movement,
-feature/lab-blockout, fix/player-collision, or fix/missing-prefab-reference.
+Open the [board](../board.md) and choose one task from `To do`.
 
-### Protect Shared Unity Files
+| Column | Meaning |
+| --- | --- |
+| Backlog | Ideas and unapproved future work. |
+| To do | Clear enough to start, with a goal and acceptance criteria. |
+| Doing | Actively owned work. |
+| Test / Review | Implemented work awaiting verification or review. |
+| Done | Complete, tested, committed, and safe for another contributor to pull. |
+
+Before moving a task to `Doing`, read its goal, acceptance criteria, affected
+files, dependencies, and blockers. Split a task when its parts cannot be built,
+tested, and reviewed as one coherent change.
+
+Keep unrelated ideas in Backlog. Starting future milestone work early makes the
+current milestone harder to finish and hides which dependency is actually
+blocking progress.
+
+## 4. Announce ownership and risk
+
+Post a start message before editing shared project areas:
+
+```text
+Working on:
+Owner:
+Branch:
+Milestone:
+Files/scenes/prefabs likely affected:
+Expected result:
+Risk/blocker:
+```
+
+Name a shared Unity file directly:
+
+```text
+I am editing Assets/Scenes/SampleScene.unity for the next hour.
+I am changing the Player prefab.
+```
+
+An announcement communicates intent to the other person even when software is
+offline. The Coordination service communicates current machine-observed state.
+The two mechanisms answer different questions, so one does not replace the
+other.
+
+## 5. Create a focused branch
+
+Create a short-lived branch from the updated base:
+
+```powershell
+git checkout -b feature/my-task
+```
+
+Use the type and subject that describe the work:
+
+```text
+feature/player-movement
+feature/lab-blockout
+fix/player-collision
+docs/evergreen-v2
+```
+
+Keep one reviewable objective on the branch. Do not combine gameplay, project
+settings, scene cleanup, and unrelated documentation because they happened in
+the same session.
+
+## 6. Protect shared Unity files
 
 Always announce before editing:
 
-- Assets/Scenes/*.unity
-- Assets/**/*.prefab
-- ProjectSettings/*
-- Packages/manifest.json
-- Packages/packages-lock.json
+- `Assets/Scenes/*.unity`
+- `Assets/**/*.prefab`
+- `ProjectSettings/*`
+- `Packages/manifest.json`
+- `Packages/packages-lock.json`
 
-Before editing a coordinated scene, use the
-[Coordinated Leasing Guide](../guides/coordinated-leasing.md) to connect, set a
-task context, choose the path, and reserve it. Coordination is advisory and
-does not replace the announcement.
+Scenes and prefabs are serialized object graphs. Project settings and package
+files change behavior across the whole checkout. All are difficult to reconcile
+when two people make overlapping changes without coordination.
+
+The current automated rule in `coordination.json` covers scene files below
+`Assets/Scenes/`. Before editing one, open
+[Unity Coordination](../guides/coordinated-leasing.md), connect, set a task
+context, select the path, and reserve it. Prefabs, project settings, and
+packages still rely on the manual announcement unless a verified rule covers
+them.
 
 If the endpoint is missing, invalid, or unhealthy, select the local Disabled
 switch. Preserve local work and use the manual collaboration fallback for every
 protected-file edit. Reconnect only after the service health is restored.
 
-## Implement a Small Playable Slice
+Prefer scripts, ScriptableObjects, focused prefabs, prefab variants, UI
+prefabs, and isolated test scenes when they let contributors work without
+sharing one large scene edit.
 
-Keep the task narrow enough to build, test, and hand off. Prefer scripts,
-prefabs, prefab variants, ScriptableObjects, UI prefabs, and isolated test
-scenes when they avoid concurrent edits to the shared gameplay scene.
+## 7. Implement one playable or verifiable slice
 
-Prototype with placeholders before polishing. Stop feature work when the
-project is unstable. A task that does not support the active milestone belongs
-in Backlog until the milestone changes.
+Connect the task's acceptance criteria to the smallest behavior that can prove
+them. For example, Milestone 1 movement does not need inventory, brewing, or a
+general ability system. It needs the accepted input, movement rule, player
+setup, and enough scene integration to observe the result.
 
-## Verify Before Handoff
+During implementation:
 
-For most tasks:
+- keep unrelated worktree changes untouched;
+- create only the systems the current slice needs;
+- use placeholders before expensive presentation work;
+- make failure state visible through tests, Console messages, or focused debug
+  information;
+- stop feature work if compilation, the shared scene, or core gameplay becomes
+  unstable.
 
-1. Wait for Unity compilation or package import to finish.
-2. Open the affected scene. For a general smoke test, use
-   Assets/Scenes/SampleScene.unity.
-3. Press Play and confirm that Play Mode starts cleanly.
-4. Check the Console for new errors related to the task.
-5. Stop Play Mode before reviewing the final scene diff.
-6. Run the relevant suite from Window > General > Test Runner when the task
-   changes tests or gameplay code:
-   - EditMode for pure logic or editor-facing behavior.
-   - PlayMode for scene, runtime, or integration behavior.
-7. Review git status and git diff before staging.
+Use the [Coding and Implementation Guide](../guides/unity/coding-and-implementation.md)
+for responsibility, dependency, testing, and debug decisions.
 
-A task is ready for review only when its acceptance criteria pass, the project
-still opens and runs, relevant Console errors are absent, and existing features
-are not obviously broken.
+## 8. Verify the actual change
 
-## Hand Off, Review, and Merge
+Choose proof from the files and behavior that changed:
 
-Stage only related files and review the staged diff:
-
-    git status
-    git diff
-    git add path/to/file1 path/to/file2
-    git diff --staged
-    git commit -m "feat(docs): explain the new MVP scope"
-    git push -u origin feature/my-task
-
-Do not use git add . for normal task work. Review or test the branch before
-merging. Keep master compiling, runnable, and playable.
-
-Move the board task to Test / Review when review is needed, then Done only when
-it is complete, tested, committed, and safe for the other developer to pull.
-Post the handoff:
-
-    Finished:
-    Branch:
-    Changed files:
-    How tested:
-    Needs review:
-    Known issues:
-    Next:
-
-## Supporting Policies
-
-### Task Board
-
-| Column | Meaning |
+| Change | Minimum evidence |
 | --- | --- |
-| Backlog | Ideas and tasks not approved for immediate work. |
-| To do | Tasks clear enough to start. |
-| Doing | Tasks currently being worked on. |
-| Test / Review | Implemented work that needs review or testing. |
-| Done | Complete, tested, committed, and safe for the other person to pull. |
+| Markdown or docs configuration | `npm test`, `npm run docs:build`, rendered page and navigation review. |
+| Pure C# or editor logic | Relevant EditMode tests plus Unity compilation and Console review. |
+| Runtime or scene integration | Relevant PlayMode tests, affected scene in Play Mode, and Console review. |
+| Scene, prefab, or inspector wiring | Open the asset, inspect references and overrides, run the affected behavior, and review the serialized diff. |
+| Project settings or packages | Reimport or restart when required, run affected behavior, and inspect every changed shared file. |
 
-Every real task needs a title, goal, acceptance criteria, status, milestone,
-and likely affected files. Add an assignee when the task has a clear owner.
-Avoid vague tasks such as Improve gameplay or Fix stuff.
+For a normal Unity smoke test:
 
-### Ownership and Scope
+1. Wait for compilation and import to finish.
+2. Open the affected scene. Use `Assets/Scenes/SampleScene.unity` for the
+   current general smoke.
+3. Enter Play Mode and exercise the acceptance criteria.
+4. Check the Console for new relevant errors or warnings.
+5. Exit Play Mode before reviewing serialized changes.
+6. Run the relevant EditMode or PlayMode suite from
+   `Window > General > Test Runner`.
+7. Review `git status` and `git diff`.
 
-Each major area has a primary owner responsible for its quality, organization,
-consistency, and decisions. Ownership is not exclusive access. Say so before
-working inside another person's area.
+Passing a different suite does not prove the changed behavior. A baseline
+failure must be reported separately rather than described as a regression or
+silently ignored.
+
+## 9. Stage and hand off only the task
+
+Review before staging, then stage explicit paths:
+
+```powershell
+git status
+git diff
+git add path/to/file1 path/to/file2
+git diff --staged
+git commit -m "type(scope): describe the change"
+git push -u origin feature/my-task
+```
+
+Do not use `git add .` for normal task work. The staged diff is the proposed
+commit, so read it as a reviewer would.
+
+Post a handoff that another contributor can execute without reconstructing the
+session:
+
+```text
+Finished:
+Branch:
+Changed files:
+How tested:
+Needs review:
+Known issues:
+Next:
+```
+
+Move the task to `Test / Review` while work still needs independent checking.
+Move it to `Done` only after the accepted evidence exists and the branch is
+safe to pull.
+
+## 10. Review and merge
+
+The reviewer checks the acceptance criteria, risky shared files, test evidence,
+and remaining limitations. A successful local run by the author does not
+replace review of scene, prefab, package, project-setting, or coordination
+changes.
+
+Keep `master` compiling, runnable, and playable. Resolve merge conflicts with
+the owner of the affected system or shared Unity file, then rerun the relevant
+verification. Do not click through Unity YAML conflicts without understanding
+which serialized objects and references changed.
+
+## Ownership and collaboration boundaries
+
+The default split helps route decisions; it does not grant exclusive access:
 
 | Area | Primary owner | Typical work |
 | --- | --- | --- |
-| Gameplay / systems | Developer A | Player controls, interactions, game state, scoring, disaster logic, save/load, and technical debugging. |
-| World / UX / presentation | Developer B | Scene blockout, environment layout, UI, menus, audio, VFX, placeholder art, and playtest notes. |
+| Gameplay and systems | Developer A | Controls, interactions, runtime state, scoring, disasters, technical debugging. |
+| World, UX, and presentation | Developer B | Scene blockout, environment, UI, menus, audio, VFX, placeholder art, playtest notes. |
 
-Adjust this default split when a milestone needs a different division of work.
-Only one major milestone should be active at a time. A milestone is complete
-when its feature works in Play Mode, the project remains playable, the other
-developer can pull and test it, and the next milestone is not blocked by broken
-work.
+Say so before working inside the other person's area. Adjust ownership when the
+active milestone needs a different split.
 
-### Shared Unity Files and Merge Conflicts
+## Documentation during a task
 
-Avoid two people editing the same scene at the same time. Today the shared
-gameplay scene is SampleScene.unity; treat Laboratory.unity the same way after
-it becomes the canonical scene.
+Update the evergreen owner when stable setup, workflow, game, scope,
+architecture, or tool behavior changes. Use the
+[Evergreen Documentation Contract](../evergreen-documentation.md) to identify
+the owner and evidence source.
 
-For important prefabs, claim the edit in the team channel before changing the
-Player, Camera, HUD, GameManager, interaction prompt, brewing station, or
-disaster prefab. Prefer smaller child prefabs where that reduces concurrent
-edits.
+Keep task execution in tickets, long-form implementation in active plans, and
+durable execution decisions in chronicles. Preserve historical records rather
+than rewriting them as current tutorials.
 
-Before changing Input System settings, physics layers, tags, sorting layers,
-build settings, render settings, quality settings, or package files, state what
-you will change and why.
+## Stabilization workflow
 
-If a merge conflict happens:
-
-1. Stop and identify the conflicted file.
-2. Identify the owner of that file or system.
-3. Resolve together when it involves a scene, prefab, project setting, or
-   important system.
-4. Test immediately after resolving.
-5. Commit the resolution clearly.
-
-Do not click through Unity YAML conflicts without understanding the file.
-
-### Documentation Ownership
-
-Update evergreen documentation when setup, systems, responsibilities, workflow
-rules, or stable project decisions change. The [Documentation Atlas](../ATLAS.md)
-routes each topic to its owner.
-
-Keep task-specific execution notes in board tickets. Keep current long-form
-implementation plans in [plans](../plans/index.md), then archive them when
-complete or superseded. Do not create duplicate evergreen documents with
-different names.
-
-### Project Health and Stabilization
-
-The project should normally open, compile, run the shared gameplay scene, keep
-master stable, show visible tasks and a clear milestone, record known issues,
-and leave both developers aware of current work.
-
-If several of these conditions are false:
+When the project no longer opens, compiles, runs the shared scene, or preserves
+its core loop:
 
 1. Stop feature work.
-2. Record what is broken.
-3. Fix compiler errors first, broken scenes second, and broken core gameplay
+2. Record the failure and the last known working state.
+3. Separate baseline failures from the new regression.
+4. Fix compiler errors first, broken scenes second, and broken core gameplay
    third.
-4. Merge only after the project runs again.
+5. Verify the recovery before merging or resuming feature work.
+
+Adding new behavior on top of an unexplained broken base makes diagnosis less
+reliable and transfers risk to every later task.
 
 ## Related pages
 
 - [Project Setup](../onboarding/getting-started.md)
-- [Coordinated Leasing](../guides/coordinated-leasing.md)
 - [Project Overview](../project/)
+- [Unity Guides](../guides/unity/)
+- [Unity Coordination](../guides/coordinated-leasing.md)
 - [Active Plans](../plans/)

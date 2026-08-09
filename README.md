@@ -1,35 +1,39 @@
 # PotionPanic
 
-Potion Panic is a small-scope Unity project for a two-person beginner team. The
-target is a finished small game, not a large experimental prototype.
+Potion Panic is a small-scope Unity game for a two-person team learning to ship
+a complete project. The target is a polished, replayable crisis-management game
+inside one magical laboratory.
 
-This repository uses a VitePress site rooted in `Docs/` for shared project
-state, planning, and evergreen documentation. The reusable board, sidebar,
-ticket, plan, and theme tooling comes from the private
-`@gabrielwawerski/docboard` package. This repository owns the Potion Panic docs
-content, board frontmatter, and VitePress configuration.
+Gameplay code is still at the scaffold stage. The repository currently contains
+the Unity project foundation, accepted game and runtime contracts, project
+management documentation, and an implemented editor-only Coordination system
+for reducing conflicts on shared scenes.
 
-Published read-only docs site:
+## Start here
 
-- `https://gabrielwawerski.github.io/PotionPanic/`
-- Persistent board, ticket, and plan editing happens through the local
-  VitePress server, usually with `npm run docs:ui`.
+Use the published site to read project documentation:
 
-## Start Here
+- <https://gabrielwawerski.github.io/PotionPanic/>
 
-Read these in order:
+Use the local docs server when you need to edit the board, tickets, or plans.
+The published site is read-only and cannot write changes back to Markdown.
 
-1. `Docs/index.md`
-2. `Docs/onboarding/getting-started.md` for Project Setup on a new machine
-3. `Docs/collaboration/team-workflow.md` for Daily Workflow
-4. `Docs/board.md`
-5. `Docs/project/index.md` for binding project decisions
-6. `Docs/guides/index.md` for task-focused guidance
-7. `Docs/ATLAS.md` when you need to route a recurring question
+Read in this order on a new machine:
 
-## First Day Commands
+1. [Project Setup](Docs/onboarding/getting-started.md)
+2. [Daily Workflow](Docs/collaboration/team-workflow.md)
+3. [Project Overview](Docs/project/index.md)
+4. [Guides](Docs/guides/index.md)
 
-Run from the repository root in PowerShell:
+Use the [Documentation Atlas](Docs/ATLAS.md) to find the owner of a recurring
+question. Use the
+[Evergreen Documentation Contract](Docs/evergreen-documentation.md) when
+changing long-lived project documentation.
+
+## First commands
+
+Run these commands from the repository root in PowerShell after cloning both
+PotionPanic and its required sibling `Docboard` checkout:
 
 ```powershell
 git lfs install
@@ -37,30 +41,16 @@ npm install
 npm run docs:ui
 ```
 
-For Unity, open the repo in Unity Hub with editor `6000.5.1f1`, open
-`Assets/Scenes/SampleScene.unity`, press Play, and confirm there are no new
-Console errors. `SampleScene.unity` is the current shared prototype scene;
-`Laboratory.unity` is the planned canonical gameplay scene after Milestone 1
-work completes.
+`package.json` resolves `@gabrielwawerski/docboard` from `../Docboard`. A
+checkout without that sibling directory cannot install the docs dependencies.
+Project Setup explains the expected folder layout and recovery steps.
 
-## Documentation Owners
+Open the repository root in Unity Hub with editor `6000.5.1f1`. The current
+shared smoke-test scene is `Assets/Scenes/SampleScene.unity`.
+`Laboratory.unity` is the accepted target scene name for Milestone 1, not a
+claim that the rename has already happened.
 
-- `Docs/ATLAS.md` routes recurring questions to the owning document.
-- `Docs/onboarding/getting-started.md` owns Project Setup for a first-time
-  contributor.
-- `Docs/collaboration/team-workflow.md` owns Daily Workflow, including task
-  execution, testing, handoff, and shared-file safety.
-- `Docs/project/index.md` routes binding game, scope, and runtime decisions.
-- `Docs/project/game-design.md` owns player-facing design.
-- `Docs/project/mvp-scope.md` owns locked MVP scope, milestone order, and
-  definition of done.
-- `Docs/project/technical-architecture.md` owns runtime structure.
-- `Docs/guides/coordinated-leasing.md` owns Unity Coordination window usage,
-  claim states, save conflicts, and manual fallback.
-- `Docs/guides/index.md` routes task-focused working guidance and research.
-- `Tools/CoordinationServer/README.md` owns coordination Worker operations.
-
-## Docs Commands
+## Documentation commands
 
 ```powershell
 npm run docs:ui
@@ -70,13 +60,12 @@ npm run docs:build
 npm test
 ```
 
-- `npm run docs:ui` starts the local docs server if needed and opens the
-  editable board.
-- `npm run docs:dev` starts the LAN-accessible server on port `6420`.
-- `npm run docs:dev:local` starts the local-only server on
-  `127.0.0.1:6420`.
-- `npm run docs:build` verifies the static VitePress site.
-- `npm test` runs docs tooling tests.
+- `docs:ui` starts the local server if necessary and opens the editable board.
+- `docs:dev` serves the site on the local network at port `6420`.
+- `docs:dev:local` binds only to `127.0.0.1:6420`.
+- `docs:build` creates the static VitePress site and reports broken routes.
+- `npm test` checks docs tooling, configuration, links, and secret safety. It
+  does not grade documentation prose.
 
 Optional Windows startup management:
 
@@ -86,26 +75,30 @@ npm run docs:startup:uninstall
 npm run docs:stop
 ```
 
-GitHub Pages uses the `Deploy Docs` workflow. In `Settings > Pages`, the source
-must be `GitHub Actions`; do that once manually if the repository has never
-served Pages before.
+GitHub Pages uses the `Deploy Docs` workflow. A new repository must set
+`Settings > Pages > Source` to `GitHub Actions` once before the workflow can
+publish the site.
 
-## Coordination Worker
+## Coordination service
 
-The coordination Worker deploy is a manual, authenticated operator action.
-GitHub Actions is verification-only for the coordination server. It runs type
-checking, tests, and a Wrangler dry run without deployment credentials.
+The Unity editor opens the developer tool from
+`Window > Potion Panic > Coordination`. Start with the
+[Unity Coordination Guide](Docs/guides/coordinated-leasing.md).
 
-`coordination.json` currently names
-`https://potion-panic-coordination.gabriel-wawerski.workers.dev`. Verify its
-`/health` response before treating the endpoint as available.
+The Cloudflare Worker deploy is a manual, authenticated operator action.
+GitHub Actions verifies the server but does not receive deployment credentials
+or deploy it. Operators use
+[`Tools/CoordinationServer/README.md`](Tools/CoordinationServer/README.md).
 
-Operational procedures live in `Tools/CoordinationServer/README.md`.
+The client endpoint is stored in `coordination.json`. A configured URL is not
+proof that the service is healthy; verify the Worker's `/health` response
+before treating it as available.
 
-## Repository Rules
+## Repository rules
 
 - PowerShell is the primary shell for local project commands.
 - The browser board is the default human task workflow.
 - AI collaborators follow `AGENTS.md`; `CLAUDE.md` and `GEMINI.md` point to it.
+- Announce before editing scenes, prefabs, project settings, or package files.
 - Never commit generated folders such as `Library/`, `Temp/`, `Logs/`, `obj/`,
-  `UserSettings/`, `node_modules/`, or VitePress cache/dist output.
+  `UserSettings/`, `node_modules/`, or VitePress cache and build output.

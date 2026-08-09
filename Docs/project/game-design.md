@@ -11,6 +11,21 @@ Use [`mvp-scope.md`](mvp-scope.md) for locked milestone and tuning decisions.
 Use [`technical-architecture.md`](technical-architecture.md) for runtime
 structure.
 
+## Status and authority
+
+This document is the accepted player-facing target. The current Unity checkout
+does not yet implement the complete gameplay loop described here. A design
+statement explains what the team intends to build; it does not prove that the
+corresponding scene, component, content, or feedback already exists.
+
+When documents differ:
+
+- this page owns the intended experience and content identity;
+- [MVP Scope](mvp-scope.md) owns locked behavior, tuning, and delivery order;
+- [Runtime Design](technical-architecture.md) owns target technical
+  responsibilities;
+- tickets and the board own current task status.
+
 ## Game at a glance
 
 | The player is... | The game asks them to... | The game ends when... |
@@ -83,6 +98,20 @@ Prefer:
 - increasing pressure
 - fast pacing
 
+### How the pillars work together
+
+The pillars describe one experience, not three independent feature lists. A
+disaster should be readable enough that the player can identify the response,
+simple enough that the response requires only one ingredient and one potion,
+and urgent enough that choosing which disaster to solve first still matters.
+
+| Design choice | Supports | Fails when... |
+| --- | --- | --- |
+| One visible solution per disaster | Readability and fast decisions | The player must stop and search a recipe menu. |
+| One carried item | Movement and prioritization pressure | Inventory management becomes the main challenge. |
+| Several simple disasters at once | Controlled chaos | Effects overlap so heavily that cause and priority disappear. |
+| Fixed top-down camera | Whole-room awareness | Important threats can occur outside the readable play space. |
+
 ## Core Gameplay Loop
 
 1. A disaster appears.
@@ -96,6 +125,36 @@ Prefer:
 9. A new disaster appears.
 
 Repeat until Panic reaches 100%.
+
+### Example run
+
+The run begins with the laboratory stable and the player able to see the whole
+room. An Overheated Cauldron appears and starts raising Panic. Its color,
+animation, icon, and sound identify heat as the problem.
+
+The player crosses the room, collects a Blue Mushroom, and now carries that
+single ingredient. At the brewing station, one interaction replaces the
+ingredient with a Cooling Potion. Applying the potion resolves the cauldron,
+reduces Panic, awards the normal resolution score, and produces clear success
+feedback.
+
+Later, an Overheated Cauldron and a Slime Leak are active together. The player
+can read both threats, but cannot solve both at once. Their age, location,
+escalation state, and current Panic pressure create the decision: handle the
+more urgent threat or take the shorter route. Choosing, moving, brewing, and
+recovering form the intended pressure. Confusing recipes, camera control, and a
+large inventory are deliberately absent because they would compete with that
+decision.
+
+If the player uses the wrong potion, the potion is consumed, the disaster
+remains, and Panic increases. The feedback must make that cause visible. The
+penalty should teach the rule and increase pressure rather than feel like an
+unexplained loss.
+
+As the run continues, spawn intervals shorten and more disasters can remain
+active. The same readable actions become harder because the player has less
+time and more competing priorities. The run ends when accumulated unresolved
+pressure reaches 100 Panic.
 
 ## Player Experience
 
@@ -323,9 +382,13 @@ Do not let the design drift into:
 If a new idea does not help the current milestone become playable, put it on
 the [board](../board.md) instead of expanding the MVP.
 
+A proposed feature belongs in the MVP only when it strengthens the core crisis
+loop, fits the current production capacity, and does not require a second game
+to be built around it. A feature can be appealing and still be a post-MVP idea.
+
 ## Related pages
 
 - [MVP Scope](mvp-scope.md)
 - [Potion Panic Runtime Contract](technical-architecture.md)
-- [Presentation Workflows](../unity-guides/presentation-workflows.md)
+- [Presentation Workflows](../guides/unity/presentation-workflows.md)
 - [Design Research](../research/game-design-and-psychology.md)

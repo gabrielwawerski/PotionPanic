@@ -1,91 +1,89 @@
 # Documentation Atlas
 
-Use this map to find the current owner for project knowledge. It is a routing
-map, not a complete inventory.
+Use this map when you know the question but not which document owns the answer.
+For the required content and authority of each evergreen page, use the
+[Evergreen Documentation Contract](evergreen-documentation.md).
 
-## Entry Points
+## Entry points
 
-- `README.md`: repository overview, first commands, and public docs operations.
-- `AGENTS.md`: always-read contributor and agent rules.
-- [`index.md`](index.md): published docs home.
-- [`board.md`](board.md): editable task board for active work.
+- [Repository README](https://github.com/gabrielwawerski/PotionPanic/blob/master/README.md): repository purpose, first commands, local
+  versus published docs, and maintainer operations. Open it when entering the
+  repository.
+- [`index.md`](index.md): published docs home. Open it when browsing the site.
+- [`board.md`](board.md): active task board. Open it to choose or update work.
+- [`evergreen-documentation.md`](evergreen-documentation.md): knowledge owners,
+  writing model, and evidence rules. Open it before changing long-lived docs.
+- [AGENTS.md](https://github.com/gabrielwawerski/PotionPanic/blob/master/AGENTS.md): always-read contributor and agent constraints.
 
-## Setup And Workflow
+## Setup and recurring work
 
-- [`onboarding/getting-started.md`](onboarding/getting-started.md): Project
-  Setup for a new machine, including the board, Unity, Rider, smoke test, and
-  Coordination login. Open this before taking a first task.
-- [`collaboration/team-workflow.md`](collaboration/team-workflow.md): Daily
-  Workflow for choosing, executing, testing, reviewing, and handing off work.
-  Open this after Project Setup and before a normal work session.
+- [`onboarding/getting-started.md`](onboarding/getting-started.md): complete
+  first-machine setup for Git, Docboard, Unity, Rider, the smoke test, and a
+  Coordination identity.
+- [`collaboration/team-workflow.md`](collaboration/team-workflow.md): move a
+  normal task from worktree review through branch, implementation, verification,
+  handoff, review, and merge.
 
-## Project Truth
+## Project truth
 
-- [`project/index.md`](project/index.md): Project Overview and reading order
-  for binding game, scope, and runtime decisions.
-- [`project/game-design.md`](project/game-design.md): player-facing design,
-  core loop, content themes, disasters, scoring intent, art, and audio.
-- [`project/mvp-scope.md`](project/mvp-scope.md): locked MVP decisions,
-  milestone sequence, hard scope boundaries, and definition of done.
+- [`project/index.md`](project/index.md): choose among the binding project
+  documents.
+- [`project/game-design.md`](project/game-design.md): player experience, core
+  loop, content intent, pressure, reward, art, and audio.
+- [`project/mvp-scope.md`](project/mvp-scope.md): accepted MVP behavior, tuning,
+  milestone dependencies, scope boundaries, and game-level completion.
 - [`project/technical-architecture.md`](project/technical-architecture.md):
-  Potion Panic Runtime Contract for data assets, component responsibilities,
-  dependencies, and completion criteria.
+  accepted target runtime data, responsibilities, ownership, and flow.
 
-## Unity Working Guides
+## Working guides
 
-- [`guides/index.md`](guides/index.md): task-based guide directory. Open this
-  when you know what kind of work you are doing but not which guide applies.
-- [`unity-guides/index.md`](unity-guides/index.md): which Unity guide to open.
-- [`unity-guides/runtime-architecture.md`](unity-guides/runtime-architecture.md):
-  Unity mental model, composition, state ownership, and scene boundaries.
-- [`unity-guides/coding-and-implementation.md`](unity-guides/coding-and-implementation.md):
-  implementation habits, small playable slices, debugging, and checks.
-- [`unity-guides/editor-safety.md`](unity-guides/editor-safety.md): scene,
-  prefab, ProjectSettings, package, and inspector-change safety.
-- [`unity-guides/presentation-workflows.md`](unity-guides/presentation-workflows.md):
-  UI, animation, materials, VFX, and feedback workflows.
+- [`guides/index.md`](guides/index.md): choose practical guidance by task.
+- [`guides/unity/index.md`](guides/unity/index.md): choose a Unity working guide.
+- [`guides/unity/runtime-architecture.md`](guides/unity/runtime-architecture.md):
+  understand Unity runtime composition, lifecycle, dependencies, and state.
+- [`guides/unity/coding-and-implementation.md`](guides/unity/coding-and-implementation.md):
+  turn one accepted behavior into a small, verifiable implementation slice.
+- [`guides/unity/editor-safety.md`](guides/unity/editor-safety.md): change
+  scenes, prefabs, serialized references, shared assets, and settings safely.
+- [`guides/unity/presentation-workflows.md`](guides/unity/presentation-workflows.md):
+  build and hand off UI, animation, models, materials, VFX, and feedback.
 
 ## Coordination
 
 - [`guides/coordinated-leasing.md`](guides/coordinated-leasing.md): developer
-  tutorial for the Unity Coordination window, its actions and claim states,
-  save conflicts, and the manual fallback. Open this before editing a
-  coordinated scene or when the window needs explanation.
-- [Coordination Server README](https://github.com/gabrielwawerski/PotionPanic/blob/master/Tools/CoordinationServer/README.md): operator-only Worker verification,
-  local development, manual deployment, token operations, monitoring, outage
-  handling, and secret rotation.
+  mental model and workflow for the Unity Coordination tool, claims, automatic
+  lifecycle, save conflicts, credentials, and troubleshooting.
+- [Coordination Server README](https://github.com/gabrielwawerski/PotionPanic/blob/master/Tools/CoordinationServer/README.md):
+  operator trust model, verification, local development, deployment, token
+  administration, monitoring, and protocol lifecycle.
 - [`plans/coordinated-file-leasing-system.md`](plans/coordinated-file-leasing-system.md):
-  Protocol v1 and durable coordination program contract.
+  Protocol v1 and program contract.
 - [`plans/coordinated-file-leasing-release-acceptance.md`](plans/coordinated-file-leasing-release-acceptance.md):
-  remaining PP-7 acceptance work after deployment and local implementation.
-- [`tickets/PP-7.md`](tickets/PP-7.md): dated coordination evidence and open
-  release blockers.
+  remaining release-acceptance work.
+- [`tickets/PP-7.md`](tickets/PP-7.md): dated evidence and current blockers.
 
-## Active Work And History
+## Active work and history
 
-- [`plans/index.md`](plans/index.md): active implementation plans. Move only
-  unfinished or current plan pages here.
+- [`plans/index.md`](plans/index.md): active long-form implementation plans.
+- [`chronicles/`](chronicles/): implementation decisions and verification
+  records for work that needs a durable execution narrative.
+- `tickets/`: one Markdown file per active task; use the board for the task UI.
 - [`plans/archive/index.md`](plans/archive/index.md): completed or superseded
-  implementation plans. This is the only plan archive.
-- `tickets/`: one Markdown file per active task. Use [`board.md`](board.md) for
-  the active task UI.
-- [`archive/tickets/index.md`](archive/tickets/index.md): archived task
-  records.
-- [`archive/board.md`](archive/board.md): archived board view.
-- [`archive/index.md`](archive/index.md): archive entry point.
+  plans.
+- [`archive/index.md`](archive/index.md): archived board and task records.
 
 ## Research
 
 - [`research/game-design-and-psychology.md`](research/game-design-and-psychology.md):
-  advisory research on engagement, ethics, game feel, market presentation,
-  and validation. It does not override project design, scope, or architecture.
+  advisory evidence and heuristics for engagement, ethics, feedback, production
+  risk, market communication, and validation. It does not override project
+  truth.
 
-## Update Rules
+## Update rules
 
-- Update the owning evergreen doc when setup, workflow, architecture, design,
-  MVP scope, or reusable Unity guidance changes.
-- Keep task-by-task execution notes in tickets.
-- Keep current implementation plans in `plans/`.
-- Move completed or superseded plans to `plans/archive/`.
-- Preserve historical archive prose unless a link, route, or frontmatter value
-  is wrong for the current file path.
+- Update the evergreen owner when a stable fact or accepted decision changes.
+- Keep execution details in tickets, plans, and chronicles.
+- Archive completed or superseded plans only through the established plan
+  lifecycle.
+- Preserve historical prose. Correct links and active file references when the
+  documentation structure moves.

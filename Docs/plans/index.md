@@ -14,6 +14,7 @@ superseded plans into [`archive/index.md`](archive/index.md).
 - [Coordinated File Leasing Program](./coordinated-file-leasing-system.md)
 - [Coordinated File Leasing Release Acceptance](./coordinated-file-leasing-release-acceptance.md)
 - [Discard Local Scene Changes on Save Conflict](./coordinated-file-leasing-discard-local-changes.md)
+- [Evergreen Documentation V2 Rework](./evergreen-documentation-v2.md)
 ## Writing Rules
 
 - Docboard regenerates the Active Plans links from each plan's frontmatter
