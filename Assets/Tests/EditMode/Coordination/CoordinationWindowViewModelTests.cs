@@ -175,7 +175,7 @@ namespace PotionPanic.Tests.EditMode.Coordination
       Assert.That(fixture.ViewModel.Mode, Is.EqualTo(CoordinationMode.Coordinated));
       Assert.That(fixture.Service.DisabledValues, Is.Empty);
       Assert.That(fixture.Confirmations.ManualMessage,
-        Does.Contain("reservations may remain"));
+        Does.Contain("Reservations may remain"));
 
       fixture.Confirmations.ManualResult = true;
       Assert.That(fixture.ViewModel.SetMode(CoordinationMode.Manual), Is.True);
@@ -282,6 +282,21 @@ namespace PotionPanic.Tests.EditMode.Coordination
       store.FailWrites = true;
       Assert.That(fixture.ViewModel.MarkReconciled(warning), Is.False);
       Assert.That(fixture.ViewModel.OutstandingWarnings.Count, Is.EqualTo(1));
+    }
+
+    [TestCase("Could not read the warning ledger.", null)]
+    [TestCase("Malformed warning ledger was quarantined.", "UserSettings/quarantine.json")]
+    public void ExposesWarningStoreErrorsWhenThereAreNoOutstandingRecords(
+      string error,
+      string quarantinePath)
+    {
+      var warnings = new CoordinationUncoordinatedSaveState(
+        new CoordinationUncoordinatedSaveLedger(
+          new LoadErrorWarningStore(error, quarantinePath), new FixedClock()));
+      var fixture = new ViewModelFixture(warnings);
+
+      Assert.That(fixture.ViewModel.OutstandingWarnings, Is.Empty);
+      Assert.That(fixture.ViewModel.WarningStoreError, Is.EqualTo(error));
     }
 
     [Test]
@@ -814,6 +829,30 @@ namespace PotionPanic.Tests.EditMode.Coordination
         return FailWrites
           ? CoordinationUncoordinatedSaveWriteResult.Failure("disk unavailable")
           : CoordinationUncoordinatedSaveWriteResult.Success();
+      }
+    }
+
+    private sealed class LoadErrorWarningStore : ICoordinationUncoordinatedSaveStore
+    {
+      private readonly string error;
+      private readonly string quarantinePath;
+
+      public LoadErrorWarningStore(string error, string quarantinePath)
+      {
+        this.error = error;
+        this.quarantinePath = quarantinePath;
+      }
+
+      public CoordinationUncoordinatedSaveLoadResult Load()
+      {
+        return new CoordinationUncoordinatedSaveLoadResult(
+          Array.Empty<CoordinationUncoordinatedSaveRecord>(), quarantinePath, error);
+      }
+
+      public CoordinationUncoordinatedSaveWriteResult Save(
+        IReadOnlyList<CoordinationUncoordinatedSaveRecord> records)
+      {
+        return CoordinationUncoordinatedSaveWriteResult.Success();
       }
     }
 

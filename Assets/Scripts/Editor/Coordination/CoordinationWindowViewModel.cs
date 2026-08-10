@@ -191,6 +191,7 @@ namespace PotionPanic.Editor.Coordination
     internal IReadOnlyList<CoordinationOutstandingWarning> OutstandingWarnings
       => warningState.Records.Select(record => new CoordinationOutstandingWarning(
         record, warningState.PersistentError)).ToArray();
+    internal string WarningStoreError => warningState.PersistentError ?? string.Empty;
 
     public string TaskContext
     {
@@ -876,7 +877,7 @@ namespace PotionPanic.Editor.Coordination
 
     private const string ManualConfirmationMessage =
       "Manual mode closes the live connection. Connection-owned presence and editing "
-      + "leases will be released. reservations may remain until released or expired. "
+      + "leases will be released. Reservations may remain until released or expired. "
       + "Every coordinated-asset save will require two confirmations and create a warning.";
     private const string ReconciliationConfirmationMessage =
       "Mark this warning reconciled? This does not merge files or update server history.";

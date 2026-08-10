@@ -12,10 +12,11 @@ Reviewed the Task 3 Unity-native IMGUI implementation in
 | Area | Result | Evidence |
 | --- | --- | --- |
 | Hierarchy | Implemented | Mode/status, warnings, current asset, one primary action, secondary actions, then compact row foldouts are rendered in that order. |
-| Narrow layout | Implemented by code review | Below 560 pixels, target-source and secondary actions use vertical flow. The window minimum width is 430 pixels. |
-| Copy and state | Implemented | The UI uses Coordinated/Manual labels, maps the internal disabled state to Manual, and exposes explicit freshness text. |
-| Warnings | Implemented | Each record exposes save time, count, reason, owner, branch, task, error, and an individual confirmed reconciliation action. |
-| Row interaction | Implemented | Presence, editing lease, and reservation rows expand independently of the current action target; one row detail key is retained at a time. |
+| Narrow layout | Implemented by code review | Below 560 pixels, target-source and secondary actions use vertical flow. Status values, warning fields, errors, paths, and row detail values use wrapped rendering; the window minimum width is 430 pixels. |
+| Copy and state | Implemented | The UI uses Coordinated/Manual labels, maps the internal disabled state to Manual, exposes explicit freshness text, and renders connection/freshness text alongside status color. |
+| Warnings | Implemented | A persistence or quarantine error renders even with zero warning records. Each record exposes save time, count, reason, owner, branch, task, error, and an individual confirmed reconciliation action. |
+| Row interaction | Implemented | Presence, editing lease, and reservation rows use focusable Unity-native foldouts with descriptive tooltips. They expand independently of the current action target; one row detail key is retained at a time. |
+| Action guidance | Implemented by code review | Primary, secondary, and row actions use descriptive Unity `GUIContent` tooltips. |
 
 ## Visual and interaction acceptance blocker
 
