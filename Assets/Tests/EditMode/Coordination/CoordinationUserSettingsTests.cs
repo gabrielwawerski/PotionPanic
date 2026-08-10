@@ -31,6 +31,25 @@ namespace PotionPanic.Tests.EditMode.Coordination
     }
 
     [Test]
+    public void DisabledStateRoundTripsWithoutPersistingPresentationState()
+    {
+      var original = new CoordinationUserSettings
+      {
+        schemaVersion = 1,
+        serverBaseUrlOverride = "https://localhost:8787",
+        taskContext = "PP-9",
+        disabled = true
+      };
+
+      var json = CoordinationUserSettings.ToJson(original);
+
+      Assert.That(CoordinationUserSettings.TryParse(json, out var reloaded, out _), Is.True);
+      Assert.That(reloaded.disabled, Is.True);
+      Assert.That(json, Does.Not.Contain("targetSource"));
+      Assert.That(json, Does.Not.Contain("expanded"));
+    }
+
+    [Test]
     public void RejectsMalformedOrTokenBearingSettings()
     {
       Assert.That(CoordinationUserSettings.TryParse("{", out _, out _), Is.False);

@@ -127,6 +127,22 @@ namespace PotionPanic.Tests.EditMode.Coordination
     }
 
     [Test]
+    public void SessionReadyRequiresACompleteSnapshotBeforeStateIsAuthoritative()
+    {
+      var store = new CoordinationStateStore();
+
+      Assert.That(store.ApplySessionReady(new CoordinationServerEnvelope
+      {
+        type = "session.ready",
+        stateVersion = 4
+      }), Is.True);
+      Assert.That(store.HasAuthoritativeSnapshot, Is.False);
+
+      Assert.That(store.ApplySnapshot(Snapshot(5)), Is.True);
+      Assert.That(store.HasAuthoritativeSnapshot, Is.True);
+    }
+
+    [Test]
     public void AppliesAPresenceUpdateAndThenRemovesThatConnection()
     {
       var store = new CoordinationStateStore();

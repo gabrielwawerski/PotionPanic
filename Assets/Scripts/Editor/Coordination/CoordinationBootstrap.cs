@@ -378,7 +378,8 @@ namespace PotionPanic.Editor.Coordination
         gitContext,
         new UnityCoordinationClipboard(),
         new UnityCoordinationWindowPathSource(),
-        new UnityCoordinationOverrideConfirmation());
+        new UnityCoordinationOverrideConfirmation(),
+        new UnityCoordinationWindowConfirmation());
       runtime = new CoordinationEditorRuntime(
         service,
         lifecycle,

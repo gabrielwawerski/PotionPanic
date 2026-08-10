@@ -55,6 +55,11 @@ namespace PotionPanic.Tests.EditMode.Coordination
       Assert.That(fixture.ViewModel.CanCopyCanonicalPath, Is.True);
 
       fixture.Service.SetState(CoordinationConnectionState.Connected);
+      Assert.That(fixture.ViewModel.Freshness,
+        Is.EqualTo(CoordinationDataFreshness.WaitingForSnapshot));
+      Assert.That(fixture.ViewModel.CanReserve, Is.False);
+      fixture.State.ApplySnapshot(Snapshot(null, null, null));
+      Assert.That(fixture.ViewModel.Freshness, Is.EqualTo(CoordinationDataFreshness.Live));
       Assert.That(fixture.ViewModel.CanReserve, Is.True);
       fixture.State.ApplySnapshot(Snapshot(null,
         EditingLease("Assets/Scenes/Laboratory.unity", "dev-remote", "Sol"), null));
@@ -85,13 +90,13 @@ namespace PotionPanic.Tests.EditMode.Coordination
     }
 
     [Test]
-    public void PersistsTaskContextAndDisabledWithoutWritingCredentials()
+    public void PersistsTaskContextAndManualModeWithoutWritingCredentials()
     {
       var fixture = new ViewModelFixture();
       fixture.ViewModel.Enable();
 
       fixture.ViewModel.TaskContext = "PP-7 Slice 08";
-      fixture.ViewModel.SetDisabled(true);
+      Assert.That(fixture.ViewModel.SetMode(CoordinationMode.Manual), Is.True);
 
       Assert.That(fixture.Settings.taskContext, Is.EqualTo("PP-7 Slice 08"));
       Assert.That(fixture.Settings.disabled, Is.True);
@@ -155,6 +160,131 @@ namespace PotionPanic.Tests.EditMode.Coordination
     }
 
     [Test]
+    public void ModeMapsTheExistingDisabledSettingAndManualRequiresConfirmation()
+    {
+      var fixture = new ViewModelFixture();
+      fixture.Settings.disabled = true;
+
+      Assert.That(fixture.ViewModel.Mode, Is.EqualTo(CoordinationMode.Manual));
+
+      fixture.Settings.disabled = false;
+      fixture.Confirmations.ManualResult = false;
+      fixture.Service.SetState(CoordinationConnectionState.Connected);
+
+      Assert.That(fixture.ViewModel.SetMode(CoordinationMode.Manual), Is.False);
+      Assert.That(fixture.ViewModel.Mode, Is.EqualTo(CoordinationMode.Coordinated));
+      Assert.That(fixture.Service.DisabledValues, Is.Empty);
+      Assert.That(fixture.Confirmations.ManualMessage,
+        Does.Contain("reservations may remain"));
+
+      fixture.Confirmations.ManualResult = true;
+      Assert.That(fixture.ViewModel.SetMode(CoordinationMode.Manual), Is.True);
+      Assert.That(fixture.Settings.disabled, Is.True);
+      Assert.That(fixture.Service.DisabledValues, Is.EqualTo(new[] { true }));
+    }
+
+    [Test]
+    public void CoordinatedModeStartsTheExistingConnectionPath()
+    {
+      var fixture = new ViewModelFixture();
+      fixture.Settings.disabled = true;
+
+      Assert.That(fixture.ViewModel.SetMode(CoordinationMode.Coordinated), Is.True);
+      Assert.That(fixture.Settings.disabled, Is.False);
+      Assert.That(fixture.Service.DisabledValues, Is.EqualTo(new[] { false }));
+    }
+
+    [Test]
+    public void ActiveStageFollowsUntilProjectOrManualTargetIsChosen()
+    {
+      var fixture = new ViewModelFixture();
+      fixture.Paths.ActiveStagePath = "Assets/Scenes/Laboratory.unity";
+      fixture.ViewModel.Enable();
+
+      Assert.That(fixture.ViewModel.SelectedPath,
+        Is.EqualTo("Assets/Scenes/Laboratory.unity"));
+      Assert.That(fixture.ViewModel.TargetSource,
+        Is.EqualTo(CoordinationTargetSource.ActiveStage));
+
+      fixture.Paths.ActiveStagePath = "Assets/Scenes/Arena.unity";
+      fixture.ViewModel.RefreshActiveStage();
+      Assert.That(fixture.ViewModel.SelectedPath, Is.EqualTo("Assets/Scenes/Arena.unity"));
+
+      fixture.Paths.ProjectSelectionPath = "Assets/Scenes/Queued.unity";
+      Assert.That(fixture.ViewModel.UseProjectSelection(), Is.True);
+      fixture.Paths.ActiveStagePath = "Assets/Scenes/Laboratory.unity";
+      fixture.ViewModel.RefreshActiveStage();
+      Assert.That(fixture.ViewModel.SelectedPath, Is.EqualTo("Assets/Scenes/Queued.unity"));
+
+      fixture.ViewModel.SelectedPath = "Assets/Scenes/Manual.unity";
+      Assert.That(fixture.ViewModel.TargetSource,
+        Is.EqualTo(CoordinationTargetSource.ManualPath));
+      Assert.That(fixture.ViewModel.FollowActiveStage(), Is.True);
+      Assert.That(fixture.ViewModel.SelectedPath,
+        Is.EqualTo("Assets/Scenes/Laboratory.unity"));
+    }
+
+    [Test]
+    public void SelectingARowOnlyExpandsItAndNeverChangesTheActionTarget()
+    {
+      var fixture = new ViewModelFixture();
+      fixture.Paths.ActiveStagePath = "Assets/Scenes/Laboratory.unity";
+      fixture.ViewModel.Enable();
+      fixture.State.ApplySnapshot(Snapshot(
+        Presence("Assets/Scenes/Queued.unity", "dev-remote", "Sol"), null, null));
+
+      fixture.ViewModel.SelectRow(fixture.ViewModel.Presence[0]);
+
+      Assert.That(fixture.ViewModel.SelectedPath,
+        Is.EqualTo("Assets/Scenes/Laboratory.unity"));
+      Assert.That(fixture.ViewModel.IsExpanded(fixture.ViewModel.Presence[0]), Is.True);
+    }
+
+    [Test]
+    public void StaleDataIsReadOnlyAndPrimaryActionUsesAuthoritativeOwnership()
+    {
+      var fixture = new ViewModelFixture();
+      fixture.Service.SetIdentity("dev-local", "Rin", "connection-local");
+      fixture.Service.SetState(CoordinationConnectionState.Connected);
+      fixture.State.ApplySnapshot(Snapshot(null,
+        EditingLease("Assets/Scenes/Laboratory.unity", "dev-local", "Rin",
+          "connection-local"), null));
+      fixture.ViewModel.SelectedPath = "Assets/Scenes/Laboratory.unity";
+
+      Assert.That(fixture.ViewModel.PrimaryAction,
+        Is.EqualTo(CoordinationPrimaryAction.ReleaseEditingLease));
+      fixture.Service.SetState(CoordinationConnectionState.Offline);
+
+      Assert.That(fixture.ViewModel.Freshness, Is.EqualTo(CoordinationDataFreshness.Stale));
+      Assert.That(fixture.ViewModel.PrimaryAction, Is.EqualTo(CoordinationPrimaryAction.None));
+      Assert.That(fixture.ViewModel.CanOverride, Is.False);
+      Assert.That(fixture.ViewModel.Release(), Is.False);
+    }
+
+    [Test]
+    public void ReconciliationRequiresConfirmationAndKeepsTheWarningOnWriteFailure()
+    {
+      var store = new FailingWarningStore();
+      var warnings = new CoordinationUncoordinatedSaveState(
+        new CoordinationUncoordinatedSaveLedger(store, new FixedClock()));
+      warnings.RecordSave("Assets/Scenes/Laboratory.unity",
+        CoordinationUncoordinatedSaveReason.Manual, "Sol", "feature/test", "PP-9");
+      var fixture = new ViewModelFixture(warnings);
+      var warning = fixture.ViewModel.OutstandingWarnings[0];
+
+      fixture.Confirmations.ReconcileResult = false;
+      Assert.That(fixture.ViewModel.MarkReconciled(warning), Is.False);
+      Assert.That(fixture.ViewModel.OutstandingWarnings.Count, Is.EqualTo(1));
+      Assert.That(fixture.Confirmations.ReconcileMessage,
+        Does.Contain("does not merge files or update server history"));
+
+      fixture.Confirmations.ReconcileResult = true;
+      store.FailWrites = true;
+      Assert.That(fixture.ViewModel.MarkReconciled(warning), Is.False);
+      Assert.That(fixture.ViewModel.OutstandingWarnings.Count, Is.EqualTo(1));
+    }
+
+    [Test]
     public void DisablesLeaseActionsForPathsOutsideConfiguredRules()
     {
       var fixture = new ViewModelFixture();
@@ -172,7 +302,7 @@ namespace PotionPanic.Tests.EditMode.Coordination
     }
 
     [Test]
-    public void SelectingARowTargetsItsPathAndSelectsEveryRowForThatPath()
+    public void SelectingARowExpandsItWithoutRetargetingTheCurrentAsset()
     {
       var fixture = new ViewModelFixture();
       fixture.Service.SetIdentity("dev-local", "Rin", "connection-local");
@@ -183,10 +313,9 @@ namespace PotionPanic.Tests.EditMode.Coordination
 
       fixture.ViewModel.SelectRow(fixture.ViewModel.EditingLeases[0]);
 
-      Assert.That(fixture.ViewModel.SelectedPath,
-        Is.EqualTo("Assets/Scenes/Laboratory.unity"));
-      Assert.That(fixture.ViewModel.IsSelected(fixture.ViewModel.Presence[0]), Is.True);
-      Assert.That(fixture.ViewModel.IsSelected(fixture.ViewModel.EditingLeases[0]), Is.True);
+      Assert.That(fixture.ViewModel.SelectedPath, Is.Empty);
+      Assert.That(fixture.ViewModel.IsExpanded(fixture.ViewModel.EditingLeases[0]), Is.True);
+      Assert.That(fixture.ViewModel.IsExpanded(fixture.ViewModel.Presence[0]), Is.False);
     }
 
     [Test]
@@ -219,7 +348,7 @@ namespace PotionPanic.Tests.EditMode.Coordination
         Reservation("Assets/Scenes/Queued.unity", "dev-local", "Rin")));
       var row = fixture.ViewModel.Reservations[0];
 
-      fixture.ViewModel.SelectRow(row);
+      fixture.ViewModel.SelectedPath = row.Path;
 
       Assert.That(fixture.ViewModel.CanCancelReservation, Is.True);
       Assert.That(fixture.ViewModel.CanCancelReservationRow(row), Is.True);
@@ -275,7 +404,7 @@ namespace PotionPanic.Tests.EditMode.Coordination
     {
       var fixture = new ViewModelFixture();
 
-      Assert.That(fixture.ViewModel.TargetHelpText, Does.StartWith("Choose a row"));
+      Assert.That(fixture.ViewModel.TargetHelpText, Does.StartWith("Choose the active stage"));
       fixture.ViewModel.SelectedPath = "Packages/example.asset";
       Assert.That(fixture.ViewModel.TargetHelpText,
         Is.EqualTo("Choose an asset under Assets/."));
@@ -286,6 +415,9 @@ namespace PotionPanic.Tests.EditMode.Coordination
       Assert.That(fixture.ViewModel.TargetHelpText,
         Is.EqualTo("Reconnect to change claims. Copy path remains available."));
       fixture.Service.SetState(CoordinationConnectionState.Connected);
+      Assert.That(fixture.ViewModel.TargetHelpText,
+        Is.EqualTo("Waiting for team data. Claim changes remain unavailable."));
+      fixture.State.ApplySnapshot(Snapshot(null, null, null));
       Assert.That(fixture.ViewModel.TargetHelpText,
         Is.EqualTo("No current claim. Reserve is available."));
     }
@@ -381,18 +513,27 @@ namespace PotionPanic.Tests.EditMode.Coordination
         = CoordinationUserSettings.CreateDefault();
       public FakeWindowService Service { get; }
       public CoordinationStateStore State { get; } = new CoordinationStateStore();
-      public CoordinationUncoordinatedSaveState Warnings { get; }
+      public CoordinationUncoordinatedSaveState Warnings { get; private set; }
         = new CoordinationUncoordinatedSaveState();
       public FakeSettingsStore Store { get; } = new FakeSettingsStore();
       public FakeClipboard Clipboard { get; } = new FakeClipboard();
       public FakePathSource Paths { get; } = new FakePathSource();
       public FakeOverrideConfirmation Confirmation { get; }
         = new FakeOverrideConfirmation();
+      public FakeWindowConfirmation Confirmations { get; }
+        = new FakeWindowConfirmation();
       public CoordinationWindowViewModel ViewModel { get; }
 
-      public ViewModelFixture(bool isSupportedPlatform = true, string gitBranch = null)
+      public ViewModelFixture(
+        CoordinationUncoordinatedSaveState warnings = null,
+        bool isSupportedPlatform = true,
+        string gitBranch = null)
       {
         Service = new FakeWindowService(isSupportedPlatform);
+        if (warnings != null)
+        {
+          Warnings = warnings;
+        }
         ViewModel = new CoordinationWindowViewModel(
           Service,
           State,
@@ -411,7 +552,8 @@ namespace PotionPanic.Tests.EditMode.Coordination
           new FakeGitContext(gitBranch),
           Clipboard,
           Paths,
-          Confirmation);
+          Confirmation,
+          Confirmations);
       }
     }
 
@@ -472,6 +614,54 @@ namespace PotionPanic.Tests.EditMode.Coordination
         Path = path;
         Owner = owner;
         return Result;
+      }
+    }
+
+    private sealed class FakeWindowConfirmation : ICoordinationWindowConfirmation
+    {
+      public bool ManualResult { get; set; } = true;
+      public bool ReconcileResult { get; set; } = true;
+      public bool ForgetCredentialsResult { get; set; } = true;
+      public string ManualMessage { get; private set; }
+      public string ReconcileMessage { get; private set; }
+
+      public bool ConfirmManualMode(string message)
+      {
+        ManualMessage = message;
+        return ManualResult;
+      }
+
+      public bool ConfirmReconciliation(string path, string message)
+      {
+        ReconcileMessage = message;
+        return ReconcileResult;
+      }
+
+      public bool ConfirmForgetCredentials(string message) => ForgetCredentialsResult;
+    }
+
+    private sealed class FixedClock : ICoordinationClock
+    {
+      public DateTimeOffset UtcNow => new DateTimeOffset(2026, 8, 10, 12, 0, 0,
+        TimeSpan.Zero);
+    }
+
+    private sealed class FailingWarningStore : ICoordinationUncoordinatedSaveStore
+    {
+      public bool FailWrites { get; set; }
+
+      public CoordinationUncoordinatedSaveLoadResult Load()
+      {
+        return new CoordinationUncoordinatedSaveLoadResult(
+          Array.Empty<CoordinationUncoordinatedSaveRecord>(), null, null);
+      }
+
+      public CoordinationUncoordinatedSaveWriteResult Save(
+        IReadOnlyList<CoordinationUncoordinatedSaveRecord> records)
+      {
+        return FailWrites
+          ? CoordinationUncoordinatedSaveWriteResult.Failure("disk unavailable")
+          : CoordinationUncoordinatedSaveWriteResult.Success();
       }
     }
 

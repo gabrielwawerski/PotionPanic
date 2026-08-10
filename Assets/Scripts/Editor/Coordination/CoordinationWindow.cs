@@ -39,11 +39,36 @@ namespace PotionPanic.Editor.Coordination
     }
   }
 
+  public sealed class UnityCoordinationWindowConfirmation
+    : ICoordinationWindowConfirmation
+  {
+    public bool ConfirmManualMode(string message)
+    {
+      return EditorUtility.DisplayDialog("Enter Manual mode?", message,
+        "Enter Manual mode", "Cancel");
+    }
+
+    public bool ConfirmReconciliation(string path, string message)
+    {
+      return EditorUtility.DisplayDialog("Mark warning reconciled?",
+        path + "\n\n" + message, "Mark reconciled", "Cancel");
+    }
+
+    public bool ConfirmForgetCredentials(string message)
+    {
+      return EditorUtility.DisplayDialog("Forget developer credential?", message,
+        "Forget credential", "Cancel");
+    }
+  }
+
   public sealed class CoordinationWindow : EditorWindow
   {
     private CoordinationWindowViewModel viewModel;
     private Vector2 scrollPosition;
     private bool showAdvancedPath;
+    private bool showPresence;
+    private bool showEditingLeases;
+    private bool showReservations;
     private bool clearKeyboardFocus;
 
     [MenuItem("Window/Potion Panic/Coordination")]
@@ -51,7 +76,7 @@ namespace PotionPanic.Editor.Coordination
     {
       var window = GetWindow<CoordinationWindow>();
       window.titleContent = new GUIContent("Coordination");
-      window.minSize = new Vector2(560, 420);
+      window.minSize = new Vector2(430, 420);
       window.Show();
     }
 
@@ -133,22 +158,38 @@ namespace PotionPanic.Editor.Coordination
       }
 
       scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
+      viewModel.RefreshActiveStage();
       DrawStatus();
       DrawWarnings();
       DrawActions();
-      DrawRows("Presence", viewModel.Presence, "No coordinated assets are open.");
-      DrawRows("Editing leases", viewModel.EditingLeases, "No editing leases.");
-      DrawRows("Reservations", viewModel.Reservations, "No reservations.");
+      DrawRows("Presence", viewModel.Presence, "No coordinated assets are open.",
+        ref showPresence);
+      DrawRows("Editing leases", viewModel.EditingLeases, "No editing leases.",
+        ref showEditingLeases);
+      DrawRows("Reservations", viewModel.Reservations, "No reservations.",
+        ref showReservations);
       EditorGUILayout.EndScrollView();
     }
 
     private void DrawStatus()
     {
-      EditorGUILayout.LabelField("Local", EditorStyles.boldLabel);
+      EditorGUILayout.LabelField("Coordination", EditorStyles.boldLabel);
+      using (new EditorGUI.DisabledScope(!viewModel.CanEditDisabled))
+      {
+        EditorGUI.BeginChangeCheck();
+        var nextMode = (CoordinationMode)EditorGUILayout.EnumPopup(
+          new GUIContent("Mode", "Coordinated uses live team data. Manual saves require confirmation."),
+          viewModel.Mode);
+        if (EditorGUI.EndChangeCheck())
+        {
+          viewModel.SetMode(nextMode);
+        }
+      }
       EditorGUILayout.LabelField("Identity", viewModel.Identity);
       EditorGUILayout.LabelField("Git branch",
         string.IsNullOrEmpty(viewModel.Branch) ? "Unavailable" : viewModel.Branch);
-      EditorGUILayout.LabelField("Connection", viewModel.ConnectionState.ToString());
+      EditorGUILayout.LabelField("Connection", viewModel.ConnectionLabel);
+      EditorGUILayout.LabelField("Team data", FreshnessLabel(viewModel.Freshness));
 
       var taskContextRect = EditorGUILayout.GetControlRect();
       var taskContextTextRect = EditorGUI.PrefixLabel(taskContextRect,
@@ -162,16 +203,6 @@ namespace PotionPanic.Editor.Coordination
         viewModel.TaskContext = taskContext;
       }
 
-      using (new EditorGUI.DisabledScope(!viewModel.CanEditDisabled))
-      {
-        EditorGUI.BeginChangeCheck();
-        var disabled = EditorGUILayout.Toggle("Disabled", viewModel.IsDisabled);
-        if (EditorGUI.EndChangeCheck())
-        {
-          viewModel.SetDisabled(disabled);
-        }
-      }
-
       if (!viewModel.CanEditDisabled)
       {
         EditorGUILayout.HelpBox(
@@ -183,60 +214,124 @@ namespace PotionPanic.Editor.Coordination
 
     private void DrawWarnings()
     {
-      foreach (var warning in viewModel.Warnings)
+      var warnings = viewModel.OutstandingWarnings;
+      if (warnings.Count == 0)
       {
-        foreach (var path in warning.PathDetails)
+        return;
+      }
+
+      EditorGUILayout.LabelField("Save warnings", EditorStyles.boldLabel);
+      EditorGUILayout.HelpBox(
+        "These records remain until each affected asset is reviewed and marked reconciled.",
+        MessageType.Warning);
+      foreach (var warning in warnings)
+      {
+        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
         {
-          var owner = string.IsNullOrEmpty(path.LastKnownOwner)
+          var owner = string.IsNullOrEmpty(warning.LastKnownOwner)
             ? "unknown owner"
-            : path.LastKnownOwner;
-          EditorGUILayout.HelpBox(
-            path.Path + " was saved without coordination. Last known owner: " + owner + ".",
-            MessageType.Warning);
+            : warning.LastKnownOwner;
+          EditorGUILayout.LabelField(warning.Path, EditorStyles.boldLabel);
+          EditorGUILayout.LabelField("First save", EmptyFallback(warning.FirstSavedAtUtc));
+          EditorGUILayout.LabelField("Latest save", EmptyFallback(warning.LatestSavedAtUtc));
+          EditorGUILayout.LabelField("Save count", warning.SaveCount.ToString());
+          EditorGUILayout.LabelField("Reason", EmptyFallback(warning.Reason));
+          EditorGUILayout.LabelField("Last known owner", owner);
+          EditorGUILayout.LabelField("Branch", EmptyFallback(warning.Branch));
+          EditorGUILayout.LabelField("Task", EmptyFallback(warning.Task));
+          if (!string.IsNullOrEmpty(warning.Error))
+          {
+            EditorGUILayout.HelpBox(warning.Error, MessageType.Error);
+          }
+          if (GUILayout.Button(new GUIContent("Mark reconciled",
+            "Removes only this local warning after confirmation. It does not merge files or update server history.")))
+          {
+            viewModel.MarkReconciled(warning);
+          }
         }
       }
+      EditorGUILayout.Space();
     }
 
     private void DrawActions()
     {
-      EditorGUILayout.LabelField("Actions", EditorStyles.boldLabel);
-      EditorGUILayout.LabelField("Action target",
-        string.IsNullOrEmpty(viewModel.SelectedPath) ? "None" : viewModel.SelectedPath);
-      using (new EditorGUILayout.HorizontalScope())
+      EditorGUILayout.LabelField("Current asset", EditorStyles.boldLabel);
+      EditorGUILayout.LabelField(
+        string.IsNullOrEmpty(viewModel.SelectedPath)
+          ? "No saved active asset"
+          : viewModel.SelectedPath,
+        EditorStyles.wordWrappedLabel);
+      EditorGUILayout.LabelField("Source", TargetSourceLabel(viewModel.TargetSource));
+      EditorGUILayout.HelpBox(viewModel.TargetHelpText, MessageType.Info);
+
+      var primary = viewModel.PrimaryAction;
+      using (new EditorGUI.DisabledScope(primary == CoordinationPrimaryAction.None))
       {
-        DrawButton("Use active stage", true, viewModel.UseActiveStage);
+        if (GUILayout.Button(PrimaryActionLabel(primary), GUILayout.ExpandWidth(true)))
+        {
+          viewModel.PerformPrimaryAction();
+        }
+      }
+
+      var compact = position.width < 560;
+      if (compact)
+      {
+        DrawButton("Follow active stage", true, viewModel.FollowActiveStage);
         DrawButton("Use Project selection", true, viewModel.UseProjectSelection);
+      }
+      else
+      {
+        using (new EditorGUILayout.HorizontalScope())
+        {
+          DrawButton("Follow active stage", true, viewModel.FollowActiveStage);
+          DrawButton("Use Project selection", true, viewModel.UseProjectSelection);
+        }
       }
 
       showAdvancedPath = EditorGUILayout.Foldout(
         showAdvancedPath, "Advanced path", true);
       if (showAdvancedPath)
       {
-        viewModel.SelectedPath = EditorGUILayout.TextField(
+        EditorGUI.BeginChangeCheck();
+        var manualPath = EditorGUILayout.TextField(
           "Asset path", viewModel.SelectedPath);
+        if (EditorGUI.EndChangeCheck())
+        {
+          viewModel.SelectedPath = manualPath;
+        }
       }
 
-      using (new EditorGUILayout.HorizontalScope())
+      if (compact)
       {
-        DrawButton("Reconnect", viewModel.CanReconnect, viewModel.Reconnect);
-        DrawButton("Reserve", viewModel.CanReserve, viewModel.Reserve);
-        DrawButton("Release editing lease", viewModel.CanRelease, viewModel.Release);
-        DrawButton("Cancel reservation",
-          viewModel.CanCancelReservation,
-          viewModel.CancelReservation);
-        DrawButton("Override…", viewModel.CanOverride, viewModel.Override);
+        DrawSecondaryActionsVertical();
       }
+      else
+      {
+        DrawSecondaryActionsHorizontal();
+      }
+      EditorGUILayout.Space();
+    }
+
+    private void DrawSecondaryActionsHorizontal()
+    {
       using (new EditorGUILayout.HorizontalScope())
       {
-        DrawButton("Copy path",
-          viewModel.CanCopyCanonicalPath,
+        DrawButton("Copy path", viewModel.CanCopyCanonicalPath,
           viewModel.CopyCanonicalPath);
-        DrawButton("Forget credentials",
-          viewModel.CanForgetCredentials,
+        DrawButton("Reconnect", viewModel.CanReconnect, viewModel.Reconnect);
+        DrawButton("Override…", viewModel.CanOverride, viewModel.Override);
+        DrawButton("Forget credentials", viewModel.CanForgetCredentials,
           viewModel.ForgetCredentials);
       }
-      EditorGUILayout.HelpBox(viewModel.TargetHelpText, MessageType.Info);
-      EditorGUILayout.Space();
+    }
+
+    private void DrawSecondaryActionsVertical()
+    {
+      DrawButton("Copy path", viewModel.CanCopyCanonicalPath, viewModel.CopyCanonicalPath);
+      DrawButton("Reconnect", viewModel.CanReconnect, viewModel.Reconnect);
+      DrawButton("Override…", viewModel.CanOverride, viewModel.Override);
+      DrawButton("Forget credentials", viewModel.CanForgetCredentials,
+        viewModel.ForgetCredentials);
     }
 
     private static void DrawButton(string label, bool enabled, Func<bool> action)
@@ -253,9 +348,14 @@ namespace PotionPanic.Editor.Coordination
     private void DrawRows(
       string title,
       IReadOnlyList<CoordinationWindowRow> rows,
-      string emptyMessage)
+      string emptyMessage,
+      ref bool expanded)
     {
-      EditorGUILayout.LabelField(title, EditorStyles.boldLabel);
+      expanded = EditorGUILayout.Foldout(expanded, title, true);
+      if (!expanded)
+      {
+        return;
+      }
       if (rows.Count == 0)
       {
         EditorGUILayout.LabelField(emptyMessage, EditorStyles.miniLabel);
@@ -265,7 +365,7 @@ namespace PotionPanic.Editor.Coordination
 
       foreach (var row in rows)
       {
-        var isSelected = viewModel.IsSelected(row);
+        var isSelected = viewModel.IsExpanded(row);
         var style = new GUIStyle(EditorStyles.helpBox);
         if (isSelected)
         {
@@ -277,32 +377,26 @@ namespace PotionPanic.Editor.Coordination
           EditorGUILayout.LabelField(row.Path, EditorStyles.boldLabel);
           if (isSelected)
           {
-            EditorGUILayout.LabelField("Selected action target", EditorStyles.miniLabel);
-          }
-          EditorGUILayout.LabelField("Owner",
-            row.Owner + (row.IsLocal ? " (local)" : string.Empty));
-          EditorGUILayout.LabelField("Developer ID", row.DeveloperId);
-          EditorGUILayout.LabelField("Branch", EmptyFallback(row.Branch));
-          EditorGUILayout.LabelField("Task", EmptyFallback(row.Task));
-          EditorGUILayout.LabelField("Expires", EmptyFallback(row.ExpiresAt));
-          using (new EditorGUILayout.HorizontalScope())
-          {
+            EditorGUILayout.LabelField("Details", EditorStyles.miniLabel);
+            EditorGUILayout.LabelField("Owner",
+              row.Owner + (row.IsLocal ? " (local)" : string.Empty));
+            EditorGUILayout.LabelField("Developer ID", row.DeveloperId);
+            EditorGUILayout.LabelField("Branch", EmptyFallback(row.Branch));
+            EditorGUILayout.LabelField("Task", EmptyFallback(row.Task));
+            EditorGUILayout.LabelField("Expires", EmptyFallback(row.ExpiresAt));
             if (row.Kind == CoordinationWindowRowKind.EditingLease && row.IsLocal)
             {
-              DrawButton("Release editing lease",
-                viewModel.CanReleaseRow(row),
+              DrawButton("Release editing lease", viewModel.CanReleaseRow(row),
                 () => viewModel.Release(row));
             }
             else if (row.Kind == CoordinationWindowRowKind.Reservation && row.IsLocal)
             {
-              DrawButton("Cancel reservation",
-                viewModel.CanCancelReservationRow(row),
+              DrawButton("Cancel reservation", viewModel.CanCancelReservationRow(row),
                 () => viewModel.CancelReservation(row));
             }
             else if (row.Kind != CoordinationWindowRowKind.Presence)
             {
-              DrawButton("Override…",
-                viewModel.CanOverrideRow(row),
+              DrawButton("Override…", viewModel.CanOverrideRow(row),
                 () => viewModel.Override(row));
             }
             DrawButton("Copy path", true, () => viewModel.CopyPath(row));
@@ -322,6 +416,49 @@ namespace PotionPanic.Editor.Coordination
     private static string EmptyFallback(string value)
     {
       return string.IsNullOrEmpty(value) ? "None" : value;
+    }
+
+    private static string FreshnessLabel(CoordinationDataFreshness freshness)
+    {
+      switch (freshness)
+      {
+        case CoordinationDataFreshness.WaitingForSnapshot:
+          return "Waiting for team data";
+        case CoordinationDataFreshness.Live:
+          return "Live";
+        case CoordinationDataFreshness.Stale:
+          return "Last-known data, read-only";
+        default:
+          return "Team data unavailable";
+      }
+    }
+
+    private static string TargetSourceLabel(CoordinationTargetSource source)
+    {
+      switch (source)
+      {
+        case CoordinationTargetSource.ProjectSelection:
+          return "Project selection";
+        case CoordinationTargetSource.ManualPath:
+          return "Manual path";
+        default:
+          return "Active stage";
+      }
+    }
+
+    private static string PrimaryActionLabel(CoordinationPrimaryAction action)
+    {
+      switch (action)
+      {
+        case CoordinationPrimaryAction.Reserve:
+          return "Reserve";
+        case CoordinationPrimaryAction.ReleaseEditingLease:
+          return "Release editing lease";
+        case CoordinationPrimaryAction.CancelReservation:
+          return "Cancel reservation";
+        default:
+          return "No claim action available";
+      }
     }
   }
 }

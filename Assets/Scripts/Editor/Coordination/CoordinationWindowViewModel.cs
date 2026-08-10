@@ -44,6 +44,42 @@ namespace PotionPanic.Editor.Coordination
     bool Confirm(string path, string owner);
   }
 
+  public interface ICoordinationWindowConfirmation
+  {
+    bool ConfirmManualMode(string message);
+    bool ConfirmReconciliation(string path, string message);
+    bool ConfirmForgetCredentials(string message);
+  }
+
+  internal enum CoordinationMode
+  {
+    Coordinated,
+    Manual,
+  }
+
+  internal enum CoordinationTargetSource
+  {
+    ActiveStage,
+    ProjectSelection,
+    ManualPath,
+  }
+
+  internal enum CoordinationDataFreshness
+  {
+    WaitingForSnapshot,
+    Live,
+    Stale,
+    Unavailable,
+  }
+
+  internal enum CoordinationPrimaryAction
+  {
+    None,
+    Reserve,
+    ReleaseEditingLease,
+    CancelReservation,
+  }
+
   public enum CoordinationWindowRowKind
   {
     Presence,
@@ -83,20 +119,51 @@ namespace PotionPanic.Editor.Coordination
     }
   }
 
+  internal sealed class CoordinationOutstandingWarning
+  {
+    public string Path { get; }
+    public string FirstSavedAtUtc { get; }
+    public string LatestSavedAtUtc { get; }
+    public int SaveCount { get; }
+    public string Reason { get; }
+    public string LastKnownOwner { get; }
+    public string Branch { get; }
+    public string Task { get; }
+    public string Error { get; }
+
+    public CoordinationOutstandingWarning(
+      CoordinationUncoordinatedSaveRecord record,
+      string error)
+    {
+      Path = record.path ?? string.Empty;
+      FirstSavedAtUtc = record.firstSavedAtUtc ?? string.Empty;
+      LatestSavedAtUtc = record.latestSavedAtUtc ?? string.Empty;
+      SaveCount = record.saveCount;
+      Reason = record.reason ?? string.Empty;
+      LastKnownOwner = record.lastKnownOwner ?? string.Empty;
+      Branch = record.branch ?? string.Empty;
+      Task = record.task ?? string.Empty;
+      Error = error ?? string.Empty;
+    }
+  }
+
   public sealed class CoordinationWindowViewModel : IDisposable
   {
     private readonly ICoordinationWindowService service;
     private readonly CoordinationStateStore stateStore;
-    private readonly ICoordinationUncoordinatedSaveState warningState;
+    private readonly CoordinationUncoordinatedSaveState warningState;
     private readonly CoordinationUserSettings settings;
     private readonly ICoordinationUserSettingsStore settingsStore;
     private readonly CoordinatedPathRule[] rules;
     private readonly ICoordinationClipboard clipboard;
     private readonly ICoordinationWindowPathSource pathSource;
     private readonly ICoordinationOverrideConfirmation overrideConfirmation;
+    private readonly ICoordinationWindowConfirmation confirmation;
     private bool isEnabled;
     private string selectedPath = string.Empty;
     private string pathSourceMessage = string.Empty;
+    private CoordinationTargetSource targetSource = CoordinationTargetSource.ActiveStage;
+    private string expandedRowKey = string.Empty;
 
     public event Action Changed;
     public string Branch { get; }
@@ -107,11 +174,23 @@ namespace PotionPanic.Editor.Coordination
         + " (" + service.DeveloperId + ")";
     public bool CanEditDisabled => service.IsSupportedPlatform;
     public bool IsDisabled => !service.IsSupportedPlatform || settings.disabled;
+    internal CoordinationMode Mode => IsDisabled
+      ? CoordinationMode.Manual
+      : CoordinationMode.Coordinated;
+    internal CoordinationTargetSource TargetSource => targetSource;
+    internal CoordinationDataFreshness Freshness => GetFreshness();
+    internal CoordinationPrimaryAction PrimaryAction => GetPrimaryAction();
+    public string ConnectionLabel => service.State == CoordinationConnectionState.Disabled
+      ? "Manual"
+      : service.State.ToString();
     public IReadOnlyList<CoordinationWindowRow> Presence => PresenceRows();
     public IReadOnlyList<CoordinationWindowRow> EditingLeases => LeaseRows("editing");
     public IReadOnlyList<CoordinationWindowRow> Reservations => LeaseRows("reserved");
     public IReadOnlyList<CoordinationUncoordinatedSaveWarning> Warnings
       => warningState.Warnings;
+    internal IReadOnlyList<CoordinationOutstandingWarning> OutstandingWarnings
+      => warningState.Records.Select(record => new CoordinationOutstandingWarning(
+        record, warningState.PersistentError)).ToArray();
 
     public string TaskContext
     {
@@ -135,25 +214,14 @@ namespace PotionPanic.Editor.Coordination
       get => selectedPath;
       set
       {
-        var raw = value ?? string.Empty;
-        var next = CoordinationPathMatcher.TryNormalize(raw, out var normalized)
-          ? normalized
-          : raw;
-        pathSourceMessage = string.Empty;
-        if (selectedPath == next)
-        {
-          return;
-        }
-
-        selectedPath = next;
-        Changed?.Invoke();
+        SetSelectedPath(value, CoordinationTargetSource.ManualPath);
       }
     }
 
     public bool CanReconnect => service.IsSupportedPlatform && !settings.disabled
       && service.State != CoordinationConnectionState.Connected
       && service.State != CoordinationConnectionState.Reconnecting;
-    public bool CanReserve => CanSendForSelectedPath() && SelectedLease() == null;
+    public bool CanReserve => GetPrimaryAction() == CoordinationPrimaryAction.Reserve;
     public bool CanRelease => CanSendForSelectedPath()
       && IsLocallyOwnedEditing(SelectedLease());
     public bool CanCancelReservation => CanSendForSelectedPath()
@@ -166,14 +234,15 @@ namespace PotionPanic.Editor.Coordination
     public CoordinationWindowViewModel(
       ICoordinationWindowService service,
       CoordinationStateStore stateStore,
-      ICoordinationUncoordinatedSaveState warningState,
+      CoordinationUncoordinatedSaveState warningState,
       CoordinationUserSettings settings,
       ICoordinationUserSettingsStore settingsStore,
       IEnumerable<CoordinatedPathRule> rules,
       ICoordinationGitContext gitContext,
       ICoordinationClipboard clipboard,
       ICoordinationWindowPathSource pathSource,
-      ICoordinationOverrideConfirmation overrideConfirmation)
+      ICoordinationOverrideConfirmation overrideConfirmation,
+      ICoordinationWindowConfirmation confirmation)
     {
       this.service = service ?? throw new ArgumentNullException(nameof(service));
       this.stateStore = stateStore ?? throw new ArgumentNullException(nameof(stateStore));
@@ -185,6 +254,8 @@ namespace PotionPanic.Editor.Coordination
       this.pathSource = pathSource ?? throw new ArgumentNullException(nameof(pathSource));
       this.overrideConfirmation = overrideConfirmation
         ?? throw new ArgumentNullException(nameof(overrideConfirmation));
+      this.confirmation = confirmation
+        ?? throw new ArgumentNullException(nameof(confirmation));
       if (gitContext == null)
       {
         throw new ArgumentNullException(nameof(gitContext));
@@ -204,6 +275,7 @@ namespace PotionPanic.Editor.Coordination
       stateStore.Changed += HandleChanged;
       warningState.Changed += HandleChanged;
       isEnabled = true;
+      RefreshActiveStage();
       Changed?.Invoke();
     }
 
@@ -227,15 +299,26 @@ namespace PotionPanic.Editor.Coordination
 
     public void SetDisabled(bool disabled)
     {
-      if (!service.IsSupportedPlatform || settings.disabled == disabled)
+      SetMode(disabled ? CoordinationMode.Manual : CoordinationMode.Coordinated);
+    }
+
+    internal bool SetMode(CoordinationMode mode)
+    {
+      if (!service.IsSupportedPlatform || Mode == mode)
       {
-        return;
+        return false;
+      }
+      if (mode == CoordinationMode.Manual
+        && !confirmation.ConfirmManualMode(ManualConfirmationMessage))
+      {
+        return false;
       }
 
-      settings.disabled = disabled;
+      settings.disabled = mode == CoordinationMode.Manual;
       settingsStore.Save(settings);
-      _ = ObserveAsync(service.SetDisabledAsync(disabled));
+      _ = ObserveAsync(service.SetDisabledAsync(settings.disabled));
       Changed?.Invoke();
+      return true;
     }
 
     public bool Reconnect()
@@ -277,16 +360,34 @@ namespace PotionPanic.Editor.Coordination
 
     public bool UseActiveStage()
     {
-      return pathSource.TryGetActiveStagePath(out var path)
-        ? TrySetPathFromSource(path, "The active stage is not a saved asset under Assets/.")
-        : SetPathSourceFailure("The active stage is not a saved asset under Assets/.");
+      return FollowActiveStage();
     }
 
     public bool UseProjectSelection()
     {
       return pathSource.TryGetProjectSelectionPath(out var path)
-        ? TrySetPathFromSource(path, "The Project selection is not an asset under Assets/.")
+        ? TrySetPathFromSource(path, CoordinationTargetSource.ProjectSelection,
+          "The Project selection is not an asset under Assets/.")
         : SetPathSourceFailure("The Project selection is not an asset under Assets/.");
+    }
+
+    public bool FollowActiveStage()
+    {
+      targetSource = CoordinationTargetSource.ActiveStage;
+      return RefreshActiveStage();
+    }
+
+    public bool RefreshActiveStage()
+    {
+      if (targetSource != CoordinationTargetSource.ActiveStage)
+      {
+        return false;
+      }
+
+      return pathSource.TryGetActiveStagePath(out var path)
+        ? TrySetPathFromSource(path, CoordinationTargetSource.ActiveStage,
+          "The active stage is not a saved asset under Assets/.")
+        : SetPathSourceFailure("The active stage is not a saved asset under Assets/.");
     }
 
     public void SelectRow(CoordinationWindowRow row)
@@ -295,16 +396,18 @@ namespace PotionPanic.Editor.Coordination
       {
         throw new ArgumentNullException(nameof(row));
       }
-      SelectedPath = row.Path;
+      var key = RowKey(row);
+      expandedRowKey = expandedRowKey == key ? string.Empty : key;
+      Changed?.Invoke();
     }
 
     public bool IsSelected(CoordinationWindowRow row)
     {
-      return row != null && TrySelectedPath(out var selected)
-        && CoordinationPathMatcher.TryNormalize(row.Path, out var candidate)
-        && CoordinationPathMatcher.ToCanonicalKey(selected)
-          == CoordinationPathMatcher.ToCanonicalKey(candidate);
+      return IsExpanded(row);
     }
+
+    public bool IsExpanded(CoordinationWindowRow row)
+      => row != null && expandedRowKey == RowKey(row);
 
     public bool CanReleaseRow(CoordinationWindowRow row)
     {
@@ -332,8 +435,8 @@ namespace PotionPanic.Editor.Coordination
       {
         return false;
       }
-      SelectRow(row);
-      return Release();
+      return TryLeaseForRow(row, out var lease) && IsLocallyOwnedEditing(lease)
+        && service.TryReleaseLease(row.Path, out _);
     }
 
     public bool CancelReservation(CoordinationWindowRow row)
@@ -342,8 +445,8 @@ namespace PotionPanic.Editor.Coordination
       {
         return false;
       }
-      SelectRow(row);
-      return CancelReservation();
+      return TryLeaseForRow(row, out var lease) && IsLocallyOwnedReservation(lease)
+        && service.TryCancelReservation(row.Path, out _);
     }
 
     public bool Override(CoordinationWindowRow row)
@@ -352,8 +455,10 @@ namespace PotionPanic.Editor.Coordination
       {
         return false;
       }
-      SelectRow(row);
-      return Override();
+      return TryLeaseForRow(row, out var lease) && IsRemotelyOwned(lease)
+        && overrideConfirmation.Confirm(row.Path,
+          DisplayOwner(lease.displayName, lease.developerId))
+        && service.TryOverrideLease(row.Path, out _);
     }
 
     public bool CopyPath(CoordinationWindowRow row)
@@ -362,8 +467,12 @@ namespace PotionPanic.Editor.Coordination
       {
         return false;
       }
-      SelectRow(row);
-      return CopyCanonicalPath();
+      if (!CoordinationPathMatcher.TryNormalize(row.Path, out var path))
+      {
+        return false;
+      }
+      clipboard.SetText(path);
+      return true;
     }
 
     public bool CopyCanonicalPath()
@@ -384,8 +493,41 @@ namespace PotionPanic.Editor.Coordination
         return false;
       }
 
+      if (!confirmation.ConfirmForgetCredentials(ForgetCredentialsConfirmationMessage))
+      {
+        return false;
+      }
+
       _ = ObserveAsync(service.ForgetCredentialsAsync());
       return true;
+    }
+
+    public bool PerformPrimaryAction()
+    {
+      switch (PrimaryAction)
+      {
+        case CoordinationPrimaryAction.Reserve:
+          return Reserve();
+        case CoordinationPrimaryAction.ReleaseEditingLease:
+          return Release();
+        case CoordinationPrimaryAction.CancelReservation:
+          return CancelReservation();
+        default:
+          return false;
+      }
+    }
+
+    internal bool MarkReconciled(CoordinationOutstandingWarning warning)
+    {
+      if (warning == null || !confirmation.ConfirmReconciliation(
+        warning.Path, ReconciliationConfirmationMessage))
+      {
+        return false;
+      }
+
+      var before = warningState.Records.Count;
+      warningState.ClearPath(warning.Path);
+      return warningState.Records.Count < before;
     }
 
     private IReadOnlyList<CoordinationWindowRow> PresenceRows()
@@ -477,7 +619,9 @@ namespace PotionPanic.Editor.Coordination
     private bool CanSendForSelectedPath()
     {
       return service.State == CoordinationConnectionState.Connected
-        && !IsDisabled && TrySelectedCoordinatedPath(out _);
+        && Mode == CoordinationMode.Coordinated
+        && Freshness == CoordinationDataFreshness.Live
+        && TrySelectedCoordinatedPath(out _);
     }
 
     private bool TrySelectedCoordinatedPath(out string normalizedPath)
@@ -502,7 +646,9 @@ namespace PotionPanic.Editor.Coordination
       out CoordinationLeaseRecord lease)
     {
       lease = null;
-      return service.State == CoordinationConnectionState.Connected && !IsDisabled
+      return service.State == CoordinationConnectionState.Connected
+        && Mode == CoordinationMode.Coordinated
+        && Freshness == CoordinationDataFreshness.Live
         && TryLeaseForRow(row, out lease);
     }
 
@@ -516,7 +662,10 @@ namespace PotionPanic.Editor.Coordination
         && stateStore.TryGetLease(path, out lease);
     }
 
-    private bool TrySetPathFromSource(string path, string failureMessage)
+    private bool TrySetPathFromSource(
+      string path,
+      CoordinationTargetSource source,
+      string failureMessage)
     {
       if (!CoordinationPathMatcher.TryNormalize(path, out var normalized)
         || !normalized.StartsWith("Assets/", StringComparison.Ordinal))
@@ -524,12 +673,32 @@ namespace PotionPanic.Editor.Coordination
         return SetPathSourceFailure(failureMessage);
       }
 
-      SelectedPath = normalized;
+      SetSelectedPath(normalized, source);
       return true;
+    }
+
+    private void SetSelectedPath(string value, CoordinationTargetSource source)
+    {
+      var raw = value ?? string.Empty;
+      var next = CoordinationPathMatcher.TryNormalize(raw, out var normalized)
+        ? normalized
+        : raw;
+      var changed = selectedPath != next || targetSource != source;
+      selectedPath = next;
+      targetSource = source;
+      pathSourceMessage = string.Empty;
+      if (changed)
+      {
+        Changed?.Invoke();
+      }
     }
 
     private bool SetPathSourceFailure(string message)
     {
+      if (pathSourceMessage == message)
+      {
+        return false;
+      }
       pathSourceMessage = message;
       Changed?.Invoke();
       return false;
@@ -543,7 +712,7 @@ namespace PotionPanic.Editor.Coordination
       }
       if (string.IsNullOrWhiteSpace(selectedPath))
       {
-        return "Choose a row, the active stage, the Project selection, or an advanced path.";
+        return "Choose the active stage, the Project selection, or a manual path.";
       }
       if (!TrySelectedPath(out var path))
       {
@@ -557,13 +726,17 @@ namespace PotionPanic.Editor.Coordination
       {
         return "Coordination actions are available only in the Windows editor.";
       }
-      if (settings.disabled)
+      if (Mode == CoordinationMode.Manual)
       {
-        return "Coordination is disabled. Copy path remains available.";
+        return "Manual mode does not allow claim changes. Copy path remains available.";
       }
       if (service.State != CoordinationConnectionState.Connected)
       {
         return "Reconnect to change claims. Copy path remains available.";
+      }
+      if (Freshness == CoordinationDataFreshness.WaitingForSnapshot)
+      {
+        return "Waiting for team data. Claim changes remain unavailable.";
       }
 
       var lease = SelectedLease();
@@ -590,6 +763,56 @@ namespace PotionPanic.Editor.Coordination
     {
       return string.IsNullOrEmpty(displayName) ? developerId ?? string.Empty : displayName;
     }
+
+    private static string RowKey(CoordinationWindowRow row)
+    {
+      return row.Kind + ":" + CoordinationPathMatcher.ToCanonicalKey(row.Path);
+    }
+
+    private CoordinationDataFreshness GetFreshness()
+    {
+      if (service.State == CoordinationConnectionState.Connected)
+      {
+        return stateStore.HasAuthoritativeSnapshot
+          ? CoordinationDataFreshness.Live
+          : CoordinationDataFreshness.WaitingForSnapshot;
+      }
+
+      return stateStore.GetAllPresence().Count > 0 || stateStore.GetAllLeases().Count > 0
+        ? CoordinationDataFreshness.Stale
+        : CoordinationDataFreshness.Unavailable;
+    }
+
+    private CoordinationPrimaryAction GetPrimaryAction()
+    {
+      if (!CanSendForSelectedPath())
+      {
+        return CoordinationPrimaryAction.None;
+      }
+
+      var lease = SelectedLease();
+      if (lease == null)
+      {
+        return CoordinationPrimaryAction.Reserve;
+      }
+      if (IsLocallyOwnedEditing(lease))
+      {
+        return CoordinationPrimaryAction.ReleaseEditingLease;
+      }
+      return IsLocallyOwnedReservation(lease)
+        ? CoordinationPrimaryAction.CancelReservation
+        : CoordinationPrimaryAction.None;
+    }
+
+    private const string ManualConfirmationMessage =
+      "Manual mode closes the live connection. Connection-owned presence and editing "
+      + "leases will be released. reservations may remain until released or expired. "
+      + "Every coordinated-asset save will require two confirmations and create a warning.";
+    private const string ReconciliationConfirmationMessage =
+      "Mark this warning reconciled? This does not merge files or update server history.";
+    private const string ForgetCredentialsConfirmationMessage =
+      "Forget the saved developer credential? The live connection will close and "
+      + "you will need to enter the credential again before connecting.";
 
     private static async Task ObserveAsync(Task task)
     {

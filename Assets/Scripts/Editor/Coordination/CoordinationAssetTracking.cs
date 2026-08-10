@@ -453,6 +453,7 @@ namespace PotionPanic.Editor.Coordination
       = new Dictionary<string, CoordinationLeaseRecord>();
 
     public long NewestStateVersion { get; private set; } = -1;
+    public bool HasAuthoritativeSnapshot { get; private set; }
     public event Action Changed;
 
     public bool ApplySessionReady(CoordinationServerEnvelope envelope)
@@ -464,6 +465,7 @@ namespace PotionPanic.Editor.Coordination
 
       presence.Clear();
       leases.Clear();
+      HasAuthoritativeSnapshot = false;
       NewestStateVersion = envelope.stateVersion;
       Changed?.Invoke();
       return true;
@@ -488,6 +490,7 @@ namespace PotionPanic.Editor.Coordination
       }
 
       NewestStateVersion = envelope.stateVersion;
+      HasAuthoritativeSnapshot = true;
       Changed?.Invoke();
       return true;
     }
