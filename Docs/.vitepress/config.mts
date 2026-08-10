@@ -65,10 +65,12 @@ export default createDocsConfig(defineDocsProject({
       {
         text: "Research",
         includeDirs: ["research"],
-        items: [{
-          text: "Design Research",
+        items: [
+          {
+          text: "Game Design & Psychology",
           link: "/research/game-design-and-psychology",
-        }],
+        }
+        ],
       },
       {
         text: "Guides",
