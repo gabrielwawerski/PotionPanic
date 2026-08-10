@@ -8,24 +8,27 @@ supersededBy: '../coordinated-file-leasing-release-acceptance.md'
 
 # Coordinated File Leasing Remaining Hardening Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:
+> subagent-driven-development (recommended) or superpowers:executing-plans to
+> implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for
+> tracking.
 
 **Goal:** Complete the Unity-side protocol hardening, release configuration,
 verification, documentation, and manual Cloudflare acceptance needed to close
 PP-7 without changing the placeholder endpoint before a real deployment.
 
-**Architecture:** The in-progress backend Tasks 1 and 2 own server-side
-project routing, bounded snapshot production and state capacity, indexed token
-lookups and session limits, and revocation cleanup. This plan consumes that
-contract. Unity parses each 16 KiB snapshot envelope but buffers and applies a
-snapshot only after one bounded, internally consistent set is complete; request
-completion follows that atomic apply. Wrangler declares the Worker
-declaratively and requires its secrets, while deployment and cross-network
-acceptance remain manual actions performed by an authenticated operator.
+**Architecture:** The in-progress backend Tasks 1 and 2 own server-side project
+routing, bounded snapshot production and state capacity, indexed token lookups
+and session limits, and revocation cleanup. This plan consumes that contract.
+Unity parses each 16 KiB snapshot envelope but buffers and applies a snapshot
+only after one bounded, internally consistent set is complete; request
+completion follows that atomic apply. Wrangler declares the Worker declaratively
+and requires its secrets, while deployment and cross-network acceptance remain
+manual actions performed by an authenticated operator.
 
-**Tech Stack:** Unity `6000.5.1f1`, C# editor scripting and Unity Test
-Framework EditMode tests, TypeScript, Vitest, Cloudflare Workers, Durable
-Objects, Wrangler `4.120.0`, PowerShell, and VitePress.
+**Tech Stack:** Unity `6000.5.1f1`, C# editor scripting and Unity Test Framework
+EditMode tests, TypeScript, Vitest, Cloudflare Workers, Durable Objects,
+Wrangler `4.120.0`, PowerShell, and VitePress.
 
 ## Global Constraints
 
@@ -38,8 +41,8 @@ Objects, Wrangler `4.120.0`, PowerShell, and VitePress.
   at most 256 KiB UTF-8; the backend rejects state-growing requests whose
   resulting snapshot would exceed that aggregate limit.
 - `path` permits NFC normalization and slash normalization, then folds only
-  ASCII `A` through `Z`. It must not apply locale-sensitive or full-Unicode
-  case folding.
+  ASCII `A` through `Z`. It must not apply locale-sensitive or full-Unicode case
+  folding.
 - Branch, task context, UI input, local settings, and serialized Git/task
   metadata are each limited to 256 UTF-16 code units. `string.Length` is the
   required C# measure; JavaScript `string.length` is the required TypeScript
@@ -53,8 +56,8 @@ Objects, Wrangler `4.120.0`, PowerShell, and VitePress.
 - Do not mark PP-7 complete, archive a plan, or describe deployment or
   two-machine acceptance as complete without dated evidence from both machines.
 
-Define this PowerShell helper once before running any Unity test command in
-this plan. Do not add `-quit`; Unity `6000.5.1f1` can exit before the Test Runner
+Define this PowerShell helper once before running any Unity test command in this
+plan. Do not add `-quit`; Unity `6000.5.1f1` can exit before the Test Runner
 writes results when `-quit` is combined with `-runTests`.
 
 ```powershell
@@ -88,33 +91,34 @@ function Invoke-CoordinationEditMode {
 
 ## File Map and Ownership
 
-| File | Responsibility in this remaining work |
-| --- | --- |
-| `Assets/Scripts/Editor/Coordination/CoordinationProtocol.cs` | Snapshot chunk DTO fields, chunk metadata validation, and the public 16 KiB/256 KiB limits consumed by Unity. |
-| `Assets/Scripts/Editor/Coordination/CoordinationSnapshotAssembler.cs` | One bounded, atomic in-memory assembly for one snapshot ID at a time. |
-| `Assets/Scripts/Editor/Coordination/CoordinationService.cs` | Route chunks through the assembler, apply a completed snapshot once, drain request handles once on close, bound outbound metadata, and reconnect after a credential save. |
-| `Assets/Scripts/Editor/Coordination/CoordinationPathMatcher.cs` | Shared path normalization and ASCII-only canonical folding. |
-| `Assets/Scripts/Editor/Coordination/CoordinationEditorInfrastructure.cs` | Bound the Git branch before it can become serialized protocol context. |
-| `Assets/Scripts/Editor/Coordination/CoordinationUserSettings.cs` | Reject and refuse to serialize an over-limit local task context. |
-| `Assets/Scripts/Editor/Coordination/CoordinationCredentialWindow.cs` | Invoke a supplied callback only after Credential Manager has stored the token. |
-| `Assets/Scripts/Editor/Coordination/CoordinationWindow.cs` and `CoordinationWindowViewModel.cs` | Limit the task-context editor control and clamp programmatic updates before saving. |
-| `Assets/Tests/EditMode/Coordination/CoordinationSnapshotAssemblerTests.cs` | Assembly-level proof of ordering, duplicate, incomplete, inconsistent, aggregate-cap, and atomic-completion behavior. |
-| `Assets/Tests/EditMode/Coordination/CoordinationProtocolTests.cs`, `CoordinationServiceTests.cs`, `CoordinationPathMatcherTests.cs`, `CoordinationUserSettingsTests.cs`, `CoordinationWindowViewModelTests.cs` | Contract and integration regression coverage for limits, close draining, credential save, and shared path vectors. |
-| `Tools/CoordinationServer/test/fixtures/canonical-path-vectors.json` | The single tracked Unicode path-vector source consumed by both Vitest and Unity tests. |
-| `Tools/CoordinationServer/test/protocol.test.ts` | Consume the shared path fixture rather than maintaining a TypeScript-only vector list. |
-| `Tools/CoordinationServer/wrangler.jsonc` | Declarative Durable Object export, required secret names, public `workers.dev`, disabled preview URLs, and full observability. |
-| `Tools/CoordinationServer/.dev.vars.example` | Tracked local-secret shape with no secret values. |
-| `Tools/CoordinationServer/README.md`, `README.md`, [Docs/onboarding/getting-started.md](../../onboarding/getting-started.md), [Docs/collaboration/team-workflow.md](../../collaboration/team-workflow.md), [Docs/guides/unity/editor-safety.md](../../guides/unity/editor-safety.md) | Server operation and evergreen user guidance. |
-| [Docs/tickets/PP-7.md](../../tickets/PP-7.md) | Dated commands, results, reviewer result, external blockers, and later two-machine acceptance evidence. |
-| `coordination.json` | Replace the example endpoint only after an actual authenticated deployment has supplied the exact URL. |
-| `.github/workflows/coordination-server.yml` | Remains verification-only: `npm ci`, typecheck, tests, and `wrangler deploy --dry-run`; no Cloudflare credential, secret, or deployment step. |
+| File                                                                                                                                                                                                                                                                                 | Responsibility in this remaining work                                                                                                                                     |
+|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `Assets/Scripts/Editor/Coordination/CoordinationProtocol.cs`                                                                                                                                                                                                                         | Snapshot chunk DTO fields, chunk metadata validation, and the public 16 KiB/256 KiB limits consumed by Unity.                                                             |
+| `Assets/Scripts/Editor/Coordination/CoordinationSnapshotAssembler.cs`                                                                                                                                                                                                                | One bounded, atomic in-memory assembly for one snapshot ID at a time.                                                                                                     |
+| `Assets/Scripts/Editor/Coordination/CoordinationService.cs`                                                                                                                                                                                                                          | Route chunks through the assembler, apply a completed snapshot once, drain request handles once on close, bound outbound metadata, and reconnect after a credential save. |
+| `Assets/Scripts/Editor/Coordination/CoordinationPathMatcher.cs`                                                                                                                                                                                                                      | Shared path normalization and ASCII-only canonical folding.                                                                                                               |
+| `Assets/Scripts/Editor/Coordination/CoordinationEditorInfrastructure.cs`                                                                                                                                                                                                             | Bound the Git branch before it can become serialized protocol context.                                                                                                    |
+| `Assets/Scripts/Editor/Coordination/CoordinationUserSettings.cs`                                                                                                                                                                                                                     | Reject and refuse to serialize an over-limit local task context.                                                                                                          |
+| `Assets/Scripts/Editor/Coordination/CoordinationCredentialWindow.cs`                                                                                                                                                                                                                 | Invoke a supplied callback only after Credential Manager has stored the token.                                                                                            |
+| `Assets/Scripts/Editor/Coordination/CoordinationWindow.cs` and `CoordinationWindowViewModel.cs`                                                                                                                                                                                      | Limit the task-context editor control and clamp programmatic updates before saving.                                                                                       |
+| `Assets/Tests/EditMode/Coordination/CoordinationSnapshotAssemblerTests.cs`                                                                                                                                                                                                           | Assembly-level proof of ordering, duplicate, incomplete, inconsistent, aggregate-cap, and atomic-completion behavior.                                                     |
+| `Assets/Tests/EditMode/Coordination/CoordinationProtocolTests.cs`, `CoordinationServiceTests.cs`, `CoordinationPathMatcherTests.cs`, `CoordinationUserSettingsTests.cs`, `CoordinationWindowViewModelTests.cs`                                                                       | Contract and integration regression coverage for limits, close draining, credential save, and shared path vectors.                                                        |
+| `Tools/CoordinationServer/test/fixtures/canonical-path-vectors.json`                                                                                                                                                                                                                 | The single tracked Unicode path-vector source consumed by both Vitest and Unity tests.                                                                                    |
+| `Tools/CoordinationServer/test/protocol.test.ts`                                                                                                                                                                                                                                     | Consume the shared path fixture rather than maintaining a TypeScript-only vector list.                                                                                    |
+| `Tools/CoordinationServer/wrangler.jsonc`                                                                                                                                                                                                                                            | Declarative Durable Object export, required secret names, public `workers.dev`, disabled preview URLs, and full observability.                                            |
+| `Tools/CoordinationServer/.dev.vars.example`                                                                                                                                                                                                                                         | Tracked local-secret shape with no secret values.                                                                                                                         |
+| `Tools/CoordinationServer/README.md`, `README.md`, [Docs/onboarding/getting-started.md](../../onboarding/getting-started.md), [Docs/collaboration/team-workflow.md](../../collaboration/team-workflow.md), [Docs/guides/unity/editor-safety.md](../../guides/unity/editor-safety.md) | Server operation and evergreen user guidance.                                                                                                                             |
+| [Docs/tickets/PP-7.md](../../tickets/PP-7.md)                                                                                                                                                                                                                                        | Dated commands, results, reviewer result, external blockers, and later two-machine acceptance evidence.                                                                   |
+| `coordination.json`                                                                                                                                                                                                                                                                  | Replace the example endpoint only after an actual authenticated deployment has supplied the exact URL.                                                                    |
+| `.github/workflows/coordination-server.yml`                                                                                                                                                                                                                                          | Remains verification-only: `npm ci`, typecheck, tests, and `wrangler deploy --dry-run`; no Cloudflare credential, secret, or deployment step.                             |
 
 ## Task 1: Assemble and Atomically Apply Unity Snapshot Chunks
 
 **Files:**
 
 - Create: `Assets/Scripts/Editor/Coordination/CoordinationSnapshotAssembler.cs`
-- Create: `Assets/Tests/EditMode/Coordination/CoordinationSnapshotAssemblerTests.cs`
+- Create:
+  `Assets/Tests/EditMode/Coordination/CoordinationSnapshotAssemblerTests.cs`
 - Modify: `Assets/Scripts/Editor/Coordination/CoordinationProtocol.cs`
 - Modify: `Assets/Scripts/Editor/Coordination/CoordinationService.cs`
 - Modify: `Assets/Tests/EditMode/Coordination/CoordinationProtocolTests.cs`
@@ -190,7 +194,8 @@ function Invoke-CoordinationEditMode {
 
   Add cases for an exact duplicate index, a conflicting duplicate index,
   incomplete assembly, a different snapshot ID replacing an existing partial
-  assembly without applying it, and a cumulative `262145` byte input. Exact duplicate data returns
+  assembly without applying it, and a cumulative `262145` byte input. Exact
+  duplicate data returns
   `Duplicate` without changing byte count; conflicting data and any aggregate
   breach return `Rejected`, clear the partial assembly, and produce no completed
   envelope.
@@ -218,18 +223,18 @@ function Invoke-CoordinationEditMode {
 
   Add `snapshotId`, `chunkIndex`, and `chunkCount` to
   `CoordinationServerEnvelope`. In `HasRequiredServerFields`, require a UUID v4
-  snapshot ID, `chunkIndex >= 0`, `chunkCount > 0`, `chunkIndex < chunkCount`,
-  a non-null presence array, a non-null lease array, and non-null server time.
-  Do not change the 16 KiB `Encoding.UTF8.GetByteCount(json)` gate.
+  snapshot ID, `chunkIndex >= 0`, `chunkCount > 0`, `chunkIndex < chunkCount`, a
+  non-null presence array, a non-null lease array, and non-null server time. Do
+  not change the 16 KiB `Encoding.UTF8.GetByteCount(json)` gate.
 
   Implement `CoordinationSnapshotAssembler` with one `SnapshotAssembly` that
   holds its ID, count, state version, request ID presence and value, server
   time, per-index `CoordinationServerEnvelope` values, and cumulative UTF-8
   bytes. Compare metadata exactly, including whether `requestId` was omitted or
   supplied. Accept indexes in any order. When an index already exists, compare
-  the original serialized chunk bytes or a canonical serialization of every
-  DTO field; an identical payload returns `Duplicate`, while a differing
-  payload clears the assembly and returns
+  the original serialized chunk bytes or a canonical serialization of every DTO
+  field; an identical payload returns `Duplicate`, while a differing payload
+  clears the assembly and returns
   `snapshot_duplicate_inconsistent`. A chunk with a different snapshot ID
   replaces the incomplete assembly and becomes the first chunk of the new
   assembly; the discarded partial snapshot never mutates protocol state. Reject
@@ -238,16 +243,17 @@ function Invoke-CoordinationEditMode {
 
   On completion, concatenate presence and lease arrays in ascending
   `chunkIndex`, return one synthetic snapshot, then clear the stored assembly.
-  The assembler must never call `CoordinationProtocolState` or publish an
-  event itself.
+  The assembler must never call `CoordinationProtocolState` or publish an event
+  itself.
 
-- [ ] **Step 4: Route snapshots through the assembler before state application.**
+- [ ] **Step 4: Route snapshots through the assembler before state
+  application.**
 
   In `CoordinationService.ApplySocketMessage`, parse the raw JSON first. For
   `type == "snapshot"`, calculate `Encoding.UTF8.GetByteCount(json)` and call
-  `snapshotAssembler.TryAdd`. Publish an `error` envelope with the returned
-  code only for `Rejected`; return immediately for `Awaiting` and `Duplicate`.
-  For `Completed`, replace the parsed chunk with `completed`, then execute the
+  `snapshotAssembler.TryAdd`. Publish an `error` envelope with the returned code
+  only for `Rejected`; return immediately for `Awaiting` and `Duplicate`. For
+  `Completed`, replace the parsed chunk with `completed`, then execute the
   existing stale-version check, `protocolState.TryApplyServerEnvelope`,
   `SnapshotReceived`, and `CompleteRequest` exactly once. A stale completed
   snapshot still calls `CompleteRequest(completed, true)` once and does not
@@ -264,8 +270,8 @@ function Invoke-CoordinationEditMode {
   if ((Invoke-CoordinationEditMode -Filter 'PotionPanic.Tests.EditMode.Coordination.CoordinationServiceTests' -Results 'Logs\coordination-service-snapshot-green.xml' -Log 'Logs\coordination-service-snapshot-green.log') -ne 0) { throw 'Coordination service snapshot tests failed.' }
   ```
 
-  Expected: both fixtures pass with zero failures, skips, or inconclusive
-  tests. The logs contain no new C# compiler error.
+  Expected: both fixtures pass with zero failures, skips, or inconclusive tests.
+  The logs contain no new C# compiler error.
 
 - [ ] **Step 6: Commit the coherent Unity chunk change.**
 
@@ -281,7 +287,8 @@ function Invoke-CoordinationEditMode {
 - Create: `Tools/CoordinationServer/test/fixtures/canonical-path-vectors.json`
 - Modify: `Assets/Scripts/Editor/Coordination/CoordinationService.cs`
 - Modify: `Assets/Scripts/Editor/Coordination/CoordinationCredentialWindow.cs`
-- Modify: `Assets/Scripts/Editor/Coordination/CoordinationEditorInfrastructure.cs`
+- Modify:
+  `Assets/Scripts/Editor/Coordination/CoordinationEditorInfrastructure.cs`
 - Modify: `Assets/Scripts/Editor/Coordination/CoordinationPathMatcher.cs`
 - Modify: `Assets/Scripts/Editor/Coordination/CoordinationUserSettings.cs`
 - Modify: `Assets/Scripts/Editor/Coordination/CoordinationWindow.cs`
@@ -289,7 +296,8 @@ function Invoke-CoordinationEditMode {
 - Modify: `Assets/Tests/EditMode/Coordination/CoordinationServiceTests.cs`
 - Modify: `Assets/Tests/EditMode/Coordination/CoordinationPathMatcherTests.cs`
 - Modify: `Assets/Tests/EditMode/Coordination/CoordinationUserSettingsTests.cs`
-- Modify: `Assets/Tests/EditMode/Coordination/CoordinationWindowViewModelTests.cs`
+- Modify:
+  `Assets/Tests/EditMode/Coordination/CoordinationWindowViewModelTests.cs`
 - Modify: `Tools/CoordinationServer/test/protocol.test.ts`
 
 **Interfaces:**
@@ -316,7 +324,8 @@ function Invoke-CoordinationEditMode {
   `credentialsSaved` runs only after `ICredentialStore.Write` returns. The
   default service supplies a callback that starts one connection attempt.
 
-- [ ] **Step 1: Write failing close, metadata, credential, and shared-vector tests.**
+- [ ] **Step 1: Write failing close, metadata, credential, and shared-vector
+  tests.**
 
   Add service tests that queue two requests, raise `Closed` twice, execute the
   queued dispatcher, and assert two `RequestSendFailed` events with
@@ -349,8 +358,8 @@ function Invoke-CoordinationEditMode {
   Use `string.Empty` as the empty-string control in the test; use
   `string.Concat(Enumerable.Repeat("\ud83d\ude00", 128))` for the accepted
   256-unit case and `129` for rejection. Add assertions that an over-limit
-  view-model assignment is clamped to a valid UTF-16 boundary and persisted,
-  and that over-limit Git branch and task values are clamped before serialization
+  view-model assignment is clamped to a valid UTF-16 boundary and persisted, and
+  that over-limit Git branch and task values are clamped before serialization
   without making `TrySend` fail or leaving the request untracked.
 
   Create this exact shared fixture:
@@ -394,8 +403,8 @@ function Invoke-CoordinationEditMode {
   failure racing with close leaves exactly one owner of each handle. Do not turn
   a close into `RequestCompleted`.
 
-  Add `CoordinationProtocol.IsValidContext(string value)` as a public
-  non-null `value.Length <= MaximumContextLength` check. Add
+  Add `CoordinationProtocol.IsValidContext(string value)` as a public non-null
+  `value.Length <= MaximumContextLength` check. Add
   `CoordinationProtocol.ClampContext(string value)` to return an empty string
   for null, retain valid input, and truncate longer input to at most 256 UTF-16
   code units without leaving a high surrogate at the end. Use validation in
@@ -437,7 +446,8 @@ function Invoke-CoordinationEditMode {
   the service is neither shut down nor disabled. The callback does not retry a
   successful existing connection and does not retain the developer token.
 
-- [ ] **Step 5: Replace C# full-Unicode folding and consume the shared fixture.**
+- [ ] **Step 5: Replace C# full-Unicode folding and consume the shared
+  fixture.**
 
   Replace `normalizedPath.ToLowerInvariant()` with an ordinal loop that maps
   only characters from `'A'` through `'Z'` by adding 32. Keep NFC normalization
@@ -484,9 +494,9 @@ function Invoke-CoordinationEditMode {
 - Consumes: named export `CoordinationObject` from
   `Tools/CoordinationServer/src/index.ts` and `Env.ADMIN_TOKEN` /
   `Env.TOKEN_HMAC_KEY`.
-- Produces: a declarative configuration requiring both secret names before
-  local development or deployment and binding `COORDINATION_OBJECT` to the
-  exported SQLite-backed Durable Object class.
+- Produces: a declarative configuration requiring both secret names before local
+  development or deployment and binding `COORDINATION_OBJECT` to the exported
+  SQLite-backed Durable Object class.
 
 - [ ] **Step 1: Write the configuration checks before editing it.**
 
@@ -494,9 +504,10 @@ function Invoke-CoordinationEditMode {
   `wrangler.jsonc` as JSONC and asserts `exports.CoordinationObject` equals
   `{ type: "durable-object", storage: "sqlite" }`, the required secrets equal
   `TOKEN_HMAC_KEY` and `ADMIN_TOKEN`, `workers_dev` is `true`, `preview_urls`
-  is `false`, and `observability` equals `{ enabled: true, head_sampling_rate: 1 }`.
-  The test must also assert that `migrations` is absent because Wrangler treats
-  it as mutually exclusive with `exports`.
+  is `false`, and `observability` equals
+  `{ enabled: true, head_sampling_rate: 1 }`. The test must also assert that
+  `migrations` is absent because Wrangler treats it as mutually exclusive with
+  `exports`.
 
 - [ ] **Step 2: Run the RED configuration checks.**
 
@@ -509,7 +520,8 @@ function Invoke-CoordinationEditMode {
   Expected: the configuration assertion fails because the current file has the
   legacy `migrations` array and lacks release settings.
 
-- [ ] **Step 3: Replace the legacy lifecycle declaration with this exact JSONC.**
+- [ ] **Step 3: Replace the legacy lifecycle declaration with this exact
+  JSONC.**
 
   Keep `name`, `main`, `compatibility_date`, and the
   `durable_objects.bindings` entry. Remove the complete `migrations` property
@@ -546,13 +558,13 @@ function Invoke-CoordinationEditMode {
   Change the ignore rule from the one-file
   `/Tools/CoordinationServer/.dev.vars` form to
   `/Tools/CoordinationServer/.dev.vars*`, then add a negated exception for
-  `!/Tools/CoordinationServer/.dev.vars.example` so the template stays
-  tracked. Do not add `.env` files; local operators use `.dev.vars` exclusively.
+  `!/Tools/CoordinationServer/.dev.vars.example` so the template stays tracked.
+  Do not add `.env` files; local operators use `.dev.vars` exclusively.
 
 - [ ] **Step 4: Confirm the GitHub workflow remains verification-only.**
 
-  Inspect `.github/workflows/coordination-server.yml`. Its only Wrangler
-  command must remain:
+  Inspect `.github/workflows/coordination-server.yml`. Its only Wrangler command
+  must remain:
 
   ```yaml
   - run: npx wrangler deploy --dry-run
@@ -590,9 +602,13 @@ function Invoke-CoordinationEditMode {
 
 - Modify: `Tools/CoordinationServer/README.md`
 - Modify: `README.md`
-- Modify: [Docs/onboarding/getting-started.md](../../onboarding/getting-started.md)
-- Modify: [Docs/collaboration/team-workflow.md](../../collaboration/team-workflow.md)
-- Modify: [Docs/guides/unity/editor-safety.md](../../guides/unity/editor-safety.md)
+-
+
+Modify: [Docs/onboarding/getting-started.md](../../onboarding/getting-started.md)
+-
+Modify: [Docs/collaboration/team-workflow.md](../../collaboration/team-workflow.md)
+-
+Modify: [Docs/guides/unity/editor-safety.md](../../guides/unity/editor-safety.md)
 
 **Interfaces:**
 
@@ -604,17 +620,18 @@ function Invoke-CoordinationEditMode {
   without putting a credential in GitHub, Git, a URL, a ticket, or a command
   history.
 
-- [ ] **Step 1: Write documentation assertions into the root documentation tests.**
+- [ ] **Step 1: Write documentation assertions into the root documentation
+  tests.**
 
   Add root test assertions that the server README contains the two secret names,
   `.dev.vars.example`, `npx wrangler deploy`, `npx wrangler tail`, and the
   `scripts/issue-token.mjs` invocation; that the root README says the
-  coordination Worker deploy is manual and GitHub is verification-only; and
-  that the onboarding and workflow docs name the local Disabled switch and
-  manual collaboration fallback. The assertions must reject a real-looking
-  bearer token and require both assignments in `.dev.vars.example` to have an
-  empty value. A documented assignment from a PowerShell variable is permitted;
-  a literal secret value is not.
+  coordination Worker deploy is manual and GitHub is verification-only; and that
+  the onboarding and workflow docs name the local Disabled switch and manual
+  collaboration fallback. The assertions must reject a real-looking bearer token
+  and require both assignments in `.dev.vars.example` to have an empty value. A
+  documented assignment from a PowerShell variable is permitted; a literal
+  secret value is not.
 
 - [ ] **Step 2: Run the RED documentation suite.**
 
@@ -648,8 +665,8 @@ function Invoke-CoordinationEditMode {
 
   Document manual production deployment as an authenticated operator action.
   Generate two independent 256-bit URL-safe values in the approved password
-  manager first, then enter them through hidden prompts. The temporary file
-  must be outside the repository, used for one atomic deploy, and removed in a
+  manager first, then enter them through hidden prompts. The temporary file must
+  be outside the repository, used for one atomic deploy, and removed in a
   `finally` block:
 
   ```powershell
@@ -704,9 +721,8 @@ function Invoke-CoordinationEditMode {
 
   Instruct the operator to paste only the URL printed by the successful
   deployment when prompted. Do not use the checked-in example endpoint. Deliver
-  the printed developer
-  token once through an approved secret channel, then paste it only into the
-  Unity credential window.
+  the printed developer token once through an approved secret channel, then
+  paste it only into the Unity credential window.
 
   Add `npx wrangler tail` as the monitoring command and require filtering out
   secrets from any captured evidence. Add the documented outage fallback:
@@ -720,9 +736,9 @@ function Invoke-CoordinationEditMode {
   invalid until reissued.
 
   In the root and evergreen docs, explain that advisory leases do not replace
-  pre-edit announcements, the local Disabled switch does not delete work, and
-  a missing/invalid server remains an offline/manual-collaboration condition.
-  Do not add a standalone auth page, a secret download, or a GitHub deployment
+  pre-edit announcements, the local Disabled switch does not delete work, and a
+  missing/invalid server remains an offline/manual-collaboration condition. Do
+  not add a standalone auth page, a secret download, or a GitHub deployment
   workflow.
 
 - [ ] **Step 4: Run GREEN documentation verification.**
@@ -775,8 +791,8 @@ function Invoke-CoordinationEditMode {
 
   Expected: every command exits zero; `npm audit --audit-level=moderate` reports
   zero vulnerabilities; the dry run reports no authentication or missing-secret
-  failure; and `git status --short` contains only intentional tracked changes.
-  A dry run does not deploy a Worker.
+  failure; and `git status --short` contains only intentional tracked changes. A
+  dry run does not deploy a Worker.
 
 - [ ] **Step 2: Execute the full Unity coordination suite.**
 
@@ -795,24 +811,26 @@ function Invoke-CoordinationEditMode {
   inspect the Console. Record the observed Coordination window state and every
   new error, warning, assertion, or exception. Do not save the scene.
 
-  Expected: Play Mode enters and exits; the Coordination window opens; there
-  are no new relevant Console errors, exceptions, or assertions; no `.unity`,
+  Expected: Play Mode enters and exits; the Coordination window opens; there are
+  no new relevant Console errors, exceptions, or assertions; no `.unity`,
   `.prefab`, `ProjectSettings`, or `Packages` file changes.
 
 - [ ] **Step 4: Obtain an independent code review before release work.**
 
-  Give a reviewer the diff, the full command outputs, the full EditMode XML,
-  and the manual smoke log. The reviewer must check these measurable properties:
+  Give a reviewer the diff, the full command outputs, the full EditMode XML, and
+  the manual smoke log. The reviewer must check these measurable properties:
 
-  1. no snapshot fragment alters client state before a complete assembly;
-  2. no request can complete or fail twice across send failure and socket close;
-  3. all 256-unit bounds use UTF-16 code units and cannot be bypassed through
-     the UI, local settings, Git branch, or serialized envelope;
-  4. C# and TypeScript consume the identical Unicode fixture and preserve
-     non-ASCII case;
-  5. Wrangler contains declarative `exports`, required secrets, `workers_dev`,
-     disabled preview URLs, observability, and no legacy `migrations`;
-  6. tracked files contain no token and the GitHub workflow performs no deploy.
+    1. no snapshot fragment alters client state before a complete assembly;
+    2. no request can complete or fail twice across send failure and socket
+       close;
+    3. all 256-unit bounds use UTF-16 code units and cannot be bypassed through
+       the UI, local settings, Git branch, or serialized envelope;
+    4. C# and TypeScript consume the identical Unicode fixture and preserve
+       non-ASCII case;
+    5. Wrangler contains declarative `exports`, required secrets, `workers_dev`,
+       disabled preview URLs, observability, and no legacy `migrations`;
+    6. tracked files contain no token and the GitHub workflow performs no
+       deploy.
 
   Record the reviewer's name, commit reviewed, and either `approved` or each
   blocking finding in PP-7. Resolve every blocking finding and repeat the
@@ -845,13 +863,14 @@ function Invoke-CoordinationEditMode {
 **Files:**
 
 - Modify after successful deploy only: `coordination.json`
-- Modify after each observed acceptance run: [Docs/tickets/PP-7.md](../../tickets/PP-7.md)
+- Modify after each observed acceptance
+  run: [Docs/tickets/PP-7.md](../../tickets/PP-7.md)
 - Verify only: deployed Worker dashboard/logs and two Windows Unity machines
 
 **Interfaces:**
 
-- Consumes: an operator's Cloudflare account, the actual deploy output,
-  manually issued developer tokens, two Windows machines using Unity
+- Consumes: an operator's Cloudflare account, the actual deploy output, manually
+  issued developer tokens, two Windows machines using Unity
   `6000.5.1f1`, and two different networks.
 - Produces: a deployed URL in `coordination.json` and evidence that the release
   acceptance criteria were observed, or a PP-7 blocker stating exactly which
@@ -865,10 +884,9 @@ function Invoke-CoordinationEditMode {
   `npx wrangler deploy --strict --secrets-file <temporary-file>` containing both
   required secrets. Remove the temporary file in `finally`. Run
   `npx wrangler secret list` and `npx wrangler deployments list`. Record the
-  exact displayed Worker URL, Worker name, deployment ID and timestamp,
-  selected account ID, and Wrangler version.
-  Do not run this through GitHub Actions and do not paste either secret into a
-  Markdown file, shell history, or PP-7.
+  exact displayed Worker URL, Worker name, deployment ID and timestamp, selected
+  account ID, and Wrangler version. Do not run this through GitHub Actions and
+  do not paste either secret into a Markdown file, shell history, or PP-7.
 
 - [x] **Step 2: Verify the deployed endpoint before changing client config.**
 
@@ -884,8 +902,8 @@ function Invoke-CoordinationEditMode {
   `serverTime`. After this succeeds, replace only `serverBaseUrl` in
   `coordination.json` with that exact base URL, run `npm test` and
   `npm run docs:build`, and commit that single configuration update. If deploy
-  or health fails, retain the example URL and add the actual error text to
-  PP-7; do not claim a deployment.
+  or health fails, retain the example URL and add the actual error text to PP-7;
+  do not claim a deployment.
 
 - [ ] **Step 3: Issue and provision one developer token per machine.**
 
@@ -894,21 +912,21 @@ function Invoke-CoordinationEditMode {
 
   Use the secure issue-token procedure from the server README once for each
   developer. Deliver each output to its owner once. On each Windows machine,
-  paste the token in `Window > Potion Panic > Coordination`, save it, and
-  verify the credential-save callback creates a 24-hour opaque session and
-  connects. Verify `UserSettings/PotionPanic/coordination.local.json` contains
-  no token and `git status --short` does not show `.dev.vars`, user settings,
-  log files, or a generated lease-state file.
+  paste the token in `Window > Potion Panic > Coordination`, save it, and verify
+  the credential-save callback creates a 24-hour opaque session and connects.
+  Verify `UserSettings/PotionPanic/coordination.local.json` contains no token
+  and `git status --short` does not show `.dev.vars`, user settings, log files,
+  or a generated lease-state file.
 
 - [ ] **Step 4: Run the two-machine, different-network acceptance matrix.**
 
   Use Machine A and Machine B on different Internet connections. Record the
   start/end timestamp, machine role, Unity version, network description, path,
-  request IDs where available, observed owner/branch/task/expiry, and result
-  for every row below in PP-7.
+  request IDs where available, observed owner/branch/task/expiry, and result for
+  every row below in PP-7.
 
   | Scenario | Required observed result |
-  | --- | --- |
+      | --- | --- |
   | Presence and reservation | A opens `Assets/Scenes/SampleScene.unity`; B sees A. A reserves it; B sees the reservation owner and expiry. |
   | Reservation cancellation | A cancels its reservation from the Coordination window. Both clients receive the correlated `lease.released` state, the reservation disappears, and the path becomes reservable. Repeat from a recreated A session to prove developer ownership does not depend on the original connection. |
   | Simultaneous acquire | A and B issue acquire against the same unclaimed coordinated path at the same time; exactly one receives `lease.granted`, and the other receives `lease.denied` with the same remote owner. |
@@ -935,21 +953,21 @@ function Invoke-CoordinationEditMode {
 - [ ] **Step 6: Close PP-7 only on complete external evidence.**
 
   Update PP-7's Definition of Done only after all local gates, independent
-  review, deployment health, token provisioning, and every acceptance-matrix
-  row has dated evidence. Archive the program and slice pages only after PP-7
-  is complete. Until then, keep PP-7 and the release-handoff plan active and
+  review, deployment health, token provisioning, and every acceptance-matrix row
+  has dated evidence. Archive the program and slice pages only after PP-7 is
+  complete. Until then, keep PP-7 and the release-handoff plan active and
   preserve the exact outstanding external blocker.
 
 ## Final Coverage Check
 
-| Required outcome | Task |
-| --- | --- |
-| 16 KiB envelopes, 256 KiB assembly, out-of-order/incomplete/duplicate/inconsistent chunks, atomic apply, one completion | Task 1 |
-| Socket-close exact-once request drain, 256 UTF-16-unit bounds, credential-save reconnect, ASCII-only folding and shared Unicode vectors | Task 2 |
+| Required outcome                                                                                                                                     | Task   |
+|------------------------------------------------------------------------------------------------------------------------------------------------------|--------|
+| 16 KiB envelopes, 256 KiB assembly, out-of-order/incomplete/duplicate/inconsistent chunks, atomic apply, one completion                              | Task 1 |
+| Socket-close exact-once request drain, 256 UTF-16-unit bounds, credential-save reconnect, ASCII-only folding and shared Unicode vectors              | Task 2 |
 | Declarative Wrangler exports, required secrets, `workers_dev`, disabled preview URLs, observability, local secret template, GitHub verification-only | Task 3 |
-| Secure setup, deploy, token, local development, monitoring, outage, and rotation guidance | Task 4 |
-| Backend/root/docs/Unity verification, Play Mode smoke, independent review, PP-7 local evidence | Task 5 |
-| Authenticated deployment and two-machine different-network acceptance including expiry, session recreation, hibernation, outage, and revocation | Task 6 |
+| Secure setup, deploy, token, local development, monitoring, outage, and rotation guidance                                                            | Task 4 |
+| Backend/root/docs/Unity verification, Play Mode smoke, independent review, PP-7 local evidence                                                       | Task 5 |
+| Authenticated deployment and two-machine different-network acceptance including expiry, session recreation, hibernation, outage, and revocation      | Task 6 |
 
 ## Current External Blockers
 

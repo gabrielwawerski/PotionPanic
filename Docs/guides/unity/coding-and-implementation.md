@@ -24,13 +24,13 @@ does not. It leaves scope, result, and proof undecided.
 
 Identify the minimum owners before creating scripts:
 
-| Question | Movement example |
-| --- | --- |
-| What input exists? | The accepted `Player/Move` action supplies a two-axis value. |
-| Who interprets it? | `PlayerController`. |
-| Who performs collision-aware movement? | The same object's `CharacterController`. |
-| What state persists? | Serialized movement speed, not an inventory or run-state framework. |
-| What does this slice not own? | Camera logic, interaction, animation, Panic, score, and menus. |
+| Question                               | Movement example                                                    |
+|----------------------------------------|---------------------------------------------------------------------|
+| What input exists?                     | The accepted `Player/Move` action supplies a two-axis value.        |
+| Who interprets it?                     | `PlayerController`.                                                 |
+| Who performs collision-aware movement? | The same object's `CharacterController`.                            |
+| What state persists?                   | Serialized movement speed, not an inventory or run-state framework. |
+| What does this slice not own?          | Camera logic, interaction, animation, Panic, score, and menus.      |
 
 The result should fit the target runtime design without constructing future
 systems before their behavior is approved.
@@ -74,13 +74,13 @@ before the first complete gameplay loop exists.
 
 For every action, identify invalid state and the safe outcome:
 
-| Action | Failure | Safe behavior |
-| --- | --- | --- |
-| Pick up an ingredient | Inventory already contains an item. | Reject the pickup without losing either item. |
-| Brew | No ingredient is carried. | Leave inventory and station state unchanged and provide readable feedback. |
-| Apply a potion | Potion is wrong. | Consume it, keep the disaster active, add the accepted Panic penalty, and show the cause. |
-| Resolve a disaster | Resolution is triggered twice. | Award effects once and ignore or reject later calls. |
-| Restart | Old objects or subscriptions remain. | Establish a clean run without duplicate events or state. |
+| Action                | Failure                              | Safe behavior                                                                             |
+|-----------------------|--------------------------------------|-------------------------------------------------------------------------------------------|
+| Pick up an ingredient | Inventory already contains an item.  | Reject the pickup without losing either item.                                             |
+| Brew                  | No ingredient is carried.            | Leave inventory and station state unchanged and provide readable feedback.                |
+| Apply a potion        | Potion is wrong.                     | Consume it, keep the disaster active, add the accepted Panic penalty, and show the cause. |
+| Resolve a disaster    | Resolution is triggered twice.       | Award effects once and ignore or reject later calls.                                      |
+| Restart               | Old objects or subscriptions remain. | Establish a clean run without duplicate events or state.                                  |
 
 Failure design prevents later patches from scattering one-off checks across UI,
 managers, and object scripts.
@@ -144,8 +144,8 @@ serialization, lifecycle, physics, or scene integration:
 
 A unit test for vector output cannot prove that an inspector reference is wired
 or the gameplay scene contains a `CharacterController`. A PlayMode test for a
-whole scene is slower and less diagnostic when the rule is pure arithmetic.
-Use both only when they prove different risks.
+whole scene is slower and less diagnostic when the rule is pure arithmetic. Use
+both only when they prove different risks.
 
 ## Verify in layers
 
@@ -172,8 +172,8 @@ A useful handoff states:
 - known limitations and skipped gates;
 - shared Unity files the reviewer should inspect carefully.
 
-“Code complete” is not a result. The slice is ready when another contributor
-can identify what changed, reproduce the proof, and understand what remains
+“Code complete” is not a result. The slice is ready when another contributor can
+identify what changed, reproduce the proof, and understand what remains
 unverified.
 
 ## Related pages

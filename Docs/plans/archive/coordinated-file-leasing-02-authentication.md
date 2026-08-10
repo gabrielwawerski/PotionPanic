@@ -32,9 +32,9 @@ revocation state for Slices 03 and 04.
   Durable Object's `developers` table. Create the `sessions` table and the
   initial state-version row in that same object; Slice 03 extends this schema
   and must not recreate any of them.
-- Hash opaque session tokens with a separate domain separator, developer ID,
-  and 24-hour expiry. Return the canonical developer ID, display name, server
-  time, lease and reservation TTLs, and state version from
+- Hash opaque session tokens with a separate domain separator, developer ID, and
+  24-hour expiry. Return the canonical developer ID, display name, server time,
+  lease and reservation TTLs, and state version from
   `POST /v1/projects/{projectId}/sessions`. Do not create or return a
   `connectionId` in this HTTP route.
 - Require the bearer developer token on session creation and the bearer session
@@ -68,6 +68,6 @@ succeeds.
 **Commit:** `feat(coordination): add revocable opaque sessions`
 
 **Handoff:** Record the commit and test evidence in `PP-7`. Slice 03 may use the
-authenticated developer/session context but must own all lease state transitions.
-Slice 04 must close live sockets for a revoked developer; Slice 02 has no socket
-registry and must not emulate one.
+authenticated developer/session context but must own all lease state
+transitions. Slice 04 must close live sockets for a revoked developer; Slice 02
+has no socket registry and must not emulate one.

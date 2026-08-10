@@ -24,7 +24,8 @@ WebSocket transport, with no socket ownership or broadcasting.
 ## Implementation steps
 
 - Extend the Slice 02 Durable Object schema with `connections`, `presence`,
-  `leases`, `reservations`, and `replayRecords`. Reuse the existing `developers`,
+  `leases`, `reservations`, and `replayRecords`. Reuse the existing
+  `developers`,
   `sessions`, and state-version row. Store no activity history.
 - Implement canonical-path uniqueness: one editing or reserved lease per path,
   with multiple presence rows allowed. Store owner, branch, task, connection,
@@ -33,9 +34,9 @@ WebSocket transport, with no socket ownership or broadcasting.
   `lease.reserve`, `lease.override`, `heartbeat`, and `snapshot.request` as
   atomic transitions. Every state mutation increments the monotonic version.
 - Expose `openConnection(session)` and `closeConnection(connectionId)` for Slice
-  04. Each mutating operation returns a typed transition containing the requester
-  response, zero or more state-change envelopes, and the resulting state version.
-  It never sends a WebSocket message itself.
+    04. Each mutating operation returns a typed transition containing the
+        requester response, zero or more state-change envelopes, and the
+        resulting state version. It never sends a WebSocket message itself.
 - Scope replay records by developer and request ID, store a payload hash, replay
   an identical result for five minutes, and explicitly reject a mismatched
   payload reuse.
@@ -43,9 +44,9 @@ WebSocket transport, with no socket ownership or broadcasting.
   Allow same-developer reconnect rebinding while preventing a stale connection
   from releasing or extending the rebound lease.
 - Implement a pure `pruneExpired(now)` operation that prunes due sessions,
-  connections, presence, leases, reservations, and replay records, returning
-  the resulting state-change envelopes. Schedule only the nearest expiry alarm.
-  In this slice, the alarm invokes pruning and schedules the next expiry without
+  connections, presence, leases, reservations, and replay records, returning the
+  resulting state-change envelopes. Schedule only the nearest expiry alarm. In
+  this slice, the alarm invokes pruning and schedules the next expiry without
   socket delivery; Slice 04 extends that alarm handler to broadcast the returned
   envelopes to live connections.
 

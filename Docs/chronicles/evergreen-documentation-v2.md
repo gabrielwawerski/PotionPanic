@@ -7,8 +7,8 @@ status: active
 
 ## Current step
 
-Review. The implementation and requested verification are complete; the plan
-and chronicle remain in place because V2 does not archive work records.
+Review. The implementation and requested verification are complete; the plan and
+chronicle remain in place because V2 does not archive work records.
 
 ## Approved decisions
 
@@ -55,8 +55,8 @@ and chronicle remain in place because V2 does not archive work records.
 ## Deferred decision
 
 [PP-9](../tickets/PP-9.md) owns the Coordination outage-policy decision and any
-approved runtime or documentation alignment. V2 preserved the disputed
-Disabled and outage passages and did not validate either policy.
+approved runtime or documentation alignment. V2 preserved the disputed Disabled
+and outage passages and did not validate either policy.
 
 ## Explanation checkpoint
 
@@ -65,8 +65,8 @@ Disabled and outage passages and did not validate either policy.
   reservations are developer-owned while presence and editing leases are
   connection-owned; V2 changes documentation and structural tests only.
 - **Conscious skips:** none.
-- **Unresolved V2 gaps:** none. PP-9 is a separately scoped policy decision,
-  not an unverified V2 completion claim.
+- **Unresolved V2 gaps:** none. PP-9 is a separately scoped policy decision, not
+  an unverified V2 completion claim.
 - **Resolved divergences:** repository-root Atlas links were changed to valid
   repository URLs after the first VitePress build rejected links outside the
   docs source root.

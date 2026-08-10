@@ -40,10 +40,10 @@ service.
   every mutation against current authoritative state. Clients discard older
   server state when applying responses.
 - On developer revocation, close only that developer's active sockets, call
-  `closeConnection` for each, and broadcast the resulting transitions. Let normal
-  alarm processing call Slice 03's `pruneExpired(now)` and broadcast its returned
-  transitions before scheduling the next expiry. Do not add a second expiry
-  mechanism in the WebSocket layer.
+  `closeConnection` for each, and broadcast the resulting transitions. Let
+  normal alarm processing call Slice 03's `pruneExpired(now)` and broadcast its
+  returned transitions before scheduling the next expiry. Do not add a second
+  expiry mechanism in the WebSocket layer.
 
 ## Verification
 
@@ -54,13 +54,13 @@ Run from `Tools/CoordinationServer`:
 - `npm test`
 - `npx wrangler deploy --dry-run`
 
-Cover upgrade authentication, snapshot ordering, hibernation restore,
-reconnect, server-assigned connection IDs, duplicate requests, older server
-versions, oversized messages, and active revocation. Confirm the protocol test
-suite still passes.
+Cover upgrade authentication, snapshot ordering, hibernation restore, reconnect,
+server-assigned connection IDs, duplicate requests, older server versions,
+oversized messages, and active revocation. Confirm the protocol test suite still
+passes.
 
 **Commit:** `feat(coordination): synchronize authoritative state`
 
 **Handoff:** Record the WebSocket endpoint contract and test evidence in `PP-7`.
-Slice 05 may now implement the Unity client against the deployed or local
-Worker without inventing a parallel protocol.
+Slice 05 may now implement the Unity client against the deployed or local Worker
+without inventing a parallel protocol.

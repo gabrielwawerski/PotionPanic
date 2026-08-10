@@ -83,8 +83,8 @@ arbitrary offsets that break the others.
 
 ## UI presents state and requests actions
 
-Gameplay systems own current Panic, score, inventory, and run state. UI reads
-or observes those owners and renders them.
+Gameplay systems own current Panic, score, inventory, and run state. UI reads or
+observes those owners and renders them.
 
 ```text
 PanicSystem changes Panic
@@ -109,9 +109,9 @@ Decide which system owns timing before building an animation:
 - Animation clips control visual interpolation.
 - Animation events are reserved for narrow, deliberate integration points.
 
-If collecting an ingredient must happen immediately on accepted interaction,
-do not make a fragile animation event the only owner of the inventory change.
-The gameplay action can complete, then the animation presents pickup feedback.
+If collecting an ingredient must happen immediately on accepted interaction, do
+not make a fragile animation event the only owner of the inventory change. The
+gameplay action can complete, then the animation presents pickup feedback.
 
 Ask whether the player can interrupt the animation, whether input should remain
 available, and what happens if the object is disabled or destroyed mid-clip.
@@ -139,9 +139,9 @@ scene instance.
 The most accurate visual mesh is rarely the best collider. Gameplay colliders
 should be stable, understandable, and as simple as the interaction needs.
 
-For a station, use a clear physical collider and a deliberate interaction
-region rather than relying on the decorative cauldron mesh. For a moving
-character, keep collision ownership on the root while child visuals animate.
+For a station, use a clear physical collider and a deliberate interaction region
+rather than relying on the decorative cauldron mesh. For a moving character,
+keep collision ownership on the root while child visuals animate.
 
 After changing scale, pivot, or hierarchy, inspect collider position in the
 Scene view and exercise the interaction in Play Mode.
@@ -149,8 +149,8 @@ Scene view and exercise the interaction in Play Mode.
 ## Treat materials as shared assets
 
 Editing one material asset changes every renderer that references it. Before a
-change, identify whether the intended scope is one object, one prefab family,
-or the whole visual language.
+change, identify whether the intended scope is one object, one prefab family, or
+the whole visual language.
 
 Create a separate material when one object needs a lasting difference. Avoid
 runtime code that repeatedly accesses APIs which instantiate material copies
@@ -163,11 +163,11 @@ Use names that state purpose, such as `Potion_Cooling_Glass`, rather than
 
 Not every event deserves the same intensity:
 
-| Priority | Potion Panic examples | Presentation goal |
-| --- | --- | --- |
-| Primary | Disaster escalation, wrong potion, high Panic, Game Over. | Interrupt enough attention to change the player's next decision. |
-| Secondary | Ingredient pickup, brew completion, correct resolution, score award. | Confirm cause and result without hiding another threat. |
-| Ambient | Laboratory motion, magical particles, environmental sound. | Support mood without competing with state information. |
+| Priority  | Potion Panic examples                                                | Presentation goal                                                |
+|-----------|----------------------------------------------------------------------|------------------------------------------------------------------|
+| Primary   | Disaster escalation, wrong potion, high Panic, Game Over.            | Interrupt enough attention to change the player's next decision. |
+| Secondary | Ingredient pickup, brew completion, correct resolution, score award. | Confirm cause and result without hiding another threat.          |
+| Ambient   | Laboratory motion, magical particles, environmental sound.           | Support mood without competing with state information.           |
 
 Use a combination of motion, color, sound, particles, UI, and timing only when
 each channel adds information or feel. When every event flashes, shakes, and

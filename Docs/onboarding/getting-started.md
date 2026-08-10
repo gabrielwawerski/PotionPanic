@@ -11,14 +11,14 @@ recurring task work and assumes this guide already passes.
 
 Potion Panic uses several tools with different responsibilities:
 
-| Part | Responsibility | Stored where |
-| --- | --- | --- |
-| Git and Git LFS | Version source, Markdown, Unity assets, and large binary assets. | Local repository and remote Git host. |
-| Docboard and VitePress | Render documentation and provide the editable local task board. | Sibling `Docboard` checkout plus this repository's `Docs/`. |
-| Unity | Import assets, serialize scenes and prefabs, compile Unity assemblies, and run the game. | Repository plus generated local folders such as `Library/`. |
-| Rider or VS Code | Edit and debug C# through Unity-generated solution and project data. | `PotionPanic.sln`, generated project files, and local editor state. |
-| WebStorm | Edit Markdown and Node tooling and use the JetBrains Git interface. | Repository files and local editor state. |
-| Coordination | Show scene presence and claims and guard coordinated saves. | Unity editor, Windows Credential Manager, and the remote service. |
+| Part                   | Responsibility                                                                           | Stored where                                                        |
+|------------------------|------------------------------------------------------------------------------------------|---------------------------------------------------------------------|
+| Git and Git LFS        | Version source, Markdown, Unity assets, and large binary assets.                         | Local repository and remote Git host.                               |
+| Docboard and VitePress | Render documentation and provide the editable local task board.                          | Sibling `Docboard` checkout plus this repository's `Docs/`.         |
+| Unity                  | Import assets, serialize scenes and prefabs, compile Unity assemblies, and run the game. | Repository plus generated local folders such as `Library/`.         |
+| Rider or VS Code       | Edit and debug C# through Unity-generated solution and project data.                     | `PotionPanic.sln`, generated project files, and local editor state. |
+| WebStorm               | Edit Markdown and Node tooling and use the JetBrains Git interface.                      | Repository files and local editor state.                            |
+| Coordination           | Show scene presence and claims and guard coordinated saves.                              | Unity editor, Windows Credential Manager, and the remote service.   |
 
 A failure in one part does not automatically mean the others are broken. For
 example, the published docs can remain readable while the local Docboard
@@ -200,8 +200,8 @@ Current scene names:
 - `Assets/Scenes/testscene.unity` is not the milestone scene unless a task says
   otherwise.
 - `Laboratory.unity` is the accepted Milestone 1 target name. It is not the
-  current shared scene until the milestone task performs and verifies the
-  rename or replacement.
+  current shared scene until the milestone task performs and verifies the rename
+  or replacement.
 
 Stop setup and fix compilation before feature work if Unity reports missing
 packages, assembly errors, or a failed import.
@@ -243,8 +243,8 @@ project packages for this setup.
 
 1. Install VS Code and Microsoft's Unity extension.
 2. Open the PotionPanic repository root in VS Code.
-3. In Unity, open `Edit > Preferences > External Tools` and select Visual
-   Studio Code as **External Script Editor**.
+3. In Unity, open `Edit > Preferences > External Tools` and select Visual Studio
+   Code as **External Script Editor**.
 4. Use Unity's `Open C# Project` action to regenerate project files when VS Code
    shows stale or missing Unity references.
 5. Wait for the Unity extension and C# project loading to finish.
@@ -293,18 +293,18 @@ Git.
 4. Confirm `Connection` becomes `Connected`.
 5. Enter a short task context so other contributors can understand your claims.
 
-The developer token belongs in Windows Credential Manager. The session token
-is memory-only. Never copy either into Git, local JSON settings, a URL, a
-ticket, a log, or ordinary chat.
+The developer token belongs in Windows Credential Manager. The session token is
+memory-only. Never copy either into Git, local JSON settings, a URL, a ticket, a
+log, or ordinary chat.
 
 If authentication fails, use `Forget credentials`, obtain a newly issued token,
 and authenticate again. Follow the
 [Unity Coordination Guide](../guides/coordinated-leasing.md) before editing a
 coordinated scene or when a window state is unfamiliar.
 
-If the service is unavailable, use the local Disabled switch only after the
-team agrees to a manual collaboration fallback. Preserve local work, announce
-the protected-file edit, and reconnect after service health is restored.
+If the service is unavailable, use the local Disabled switch only after the team
+agrees to a manual collaboration fallback. Preserve local work, announce the
+protected-file edit, and reconnect after service health is restored.
 
 ## Ready-to-work checklist
 

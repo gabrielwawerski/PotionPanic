@@ -52,16 +52,16 @@ SQLite-backed Durable Objects, WebSocket Hibernation API, Wrangler, and Vitest.
 - A developer may explicitly cancel its reservation from any authenticated
   connection for that developer.
 - Closing an editing file releases its lease unless the developer reserved it.
-- A remote claim shows owner, branch, task, and expiry. Saving requires cancel or
-  explicit override.
+- A remote claim shows owner, branch, task, and expiry. Saving requires cancel
+  or explicit override.
 - Override transfers ownership immediately and notifies the displaced developer.
 - Backend outages never block local editing or permanently trap unsaved work.
 - Notifications and the Coordination window are the first UI. Native Windows
   notifications and Rider integration are out of scope.
 - The backend stores current coordination state and short-lived replay records,
   never activity history.
-- Authentication uses one revocable developer token per developer, exchanged
-  for an opaque 24-hour session.
+- Authentication uses one revocable developer token per developer, exchanged for
+  an opaque 24-hour session.
 - Machine-local task context, preferences, and endpoint overrides stay outside
   Git. Repository rules live in tracked `coordination.json`.
 - This is advisory coordination, not a hard filesystem lock. Manual protected
@@ -134,7 +134,8 @@ Authorization: Bearer <ADMIN_TOKEN>
 `serverTime`. It accepts no credential and exposes no project or developer data.
 
 The session response contains `developerId`, `displayName`, `serverTime`,
-`leaseTtlSeconds`, `reservationTtlSeconds`, and `stateVersion`. It never contains
+`leaseTtlSeconds`, `reservationTtlSeconds`, and `stateVersion`. It never
+contains
 `connectionId`. A successful WebSocket upgrade creates the connection and
 `session.ready` returns its server-assigned `connectionId`.
 
@@ -158,17 +159,17 @@ Every client-to-server envelope contains these fields:
 The server records replay results only for mutating messages. Client envelopes
 must not contain `projectId`, `developerId`, or `connectionId`.
 
-| Client message | Required additional fields | Meaning |
-| --- | --- | --- |
-| `presence.open` | `path`, `branch`, `task` | Publish non-exclusive viewing presence. |
-| `presence.close` | `path` | Remove this connection's viewing presence. |
-| `lease.acquire` | `path`, `branch`, `task` | Claim an unclaimed path for editing. |
-| `lease.release` | `path` | Release this developer's editing lease. |
-| `lease.reserve` | `path`, `branch`, `task` | Reserve an unclaimed path. |
-| `reservation.cancel` | `path` | Cancel this developer's reservation. |
-| `lease.override` | `path`, `branch`, `task` | Transfer a remotely owned lease deliberately. |
-| `heartbeat` | none | Extend only this connection's presence and editing leases. |
-| `snapshot.request` | none | Request the complete current state; no history replay exists. |
+| Client message       | Required additional fields | Meaning                                                       |
+|----------------------|----------------------------|---------------------------------------------------------------|
+| `presence.open`      | `path`, `branch`, `task`   | Publish non-exclusive viewing presence.                       |
+| `presence.close`     | `path`                     | Remove this connection's viewing presence.                    |
+| `lease.acquire`      | `path`, `branch`, `task`   | Claim an unclaimed path for editing.                          |
+| `lease.release`      | `path`                     | Release this developer's editing lease.                       |
+| `lease.reserve`      | `path`, `branch`, `task`   | Reserve an unclaimed path.                                    |
+| `reservation.cancel` | `path`                     | Cancel this developer's reservation.                          |
+| `lease.override`     | `path`, `branch`, `task`   | Transfer a remotely owned lease deliberately.                 |
+| `heartbeat`          | none                       | Extend only this connection's presence and editing leases.    |
+| `snapshot.request`   | none                       | Request the complete current state; no history replay exists. |
 
 `path` is the submitted display path. The server normalizes separators and
 Unicode, rejects control characters, leading separators, drive prefixes, `.`
@@ -180,26 +181,26 @@ serialized UTF-8 envelope is at most 16 KiB.
 `lease.release` is connection-owned and applies only to an editing lease.
 `reservation.cancel` is developer-owned, so a recreated session or another
 connection for the same developer may cancel the reservation. Successful
-cancellation uses the existing correlated `lease.released` server envelope;
-the reservation ID is its `leaseId`.
+cancellation uses the existing correlated `lease.released` server envelope; the
+reservation ID is its `leaseId`.
 
 Every server-to-client envelope contains `protocolVersion: 1`, `type`, and the
 current monotonic `stateVersion`. A response to a request also contains that
 request's `requestId`. The client applies a state-carrying envelope only when
 its `stateVersion` is not older than the greatest version already applied.
 
-| Server message | Required additional fields |
-| --- | --- |
-| `session.ready` | `developerId`, `displayName`, `serverTime`, `connectionId`, `leaseTtlSeconds`, `reservationTtlSeconds` |
-| `snapshot` | `presence`, `leases`, `serverTime` |
-| `presence.updated` | `presence` |
-| `presence.removed` | `path`, `connectionId` |
-| `lease.granted` | `path`, `lease` |
-| `lease.denied` | `path`, `code`, `currentLease` |
-| `lease.updated` | `lease` |
-| `lease.released` | `path`, `leaseId` |
-| `lease.overridden` | `path`, `previousDeveloperId`, `lease` |
-| `error` | `code`, `message` |
+| Server message     | Required additional fields                                                                             |
+|--------------------|--------------------------------------------------------------------------------------------------------|
+| `session.ready`    | `developerId`, `displayName`, `serverTime`, `connectionId`, `leaseTtlSeconds`, `reservationTtlSeconds` |
+| `snapshot`         | `presence`, `leases`, `serverTime`                                                                     |
+| `presence.updated` | `presence`                                                                                             |
+| `presence.removed` | `path`, `connectionId`                                                                                 |
+| `lease.granted`    | `path`, `lease`                                                                                        |
+| `lease.denied`     | `path`, `code`, `currentLease`                                                                         |
+| `lease.updated`    | `lease`                                                                                                |
+| `lease.released`   | `path`, `leaseId`                                                                                      |
+| `lease.overridden` | `path`, `previousDeveloperId`, `lease`                                                                 |
+| `error`            | `code`, `message`                                                                                      |
 
 `presence` is an array of presence records; each record contains `path`,
 `displayPath`, `developerId`, `displayName`, `connectionId`, `branch`, `task`,
@@ -215,8 +216,8 @@ ID, contain a payload hash, return the earlier result only for an identical
 payload for five minutes, and reject mismatched reuse. The server accepts a
 heartbeat from its authenticated owning connection even if unrelated state has
 advanced; stale server state is rejected by the client at apply time. The
-authoritative-state slice returns state-transition data only; the WebSocket slice
-is solely responsible for sending it to clients.
+authoritative-state slice returns state-transition data only; the WebSocket
+slice is solely responsible for sending it to clients.
 
 The Durable Object owns all persistent state. Slice 02 creates its auth-only
 foundation: `developers`, `sessions`, and the initial state-version row plus the
@@ -253,11 +254,11 @@ creates a connection record; an HTTP session never does.
 
 Slice 01 includes the repository baseline and protocol contract. Slice 02
 creates identities and authenticated sessions. Slice 03 owns all state
-transitions and expiry. Slice 04 transports that state. Slice 05A stabilizes
-the authoritative backend and Slice 05B stabilizes the Unity protocol and
-transport. Slice 06 remains paused until both stabilization gates are green.
-Slices 06 through 08 then consume the stable contract in order. Slice 09 is the
-only release gate.
+transitions and expiry. Slice 04 transports that state. Slice 05A stabilizes the
+authoritative backend and Slice 05B stabilizes the Unity protocol and transport.
+Slice 06 remains paused until both stabilization gates are green. Slices 06
+through 08 then consume the stable contract in order. Slice 09 is the only
+release gate.
 
 ## Session slices
 

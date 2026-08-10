@@ -16,9 +16,9 @@ owns the scene's editing lease.
 
 **Architecture:** Replace the native three-button conflict prompt with a custom
 modal editor window. Keep path-global coordination unchanged. Editor-only
-services handle destructive scene reload, Git branch creation, and scene Save
-As behind injected interfaces so the coordinator contains only decision routing
-and pending-save lifecycle logic.
+services handle destructive scene reload, Git branch creation, and scene Save As
+behind injected interfaces so the coordinator contains only decision routing and
+pending-save lifecycle logic.
 
 **Tech Stack:** Unity 6000.5.1f1 editor APIs, C#, NUnit EditMode tests, local
 Git command-line client, VitePress documentation.
@@ -31,14 +31,14 @@ Git command-line client, VitePress documentation.
   and Save As must run only through the existing deferred scheduler.
 - Support loaded `.unity` scenes only. Do not add Prefab Stage, generic asset,
   backend, protocol, Worker, or branch-scoped-lease behavior.
-- Keep leases unique by canonical asset path across every Git branch. A
-  recovery branch never authorizes saving the original scene path.
-- Save recovery scenes under `Assets/CoordinationRecovery/`, outside the
-  current `Assets/Scenes/**/*.unity` coordination rule.
+- Keep leases unique by canonical asset path across every Git branch. A recovery
+  branch never authorizes saving the original scene path.
+- Save recovery scenes under `Assets/CoordinationRecovery/`, outside the current
+  `Assets/Scenes/**/*.unity` coordination rule.
 - Runtime recovery code must not stage, commit, stash, push, reset, delete, or
   overwrite Git data.
-- Branch creation intentionally leaves all staged, unstaged, and untracked
-  files in the working tree.
+- Branch creation intentionally leaves all staged, unstaged, and untracked files
+  in the working tree.
 - Do not edit `Assets/Scenes/*.unity`, prefabs, `ProjectSettings`, or `Packages`
   while implementing or testing this slice unless the user explicitly approves
   that exact asset change.
@@ -67,15 +67,14 @@ Selecting `Move to recovery branch` reveals an in-window recovery form with:
   after checkout.
 - `Create branch and move scene` and `Back` actions.
 
-On success, the tool creates and checks out the branch, saves the dirty scene
-as the active scene at the recovery path, leaves the original scene unchanged
-on disk, and reports that no commit was created. The developer must review and
+On success, the tool creates and checks out the branch, saves the dirty scene as
+the active scene at the recovery path, leaves the original scene unchanged on
+disk, and reports that no commit was created. The developer must review and
 commit before another checkout because uncommitted files are not permanently
 attached to a branch.
 
 Selecting `Discard local changes` requires a second confirmation stating that
-the scene will be reloaded from disk and the discarded changes cannot be
-undone.
+the scene will be reloaded from disk and the discarded changes cannot be undone.
 
 ## Interfaces
 
@@ -97,8 +96,8 @@ public sealed class SaveConflictDecision
 }
 ```
 
-Update `ISaveConflictDialog.Show` to accept the suggested branch name and
-return `SaveConflictDecision`. Add these editor-only service contracts:
+Update `ISaveConflictDialog.Show` to accept the suggested branch name and return
+`SaveConflictDecision`. Add these editor-only service contracts:
 
 ```csharp
 public interface ICoordinationGitRecoveryService
@@ -139,9 +138,9 @@ partial result.
 - [ ] **Step 1: Write failing decision and controller tests**
 
   Add tests proving all four actions, window close to `KeepWorking`, editable
-  recovery branch input, `Back`, and rejected discard confirmation. The
-  recovery decision must contain the final branch text; other decisions must
-  return an empty branch name.
+  recovery branch input, `Back`, and rejected discard confirmation. The recovery
+  decision must contain the final branch text; other decisions must return an
+  empty branch name.
 
 - [ ] **Step 2: Run the focused tests and capture RED**
 
@@ -266,20 +265,21 @@ partial result.
 
 **Files:**
 
-- Modify: `Assets/Scripts/Editor/Coordination/CoordinationSaveResumeCoordinator.cs`
+- Modify:
+  `Assets/Scripts/Editor/Coordination/CoordinationSaveResumeCoordinator.cs`
 - Modify: `Assets/Scripts/Editor/Coordination/CoordinationBootstrap.cs`
 - Modify: `Assets/Scripts/Editor/Coordination/CoordinationWindowViewModel.cs`
 - Modify: `Assets/Tests/EditMode/Coordination/CoordinationSaveGuardTests.cs`
-- Modify: `Assets/Tests/EditMode/Coordination/CoordinationWindowViewModelTests.cs`
+- Modify:
+  `Assets/Tests/EditMode/Coordination/CoordinationWindowViewModelTests.cs`
 
 - [ ] **Step 1: Write failing orchestration tests**
 
   Prove `OverrideAndSave` alone sends `lease.override`. Prove `KeepWorking`
-  completes the pending path without saving. Prove discard completes the
-  pending path and calls only the discarder. Prove recovery completes the
-  original pending path before Git or Save As, then calls Git followed by Save
-  As without sending acquire, override, release, or uncoordinated-save
-  requests.
+  completes the pending path without saving. Prove discard completes the pending
+  path and calls only the discarder. Prove recovery completes the original
+  pending path before Git or Save As, then calls Git followed by Save As without
+  sending acquire, override, release, or uncoordinated-save requests.
 
   Cover Git failure with no scene save, Save As failure with
   `BranchCreated == true`, successful result copy, and immediate Coordination
@@ -331,11 +331,11 @@ partial result.
 
 - [ ] **Step 1: Update evergreen guidance after implementation**
 
-  Follow `Docs/evergreen-documentation.md`. Mark the four-action conflict
-  window as current only after code and tests pass. Explain the normal recovery
-  flow, the fact that every working-tree change follows checkout, the absence
-  of an automatic commit, partial branch-created/Save-As-failed recovery, and
-  the need to commit before switching again.
+  Follow `Docs/evergreen-documentation.md`. Mark the four-action conflict window
+  as current only after code and tests pass. Explain the normal recovery flow,
+  the fact that every working-tree change follows checkout, the absence of an
+  automatic commit, partial branch-created/Save-As-failed recovery, and the need
+  to commit before switching again.
 
 - [ ] **Step 2: Run the single-machine Unity smoke**
 
@@ -377,8 +377,8 @@ partial result.
   protocol or Worker change.
 - The custom modal is necessary because Unity's native complex dialog exposes
   only three actions.
-- Branch creation, scene recovery, discard, routing, and documentation each
-  have a separate RED/GREEN gate.
+- Branch creation, scene recovery, discard, routing, and documentation each have
+  a separate RED/GREEN gate.
 - Every destructive action requires explicit confirmation, and no failure path
   automatically deletes or rolls back user data.
 - The plan does not claim that automated evidence completes PP-7's external

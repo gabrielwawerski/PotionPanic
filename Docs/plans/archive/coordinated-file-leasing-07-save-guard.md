@@ -37,12 +37,12 @@ resumes only the omitted paths after an authoritative grant or override.
   `SaveConflictDialog` with `EditorApplication.delayCall`; never open UI inside
   `OnWillSaveAssets`. The dialog has exactly `Override and save`, `Cancel save`,
   and `Keep working` actions. Only `Override and save` sends `lease.override`;
-  the other actions preserve dirty local changes without scheduling a save.
-  If an override fails, if the backend is offline, or if the editor reloads,
+  the other actions preserve dirty local changes without scheduling a save. If
+  an override fails, if the backend is offline, or if the editor reloads,
   preserve dirty local changes and leave the file editable.
-- Preserve dirty work for cancellation, authoritative denial, reload, and
-  failed saves. Never treat a timeout or local offline state as ownership.
-  Manual coordination remains the fallback.
+- Preserve dirty work for cancellation, authoritative denial, reload, and failed
+  saves. Never treat a timeout or local offline state as ownership. Manual
+  coordination remains the fallback.
 
 ## Verification
 

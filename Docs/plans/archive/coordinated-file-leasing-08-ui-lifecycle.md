@@ -19,9 +19,9 @@ editor, and make normal shutdown, compilation, and domain reload safe.
 
 ## Implementation steps
 
-- Add `Window > Potion Panic > Coordination` showing authenticated identity,
-  the Git-derived branch, editable local task context, connection state,
-  presence, leases, reservations, owner details, expiry, and the local
+- Add `Window > Potion Panic > Coordination` showing authenticated identity, the
+  Git-derived branch, editable local task context, connection state, presence,
+  leases, reservations, owner details, expiry, and the local
   `Disabled` control. Persist only the task context and disabled switch through
   Slice 01's untracked local settings store.
 - Add actions to reconnect, reserve, release, override, copy a canonical path,
@@ -44,8 +44,8 @@ Run Coordination EditMode tests for view-model state, action enablement,
 notification filtering, normal shutdown release, domain reload, duplicate
 bootstrap prevention, unsupported-platform disabling, task-context persistence,
 and disabled-switch persistence. Open the window in Unity, confirm the menu item
-and key states render, then run the coordinated scene in Play Mode and review the
-Console for new errors.
+and key states render, then run the coordinated scene in Play Mode and review
+the Console for new errors.
 
 **Commit:** `feat(coordination): add editor coordination interface`
 

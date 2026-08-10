@@ -21,7 +21,8 @@ authenticated protocol operations to later Unity slices.
 - Create `CoordinationCredentialWindow.cs` as the narrow token-entry surface
   required before the full Coordination window exists in Slice 08.
 - Add matching tests under `Assets/Tests/EditMode/Coordination/`.
-- Modify only the existing Editor assembly references if compilation requires it.
+- Modify only the existing Editor assembly references if compilation requires
+  it.
 
 ## Implementation steps
 

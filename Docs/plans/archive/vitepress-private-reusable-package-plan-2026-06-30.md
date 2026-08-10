@@ -18,9 +18,9 @@ keep only docs content, board page frontmatter, and thin VitePress adapter
 files.
 
 This plan assumes the chosen direction is one full package, in a separate
-private repo, consumed via Git rather than a private npm registry. The
-migration should preserve current behavior first, then clean up naming and
-boundaries once PotionPanic is running through the package.
+private repo, consumed via Git rather than a private npm registry. The migration
+should preserve current behavior first, then clean up naming and boundaries once
+PotionPanic is running through the package.
 
 ## Locked Decisions
 
@@ -31,13 +31,12 @@ boundaries once PotionPanic is running through the package.
 - Distribution: private Git dependency from a dedicated private repo
 - Git pinning: immutable tags or releases
 - CLI integration: direct package bins in `package.json`
-- PotionPanic path conventions stay unchanged during the initial
-  implementation:
-  - `Docs`
-  - `plans`
-  - `archive/completed`
-  - `tickets`
-  - `archive/tickets`
+- PotionPanic path conventions stay unchanged during the initial implementation:
+    - `Docs`
+    - `plans`
+    - `archive/completed`
+    - `tickets`
+    - `archive/tickets`
 - Navigation direction for PotionPanic: workflow-first grouped navigation
 - PotionPanic topbar group label for onboarding and workflow: `Handbook`
 - PotionPanic keeps the sidebar section label `Unity Guides`
@@ -88,8 +87,8 @@ See README.md for current project scope and provenance details.
 ### License Handling
 
 - Preserve the upstream MIT license notice in the new repository
-- If the repository contains upstream-derived code, keep the MIT license text
-  in `LICENSE`
+- If the repository contains upstream-derived code, keep the MIT license text in
+  `LICENSE`
 - If needed, add a short note in `NOTICE` or README that portions were derived
   from the upstream package and later modified
 - Treat provenance and license carry-forward as part of the initial repo
@@ -100,37 +99,38 @@ See README.md for current project scope and provenance details.
 - `Docs/.vitepress/lib/markdown-writer-plugin.mjs`,
   `plan-writer.mjs`, `plan-archive.mjs`, `plan-common.mjs`,
   `plan-archive-page.mjs`
-  - reusable markdown-backed CRUD, archive, index-sync, and dev-server
-    middleware for tickets and plans
+    - reusable markdown-backed CRUD, archive, index-sync, and dev-server
+      middleware for tickets and plans
 - `Docs/.vitepress/lib/sidebar.mjs`, `sidebar-hmr-plugin.mjs`,
   `sidebar-site-data.mjs`
-  - reusable sidebar generation and live sidebar refresh
+    - reusable sidebar generation and live sidebar refresh
 - `Docs/.vitepress/lib/ticket-sections.mjs`, `ticket-links.mjs`,
   `ticket-metadata.mjs`, `ticket-suggestions.mjs`, `board-ordering.mjs`,
   `board-notice.mjs`, `ticket-detail-layout.mjs`, `page-path-copy.mjs`,
   `board-shell.mjs`
-  - reusable parsing, suggestion, ordering, responsive-layout, and board-shell
-    helpers
+    - reusable parsing, suggestion, ordering, responsive-layout, and board-shell
+      helpers
 - `Docs/.vitepress/theme/Layout.vue`, `theme/components/**`,
   `theme/composables/**`, `theme/styles/board.css`, `theme/types.ts`,
   `theme/index.ts`
-  - reusable VitePress theme bundle
+    - reusable VitePress theme bundle
 - `Scripts/docs/lib/docs-ui-launcher.mjs`, `Scripts/docs/open-board.mjs`,
   `Scripts/docs/create-ticket.mjs`
-  - reusable CLI and developer-UX helpers that should become package bins
+    - reusable CLI and developer-UX helpers that should become package bins
 - Most non-startup tests under `Scripts/docs/lib/*.test.mjs`
-  - reusable package characterization tests
+    - reusable package characterization tests
 
 ## Inventory Of PotionPanic-Specific Parts
 
 - All content under `Docs/**/*.md`
-- [Docs/board.md](../../board.md) and [Docs/archive/board.md](../../archive/board.md) frontmatter
-  - `board`, `boardMode`, `ticketsDir`, `archiveTicketsDir`,
-    `restoreTicketsDir`, `ticketPrefix`, `defaultColumn`, `ticketSections`,
-    `columns`, `demo`
+- [Docs/board.md](../../board.md)
+  and [Docs/archive/board.md](../../archive/board.md) frontmatter
+    - `board`, `boardMode`, `ticketsDir`, `archiveTicketsDir`,
+      `restoreTicketsDir`, `ticketPrefix`, `defaultColumn`, `ticketSections`,
+      `columns`, `demo`
 - PotionPanic site identity and information architecture
-  - title, description, GitHub URL, nav labels, sidebar sections, docs root
-    label `Docs`, and current plan/archive directory conventions
+    - title, description, GitHub URL, nav labels, sidebar sections, docs root
+      label `Docs`, and current plan/archive directory conventions
 - Host docs bootstrapping and usage docs in `README.md`
 - Host content integrity tests such as
   `Scripts/docs/lib/plans-index-links.test.mjs`
@@ -154,20 +154,20 @@ See README.md for current project scope and provenance details.
 #### Chosen
 
 - Dedicated full package repo plus private Git dependency
-  - best reuse boundary and cleanest ownership split
-  - tradeoff: broader package scope and Git-based release discipline
+    - best reuse boundary and cleanest ownership split
+    - tradeoff: broader package scope and Git-based release discipline
 
 #### Alternative
 
 - Same-repo workspace package first
-  - lower extraction friction
-  - tradeoff: second migration later and weaker reuse boundary
+    - lower extraction friction
+    - tradeoff: second migration later and weaker reuse boundary
 
 #### Alternative
 
 - Split foundation package plus PM addon
-  - better modularity for mixed-use projects
-  - tradeoff: more API and versioning overhead now
+    - better modularity for mixed-use projects
+    - tradeoff: more API and versioning overhead now
 
 ## Proposed Public API Shape
 
@@ -273,21 +273,21 @@ docboard create-ticket --board Docs/board.md --dir Docs/tickets
 ### Config Options To Preserve In V1
 
 - Board-page frontmatter remains the main runtime contract:
-  - `board`
-  - `boardMode`
-  - `ticketsDir`
-  - `archiveTicketsDir`
-  - `restoreTicketsDir`
-  - `ticketPrefix`
-  - `defaultColumn`
-  - `ticketSections`
-  - `columns`
-  - `demo`
+    - `board`
+    - `boardMode`
+    - `ticketsDir`
+    - `archiveTicketsDir`
+    - `restoreTicketsDir`
+    - `ticketPrefix`
+    - `defaultColumn`
+    - `ticketSections`
+    - `columns`
+    - `demo`
 - Preserve the current live sidebar refresh behavior during extraction:
-  - sidebar content changes should still rebuild sidebar data from config
-  - the dev HMR path should keep updating only `themeConfig.sidebar`
-  - `buildSidebarThemeConfig(...)` and `isSidebarContentPath(...)` should stay
-    usable by the HMR plugin, even if they start consuming host-owned config
+    - sidebar content changes should still rebuild sidebar data from config
+    - the dev HMR path should keep updating only `themeConfig.sidebar`
+    - `buildSidebarThemeConfig(...)` and `isSidebarContentPath(...)` should stay
+      usable by the HMR plugin, even if they start consuming host-owned config
 - Internal package naming should replace `potion-panic:*` event names, plugin
   names, and localStorage keys with generic `docboard:*` equivalents after the
   initial host refactor preserves the current live-update contract
@@ -298,49 +298,49 @@ docboard create-ticket --board Docs/board.md --dir Docs/tickets
 
 - `Home`
 - `Work`
-  - `Board`
-  - `Plans`
-  - `Milestones`
+    - `Board`
+    - `Plans`
+    - `Milestones`
 - `Project`
-  - `Game Design`
-  - `MVP Scope`
-  - `Technical Architecture`
+    - `Game Design`
+    - `MVP Scope`
+    - `Technical Architecture`
 - `Guides`
-  - `Guides`
-  - `Runtime Architecture`
-  - `Coding And Implementation`
-  - `Editor Safety`
-  - `Presentation Workflows`
+    - `Guides`
+    - `Runtime Architecture`
+    - `Coding And Implementation`
+    - `Editor Safety`
+    - `Presentation Workflows`
 - `Handbook`
-  - `Getting Started`
-  - `Workflow`
+    - `Getting Started`
+    - `Workflow`
 - `Archive`
 
 ### PotionPanic Sidebar
 
 - `Start Here`
-  - `Docs Home`
-  - `Getting Started`
-  - `Team Workflow`
+    - `Docs Home`
+    - `Getting Started`
+    - `Team Workflow`
 - `Active Work`
-  - `Board`
-  - `Implementation Plans`
-  - `Milestones`
+    - `Board`
+    - `Implementation Plans`
+    - `Milestones`
 - `Project Truth`
-  - `Game Design`
-  - `MVP Scope`
-  - `Technical Architecture`
-  - `Game Design And Psychology`
+    - `Game Design`
+    - `MVP Scope`
+    - `Technical Architecture`
+    - `Game Design And Psychology`
 - `Unity Guides`
-  - `Guides`
-  - `Runtime Architecture`
-  - `Coding And Implementation`
-  - `Editor Safety`
-  - `Presentation Workflows`
+    - `Guides`
+    - `Runtime Architecture`
+    - `Coding And Implementation`
+    - `Editor Safety`
+    - `Presentation Workflows`
 - `Archive`
-  - `Archive`
-  - `Archive Board`
-  - `Archived Plans`
+    - `Archive`
+    - `Archive Board`
+    - `Archived Plans`
 
 ### Docboard Package Defaults
 
@@ -367,25 +367,25 @@ docboard create-ticket --board Docs/board.md --dir Docs/tickets
 ## Risks And Mitigation
 
 - Tight coupling to current `Docs/`, `plans/`, and archive path conventions
-  - mitigation: make these explicit host config options with current values as
-    defaults
+    - mitigation: make these explicit host config options with current values as
+      defaults
 - Theme and plugin runtime coupling through custom HMR events and internal
   endpoints
-  - mitigation: keep both sides inside the package and do not expose endpoints
-    or events as public API; preserve the existing sidebar update payload shape
-    during the first extraction step, then rename internals only after both
-    emitter and listener move under package ownership
+    - mitigation: keep both sides inside the package and do not expose endpoints
+      or events as public API; preserve the existing sidebar update payload
+      shape during the first extraction step, then rename internals only after
+      both emitter and listener move under package ownership
 - Git dependency operational friction
-  - mitigation: pin to tags, document update workflow, avoid requiring a
-    build/publish step for installs
+    - mitigation: pin to tags, document update workflow, avoid requiring a
+      build/publish step for installs
 - Host test coverage collapse after moving unit tests out
-  - mitigation: move logic tests to the package repo and keep a small number of
-    thin host integration checks
+    - mitigation: move logic tests to the package repo and keep a small number
+      of thin host integration checks
 - Hidden PotionPanic assumptions inside reusable code
-  - mitigation: extract all site identity and sidebar content into host config
-    before the repo split
+    - mitigation: extract all site identity and sidebar content into host config
+      before the repo split
 - Startup-script churn
-  - mitigation: keep startup scripts out of scope for this work
+    - mitigation: keep startup scripts out of scope for this work
 
 ## Step-By-Step Implementation Plan
 
@@ -397,21 +397,21 @@ docboard create-ticket --board Docs/board.md --dir Docs/tickets
 - Refactor local sidebar generation to consume host config instead of owning
   `SIDEBAR_SECTIONS`
 - Preserve the current sidebar HMR contract in this phase:
-  - keep the same dev update flow of rebuild -> emit sidebar payload -> replace
-    only `themeConfig.sidebar`
-  - do not rename custom sidebar update events yet while emitter and listener
-    still live in the host repo
+    - keep the same dev update flow of rebuild -> emit sidebar payload ->
+      replace only `themeConfig.sidebar`
+    - do not rename custom sidebar update events yet while emitter and listener
+      still live in the host repo
 - Review gate: no behavior change, same board and docs pages still work locally
 
 ### Phase 2: Scaffold The Package Repo
 
-- Create the private repo, package manifest, exports map, peer dependencies,
-  CLI entrypoint, and test fixture site
+- Create the private repo, package manifest, exports map, peer dependencies, CLI
+  entrypoint, and test fixture site
 - Create the repo as a new repository, not a GitHub fork
 - Add provenance and licensing files during scaffold:
-  - `README.md` provenance section using the locked wording
-  - `NOTICE` file using the locked wording
-  - `LICENSE` carrying forward the upstream MIT notice
+    - `README.md` provenance section using the locked wording
+    - `NOTICE` file using the locked wording
+    - `LICENSE` carrying forward the upstream MIT notice
 - Copy reusable pure helpers and their unit tests first
 - Review gate: package tests run in isolation against a fixture docs tree
 
@@ -438,7 +438,11 @@ docboard create-ticket --board Docs/board.md --dir Docs/tickets
 - Add the Git dependency to PotionPanic
 - Replace local implementation files with thin adapters
 - Switch `package.json` scripts to direct `docboard` package bins
-- Keep [Docs/board.md](../../board.md), [Docs/archive/board.md](../../archive/board.md), and all content files in place
+-
+
+Keep [Docs/board.md](../../board.md), [Docs/archive/board.md](../../archive/board.md),
+and all content files in place
+
 - Review gate: `npm test`, `npm run docs:build`, and manual `npm run docs:ui`
   succeed in PotionPanic
 
@@ -447,8 +451,7 @@ docboard create-ticket --board Docs/board.md --dir Docs/tickets
 - Delete moved local libs and theme implementation files from PotionPanic once
   package usage is stable
 - Keep only host adapters, content, and host-specific tests
-- Update `README.md` and docs setup text to describe the package-backed
-  workflow
+- Update `README.md` and docs setup text to describe the package-backed workflow
 - Review gate: final host tree is thinner and no longer owns reusable logic
 
 ## Likely File Moves, Remains, And Changes
@@ -464,8 +467,8 @@ docboard create-ticket --board Docs/board.md --dir Docs/tickets
 - `Scripts/docs/lib/docs-ui-launcher.mjs`
 - `Scripts/docs/open-board.mjs`
 - `Scripts/docs/create-ticket.mjs`
-- Non-startup package-behavior tests under `Scripts/docs/lib/*.test.mjs`,
-  except `plans-index-links.test.mjs`
+- Non-startup package-behavior tests under `Scripts/docs/lib/*.test.mjs`, except
+  `plans-index-links.test.mjs`
 - Upstream provenance and license context should also be carried into the new
   repo scaffold, even though those files are newly authored rather than moved
 
@@ -487,39 +490,39 @@ docboard create-ticket --board Docs/board.md --dir Docs/tickets
 - `Docs/.vitepress/config.ts`
 - `Docs/.vitepress/theme/index.ts`
 - add `Docs/.vitepress/project-docs.config.ts`
-- remove the local `Docs/.vitepress/lib/` implementation directory after
-  cutover
+- remove the local `Docs/.vitepress/lib/` implementation directory after cutover
 - remove local theme implementation files after cutover
 - optionally add one small host integration test that checks package wiring
 
 ## Test Cases And Scenarios
 
 - Package unit tests
-  - ticket sections
-  - ticket links
-  - ticket metadata normalization
-  - suggestion catalog generation
-  - board ordering
-  - page-path copy
-  - plan create, update, and archive
-  - sidebar generation
-  - sidebar HMR payloads
-  - docs UI launcher
+    - ticket sections
+    - ticket links
+    - ticket metadata normalization
+    - suggestion catalog generation
+    - board ordering
+    - page-path copy
+    - plan create, update, and archive
+    - sidebar generation
+    - sidebar HMR payloads
+    - docs UI launcher
 - Package fixture integration
-  - board loads ticket JSON in dev and static modes
-  - create, edit, archive, and restore ticket flows work
-  - create, edit, and archive plan flows update indexes
-  - plan index sync still works on file changes
+    - board loads ticket JSON in dev and static modes
+    - create, edit, archive, and restore ticket flows work
+    - create, edit, and archive plan flows update indexes
+    - plan index sync still works on file changes
 - PotionPanic host verification
-  - `npm test`
-  - `npm run docs:build`
-  - manual `npm run docs:ui`
-  - manual board smoke on [Docs/board.md](../../board.md)
-  - manual archive-board smoke on [Docs/archive/board.md](../../archive/board.md)
+    - `npm test`
+    - `npm run docs:build`
+    - manual `npm run docs:ui`
+    - manual board smoke on [Docs/board.md](../../board.md)
+    - manual archive-board smoke
+      on [Docs/archive/board.md](../../archive/board.md)
 - Regression focus
-  - no behavior drift in frontmatter contract
-  - no hardcoded `Potion Panic` strings inside package internals
-  - no dependency on startup scripts
+    - no behavior drift in frontmatter contract
+    - no hardcoded `Potion Panic` strings inside package internals
+    - no dependency on startup scripts
 
 ## Final Package Identity
 

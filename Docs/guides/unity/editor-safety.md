@@ -2,9 +2,9 @@
 
 Use this guide before changing scenes, prefabs, inspector references, shared
 materials, layers, tags, project settings, or packages. These files are not
-opaque binaries: Unity serializes object identities, component fields, and
-asset references. That makes them reviewable, but overlapping edits can still
-be difficult or unsafe to merge.
+opaque binaries: Unity serializes object identities, component fields, and asset
+references. That makes them reviewable, but overlapping edits can still be
+difficult or unsafe to merge.
 
 Use [Unity Coordination](../coordinated-leasing.md) for developer identity,
 scene claims, save conflicts, and Coordination window actions.
@@ -25,8 +25,8 @@ Player prefab
 This explains several safety rules:
 
 - Renaming an asset inside Unity can preserve its GUID and references.
-- Deleting or regenerating its `.meta` file creates a different identity and
-  can break every reference to the old GUID.
+- Deleting or regenerating its `.meta` file creates a different identity and can
+  break every reference to the old GUID.
 - Replacing a YAML conflict without understanding object IDs can connect the
   right field to the wrong object even when the file still parses.
 - An apparently small inspector change can modify a shared prefab used in many
@@ -50,8 +50,8 @@ references, or scene assumptions.
 ## Scenes compose the current level
 
 Use the shared scene for scene-specific composition: room layout, lighting,
-camera placement, spawn locations, and the objects needed to run the level.
-Use prefabs for repeated or independently owned units.
+camera placement, spawn locations, and the objects needed to run the level. Use
+prefabs for repeated or independently owned units.
 
 Before editing a shared scene:
 
@@ -68,8 +68,8 @@ does not prove the configured gameplay scene works.
 
 ## Prefabs define reusable compositions
 
-Make an object a prefab when it should be instantiated, reused across scenes,
-or reviewed independently from one scene. Good candidates include ingredient
+Make an object a prefab when it should be instantiated, reused across scenes, or
+reviewed independently from one scene. Good candidates include ingredient
 stations, disasters, pickups, reusable UI panels, and visual effects.
 
 ### Understand overrides
@@ -88,13 +88,13 @@ Before applying overrides:
 - reopen another instance and verify the shared result.
 
 `Apply All` is unsafe when the instance contains experimental or scene-specific
-changes. A prefab variant is appropriate when a group of objects shares a
-stable base but needs a deliberate, reusable set of differences.
+changes. A prefab variant is appropriate when a group of objects shares a stable
+base but needs a deliberate, reusable set of differences.
 
 ## Inspector references are part of the implementation
 
-A serialized reference is a dependency. Treat assigning it with the same care
-as calling a method in code.
+A serialized reference is a dependency. Treat assigning it with the same care as
+calling a method in code.
 
 Check:
 
@@ -104,8 +104,8 @@ Check:
   scenes?
 - Will duplicating or instantiating the prefab preserve the relationship?
 - Does the reference remain valid when a child is renamed or moved?
-- Is the field required, and does the component report a clear setup error
-  when it is missing?
+- Is the field required, and does the component report a clear setup error when
+  it is missing?
 
 Do not drag an arbitrary object into a `None` field merely to remove a warning.
 That hides the setup defect until a less obvious behavior fails.

@@ -26,19 +26,18 @@ history.
 
 ## Implementation sequence
 
-1. Create `Docs/evergreen-documentation.md` and link it from README, AGENTS,
-   and the Documentation Atlas.
+1. Create `Docs/evergreen-documentation.md` and link it from README, AGENTS, and
+   the Documentation Atlas.
 2. Move `Docs/unity-guides/` to `Docs/guides/unity/`; update VitePress
-   navigation, current references, active work metadata, and live archive
-   links.
+   navigation, current references, active work metadata, and live archive links.
 3. Rewrite Project Setup and Daily Workflow around first-machine readiness and
    the complete task lifecycle.
 4. Clarify Game Design, MVP Scope, and the accepted target runtime design while
    preserving all accepted product decisions.
 5. Rebuild the Unity guides and Unity Coordination Guide with mental models,
    examples, failure modes, and compact reference material.
-6. Improve the Coordination Server runbook and research framing without
-   changing the deferred outage policy or research conclusions.
+6. Improve the Coordination Server runbook and research framing without changing
+   the deferred outage policy or research conclusions.
 7. Remove prose-content assertions; retain structural, workflow, link, and
    secret-leak safeguards.
 8. Verify `npm test`, `npm run docs:build`, `git diff --check`, path migration,
@@ -48,7 +47,8 @@ history.
 
 - Implementation behavior: `Assets/Scripts/Editor/Coordination/`, its EditMode
   tests, `Tools/CoordinationServer/src/`, and server tests.
-- Project configuration: `coordination.json`, `ProjectSettings/ProjectVersion.txt`,
+- Project configuration: `coordination.json`,
+  `ProjectSettings/ProjectVersion.txt`,
   `Packages/manifest.json`, `package.json`, and VitePress configuration.
 - Accepted gameplay and delivery decisions: `Docs/project/` and active tickets.
 - Historical rationale: plans and archives, used only when consistent with

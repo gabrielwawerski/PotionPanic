@@ -69,12 +69,12 @@ features such as assignees, dependency links, and richer archive views.
 
 ## Recommended Next Slice
 
-The next best slice is **structured workflow metadata and ticket relationships**.
+The next best slice is **structured workflow metadata and ticket
+relationships**.
 
-This repo's active tickets already carry useful planning data such as
-milestone, dependencies, documentation links, and likely affected files, but
-those values currently live inside markdown content rather than first-class
-ticket metadata.
+This repo's active tickets already carry useful planning data such as milestone,
+dependencies, documentation links, and likely affected files, but those values
+currently live inside markdown content rather than first-class ticket metadata.
 
 ### Scope
 
@@ -85,8 +85,8 @@ ticket metadata.
    Show and edit those fields in the ticket modal sidebar alongside status,
    priority, tags, and assignee.
 3. **Clickable relationships**
-   Render dependency ticket IDs such as `PP-2` and `PP-3` as direct links in
-   the modal so tickets become easier to navigate.
+   Render dependency ticket IDs such as `PP-2` and `PP-3` as direct links in the
+   modal so tickets become easier to navigate.
 
 ### Why This Next
 

@@ -12,13 +12,15 @@ archivedAt: '2026-08-06T16:32:48.967Z'
 
 ## Description
 
-Add structured assignee support to the VitePress board UI and markdown ticket workflow.
+Add structured assignee support to the VitePress board UI and markdown ticket
+workflow.
 
 ## Acceptance Criteria
 
 - [x] Tasks can store an assignee in frontmatter.
 - [x] The board UI can show and edit the assignee value in local dev mode.
-- [x] The detail view presents the assignee clearly without breaking the stock task flow.
+- [x] The detail view presents the assignee clearly without breaking the stock
+  task flow.
 
 ## Implementation Plan
 

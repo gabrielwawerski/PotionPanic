@@ -1,7 +1,8 @@
 # Archive
 
 Completed or superseded task records and board history live here. Finished
-implementation plans live in [`../plans/archive/index.md`](../plans/archive/index.md).
+implementation plans live in [
+`../plans/archive/index.md`](../plans/archive/index.md).
 
 ## Archive Areas
 

@@ -6,14 +6,15 @@ For the required content and authority of each evergreen page, use the
 
 ## Entry points
 
-- [Repository README](https://github.com/gabrielwawerski/PotionPanic/blob/master/README.md): repository purpose, first commands, local
-  versus published docs, and maintainer operations. Open it when entering the
-  repository.
+- [Repository README](https://github.com/gabrielwawerski/PotionPanic/blob/master/README.md):
+  repository purpose, first commands, local versus published docs, and
+  maintainer operations. Open it when entering the repository.
 - [`index.md`](index.md): published docs home. Open it when browsing the site.
 - [`board.md`](board.md): active task board. Open it to choose or update work.
 - [`evergreen-documentation.md`](evergreen-documentation.md): knowledge owners,
   writing model, and evidence rules. Open it before changing long-lived docs.
-- [AGENTS.md](https://github.com/gabrielwawerski/PotionPanic/blob/master/AGENTS.md): always-read contributor and agent constraints.
+- [AGENTS.md](https://github.com/gabrielwawerski/PotionPanic/blob/master/AGENTS.md):
+  always-read contributor and agent constraints.
 
 ## Setup and recurring work
 
@@ -39,14 +40,18 @@ For the required content and authority of each evergreen page, use the
 ## Working guides
 
 - [`guides/index.md`](guides/index.md): choose practical guidance by task.
-- [`guides/unity/index.md`](guides/unity/index.md): choose a Unity working guide.
-- [`guides/unity/runtime-architecture.md`](guides/unity/runtime-architecture.md):
+- [`guides/unity/index.md`](guides/unity/index.md): choose a Unity working
+  guide.
+- [
+  `guides/unity/runtime-architecture.md`](guides/unity/runtime-architecture.md):
   understand Unity runtime composition, lifecycle, dependencies, and state.
-- [`guides/unity/coding-and-implementation.md`](guides/unity/coding-and-implementation.md):
+- [
+  `guides/unity/coding-and-implementation.md`](guides/unity/coding-and-implementation.md):
   turn one accepted behavior into a small, verifiable implementation slice.
 - [`guides/unity/editor-safety.md`](guides/unity/editor-safety.md): change
   scenes, prefabs, serialized references, shared assets, and settings safely.
-- [`guides/unity/presentation-workflows.md`](guides/unity/presentation-workflows.md):
+- [
+  `guides/unity/presentation-workflows.md`](guides/unity/presentation-workflows.md):
   build and hand off UI, animation, models, materials, VFX, and feedback.
 
 ## Coordination
@@ -57,9 +62,11 @@ For the required content and authority of each evergreen page, use the
 - [Coordination Server README](https://github.com/gabrielwawerski/PotionPanic/blob/master/Tools/CoordinationServer/README.md):
   operator trust model, verification, local development, deployment, token
   administration, monitoring, and protocol lifecycle.
-- [`plans/coordinated-file-leasing-system.md`](plans/coordinated-file-leasing-system.md):
+- [
+  `plans/coordinated-file-leasing-system.md`](plans/coordinated-file-leasing-system.md):
   Protocol v1 and program contract.
-- [`plans/coordinated-file-leasing-release-acceptance.md`](plans/coordinated-file-leasing-release-acceptance.md):
+- [
+  `plans/coordinated-file-leasing-release-acceptance.md`](plans/coordinated-file-leasing-release-acceptance.md):
   remaining release-acceptance work.
 - [`tickets/PP-7.md`](tickets/PP-7.md): dated evidence and current blockers.
 
@@ -75,7 +82,8 @@ For the required content and authority of each evergreen page, use the
 
 ## Research
 
-- [`research/game-design-and-psychology.md`](research/game-design-and-psychology.md):
+- [
+  `research/game-design-and-psychology.md`](research/game-design-and-psychology.md):
   advisory evidence and heuristics for engagement, ethics, feedback, production
   risk, market communication, and validation. It does not override project
   truth.

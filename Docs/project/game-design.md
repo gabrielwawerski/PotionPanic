@@ -1,10 +1,7 @@
 # Game design
 
-Version: 1.0
-Project Type: Small-scope 3D indie game
-Team Size: 2 developers
-Target Engine: Unity
-Target Platform: PC
+Version: 1.0 Project Type: Small-scope 3D indie game Team Size: 2 developers
+Target Engine: Unity Target Platform: PC
 
 Use this doc for player-facing design, feel, readability, and content intent.
 Use [`mvp-scope.md`](mvp-scope.md) for locked milestone and tuning decisions.
@@ -28,8 +25,8 @@ When documents differ:
 
 ## Game at a glance
 
-| The player is... | The game asks them to... | The game ends when... |
-| --- | --- | --- |
+| The player is...                                  | The game asks them to...                                                                    | The game ends when...        |
+|---------------------------------------------------|---------------------------------------------------------------------------------------------|------------------------------|
 | An apprentice alchemist in one chaotic laboratory | identify disasters, gather one matching ingredient, brew its potion, and resolve the threat | the Panic Meter reaches 100% |
 
 The design owns player experience and content intent. It does not set locked
@@ -102,15 +99,15 @@ Prefer:
 
 The pillars describe one experience, not three independent feature lists. A
 disaster should be readable enough that the player can identify the response,
-simple enough that the response requires only one ingredient and one potion,
-and urgent enough that choosing which disaster to solve first still matters.
+simple enough that the response requires only one ingredient and one potion, and
+urgent enough that choosing which disaster to solve first still matters.
 
-| Design choice | Supports | Fails when... |
-| --- | --- | --- |
-| One visible solution per disaster | Readability and fast decisions | The player must stop and search a recipe menu. |
-| One carried item | Movement and prioritization pressure | Inventory management becomes the main challenge. |
-| Several simple disasters at once | Controlled chaos | Effects overlap so heavily that cause and priority disappear. |
-| Fixed top-down camera | Whole-room awareness | Important threats can occur outside the readable play space. |
+| Design choice                     | Supports                             | Fails when...                                                 |
+|-----------------------------------|--------------------------------------|---------------------------------------------------------------|
+| One visible solution per disaster | Readability and fast decisions       | The player must stop and search a recipe menu.                |
+| One carried item                  | Movement and prioritization pressure | Inventory management becomes the main challenge.              |
+| Several simple disasters at once  | Controlled chaos                     | Effects overlap so heavily that cause and priority disappear. |
+| Fixed top-down camera             | Whole-room awareness                 | Important threats can occur outside the readable play space.  |
 
 ## Core Gameplay Loop
 
@@ -152,9 +149,9 @@ penalty should teach the rule and increase pressure rather than feel like an
 unexplained loss.
 
 As the run continues, spawn intervals shorten and more disasters can remain
-active. The same readable actions become harder because the player has less
-time and more competing priorities. The run ends when accumulated unresolved
-pressure reaches 100 Panic.
+active. The same readable actions become harder because the player has less time
+and more competing priorities. The run ends when accumulated unresolved pressure
+reaches 100 Panic.
 
 ## Player Experience
 
@@ -249,11 +246,11 @@ The room should be readable from the fixed top-down camera at all times.
 
 ### Ingredient and potion set
 
-| Ingredient | Potion | Solves |
-| --- | --- | --- |
-| Blue Mushroom | Cooling Potion | Overheated Cauldron |
-| Green Slime | Slime Dissolver | Slime Leak |
-| Purple Crystal Dust | Purification Potion | Toxic Magic Cloud |
+| Ingredient          | Potion              | Solves              |
+|---------------------|---------------------|---------------------|
+| Blue Mushroom       | Cooling Potion      | Overheated Cauldron |
+| Green Slime         | Slime Dissolver     | Slime Leak          |
+| Purple Crystal Dust | Purification Potion | Toxic Magic Cloud   |
 
 ### Ingredient themes
 

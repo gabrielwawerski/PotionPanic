@@ -1,15 +1,15 @@
 # Guides
 
-Use these pages while doing project work. Guides teach reusable methods and
-tool behavior. The [Project Overview](../project/) owns Potion Panic's binding
-game, scope, and target runtime decisions.
+Use these pages while doing project work. Guides teach reusable methods and tool
+behavior. The [Project Overview](../project/) owns Potion Panic's binding game,
+scope, and target runtime decisions.
 
 ## Choose by task
 
-| You need to... | Open |
-| --- | --- |
-| Understand or operate the Unity Coordination tool | [Unity Coordination Guide](coordinated-leasing.md) |
-| Choose a Unity architecture, implementation, editor, or presentation guide | [Unity Guides](unity/) |
+| You need to...                                                                            | Open                                                                           |
+|-------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------|
+| Understand or operate the Unity Coordination tool                                         | [Unity Coordination Guide](coordinated-leasing.md)                             |
+| Choose a Unity architecture, implementation, editor, or presentation guide                | [Unity Guides](unity/)                                                         |
 | Evaluate a design idea against evidence, ethics, production risk, or market communication | [Game Design and Player Psychology](../research/game-design-and-psychology.md) |
 
 ## Authority

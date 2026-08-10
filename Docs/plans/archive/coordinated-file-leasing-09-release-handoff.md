@@ -17,8 +17,8 @@ Machine A provisioning. Machine B on a different network remains unavailable.
 
 ## Current release state
 
-- Production deployment, required Worker secrets, endpoint health, and Machine
-  A authentication are verified in `PP-7`.
+- Production deployment, required Worker secrets, endpoint health, and Machine A
+  authentication are verified in `PP-7`.
 - Coordination is project-owned editor code in the `PotionPanic.Editor`
   assembly, not a separately packaged Unity or UPM plugin. There is no distinct
   plugin publish action. Its release gate combines the committed editor code,
@@ -50,8 +50,8 @@ Machine A provisioning. Machine B on a different network remains unavailable.
   values, then verify the existing HMAC digest. Keep at most eight valid
   sessions per developer, evict the oldest disconnected session first, and
   return HTTP 429 if all eight sessions have active connections.
-- Remove and broadcast a revoked developer's reservations with that
-  developer's sessions, presence, editing leases, and connections.
+- Remove and broadcast a revoked developer's reservations with that developer's
+  sessions, presence, editing leases, and connections.
 - Use identical path canonicalization in TypeScript and C#: NFC normalization,
   slash normalization, and ASCII `A-Z` folding only. Cover non-ASCII and
   composed/decomposed Unicode vectors.
@@ -71,14 +71,18 @@ produce the exact `workers.dev` URL.
 
 - Modify `coordination.json` to replace the placeholder endpoint after the
   Worker is deployed.
-- Update `README.md`, [Docs/onboarding/getting-started.md](../../onboarding/getting-started.md),
-  [Docs/collaboration/team-workflow.md](../../collaboration/team-workflow.md), and [Docs/guides/unity/editor-safety.md](../../guides/unity/editor-safety.md).
-- Append deployment, test, and two-machine evidence to [Docs/tickets/PP-7.md](../../tickets/PP-7.md).
+- Update
+  `README.md`, [Docs/onboarding/getting-started.md](../../onboarding/getting-started.md),
+  [Docs/collaboration/team-workflow.md](../../collaboration/team-workflow.md),
+  and [Docs/guides/unity/editor-safety.md](../../guides/unity/editor-safety.md).
+- Append deployment, test, and two-machine evidence
+  to [Docs/tickets/PP-7.md](../../tickets/PP-7.md).
 - Create Cloudflare secrets `TOKEN_HMAC_KEY` and `ADMIN_TOKEN`; issue one
   developer token per person without committing any secret.
 - Move the program page and completed slice pages into `Docs/plans/archive/`
   only after acceptance, and update
-  [Docs/plans/archive/index.md](index.md) through the existing plan archive flow.
+  [Docs/plans/archive/index.md](index.md) through the existing plan archive
+  flow.
 
 ## Acceptance run
 
@@ -100,8 +104,8 @@ produce the exact `workers.dev` URL.
   Unity Coordination EditMode suite, and a Play Mode smoke test against the
   canonical scene at execution time.
 - Record commands, dates, machine roles, network conditions, observed expiry,
-  and any remaining risk in `PP-7`. Do not claim acceptance from a single-machine
-  local test.
+  and any remaining risk in `PP-7`. Do not claim acceptance from a
+  single-machine local test.
 - Document token setup, reservations, overrides, offline recovery, advisory
   locking limits, and the manual-outage fallback. Keep manual announcements
   required for protected changes.

@@ -9,9 +9,9 @@ configuration foundations without connecting to a real service.
 
 **Depends on:** None. PP-8 is already resolved; do not recreate or modify it.
 
-**Produces:** A buildable strict-TypeScript Worker package, a Unity configuration
-loader and path matcher, the version-1 flat-envelope contract, and CI that runs
-backend checks without deployment credentials.
+**Produces:** A buildable strict-TypeScript Worker package, a Unity
+configuration loader and path matcher, the version-1 flat-envelope contract, and
+CI that runs backend checks without deployment credentials.
 
 ## Files
 
@@ -48,9 +48,9 @@ backend checks without deployment credentials.
   ignore server state older than the newest version already applied.
 - Scaffold a strict Worker package with the SQLite Durable Object migration
   binding, an exported no-op `CoordinationObject` class, and Vitest Workers
-  integration. Implement `GET /health` with the program-contract response.
-  Other routes may return a deliberate not-yet-authenticated response in this
-  slice; do not implement auth or state.
+  integration. Implement `GET /health` with the program-contract response. Other
+  routes may return a deliberate not-yet-authenticated response in this slice;
+  do not implement auth or state.
 - Add CI steps for `npm ci`, type checking, Vitest, and Wrangler dry-run. CI
   must not require `TOKEN_HMAC_KEY`, `ADMIN_TOKEN`, or a deployed endpoint.
 

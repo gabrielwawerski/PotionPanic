@@ -10,14 +10,15 @@ supersedes:
 ## Summary
 
 The coordination Worker is deployed at the URL in `coordination.json`, and the
-latest PP-7 evidence records successful `/health` checks for that endpoint.
-PP-7 remains open because final release acceptance still needs interactive
-Unity smoke evidence, credentialed Wrangler-tail evidence, and two Windows
-machines on different networks completing the acceptance matrix.
+latest PP-7 evidence records successful `/health` checks for that endpoint. PP-7
+remains open because final release acceptance still needs interactive Unity
+smoke evidence, credentialed Wrangler-tail evidence, and two Windows machines on
+different networks completing the acceptance matrix.
 
 This page is the active release-acceptance plan. The detailed hardening
 implementation history is archived in
-[`archive/coordinated-file-leasing-remaining-hardening.md`](archive/coordinated-file-leasing-remaining-hardening.md).
+[
+`archive/coordinated-file-leasing-remaining-hardening.md`](archive/coordinated-file-leasing-remaining-hardening.md).
 
 ## Current State
 
@@ -39,7 +40,8 @@ implementation history is archived in
 
 1. Re-run local gates from the current checkout:
    `npm test`, `npm run docs:build`, `Tools/CoordinationServer` typecheck,
-   Worker tests, `npm audit --audit-level=high`, and `npx wrangler deploy --dry-run`.
+   Worker tests, `npm audit --audit-level=high`, and
+   `npx wrangler deploy --dry-run`.
 2. Verify the configured endpoint with `GET /health` and record the timestamp
    and response shape in PP-7 without saving credentials or secrets.
 3. Complete an interactive single-machine Unity smoke with the current client:

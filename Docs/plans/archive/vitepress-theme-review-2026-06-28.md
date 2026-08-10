@@ -20,8 +20,8 @@ board-only alignment mismatch, so that area should not be treated as complete.
 
 ### 1. Board sidebar is still slightly misaligned on the board page
 
-The board page does not fully match the normal VitePress left sidebar shell.
-On `/board` at large desktop width, the navbar title box and divider render at
+The board page does not fully match the normal VitePress left sidebar shell. On
+`/board` at large desktop width, the navbar title box and divider render at
 `272px` while the actual sidebar renders at `262px`. Normal docs pages do not
 show that mismatch.
 

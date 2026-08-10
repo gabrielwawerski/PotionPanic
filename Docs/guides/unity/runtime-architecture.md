@@ -24,8 +24,8 @@ Project assets
 ```
 
 These layers solve different problems. Confusing them creates bugs such as a
-shared ScriptableObject retaining per-run health, UI deciding gameplay rules,
-or one scene object becoming a hidden dependency of every prefab.
+shared ScriptableObject retaining per-run health, UI deciding gameplay rules, or
+one scene object becoming a hidden dependency of every prefab.
 
 ## Scenes define a running context
 
@@ -62,8 +62,8 @@ Player
 
 The root owns movement and gameplay-facing components. The visual child can
 rotate, animate, or be replaced without changing collision or inventory. A
-single `PlayerEverything` component would make those concerns harder to test
-and change independently.
+single `PlayerEverything` component would make those concerns harder to test and
+change independently.
 
 Hierarchy is not a general dependency-injection system. A deeply nested child
 should not search the entire scene for arbitrary managers merely because both
@@ -82,8 +82,8 @@ component, state:
 
 For example, `PlayerInventory` can own the carried item and reject a second
 pickup. It should not decide the global score, spawn disasters, or control the
-Panic meter. Keeping those boundaries explicit prevents a small rule change
-from spreading through unrelated systems.
+Panic meter. Keeping those boundaries explicit prevents a small rule change from
+spreading through unrelated systems.
 
 ## Prefer composition to deep inheritance
 
@@ -98,24 +98,24 @@ WorldObject -> Interactable -> Station -> BrewingStation
 ```
 
 Changing the parent can affect every subtype, and scene behavior becomes
-difficult to infer from the attached components. Prefer a brewing component,
-an animation presenter, and any tutorial behavior as separate responsibilities
+difficult to infer from the attached components. Prefer a brewing component, an
+animation presenter, and any tutorial behavior as separate responsibilities
 unless a small pure-C# inheritance relationship genuinely expresses one stable
 concept.
 
 ## Separate data, behavior, and current state
 
-| Kind | Good owner | Potion Panic example | Common failure |
-| --- | --- | --- | --- |
-| Reusable content data | ScriptableObject asset | Which ingredient produces which potion. | Storing the currently carried item in the shared asset. |
-| Scene-attached behavior | MonoBehaviour component | A station responds to interaction. | Making a data asset search the scene or run frame logic. |
-| Per-run state | Component or plain C# object | Current Panic, score, active disasters. | Letting state survive unintentionally in a shared asset. |
-| Presentation state | View component | Current meter fill or warning animation. | Letting the view decide gameplay outcomes. |
+| Kind                    | Good owner                   | Potion Panic example                     | Common failure                                           |
+|-------------------------|------------------------------|------------------------------------------|----------------------------------------------------------|
+| Reusable content data   | ScriptableObject asset       | Which ingredient produces which potion.  | Storing the currently carried item in the shared asset.  |
+| Scene-attached behavior | MonoBehaviour component      | A station responds to interaction.       | Making a data asset search the scene or run frame logic. |
+| Per-run state           | Component or plain C# object | Current Panic, score, active disasters.  | Letting state survive unintentionally in a shared asset. |
+| Presentation state      | View component               | Current meter fill or warning animation. | Letting the view decide gameplay outcomes.               |
 
-ScriptableObjects are assets. Multiple objects can reference the same asset,
-so changing a field on it at runtime can affect every reader and may persist in
-the editor in surprising ways. Treat content assets as configuration unless a
-design explicitly requires shared mutable state.
+ScriptableObjects are assets. Multiple objects can reference the same asset, so
+changing a field on it at runtime can affect every reader and may persist in the
+editor in surprising ways. Treat content assets as configuration unless a design
+explicitly requires shared mutable state.
 
 ## State needs one authoritative owner
 
@@ -128,39 +128,38 @@ Ask “who owns the current value?” before deciding who can change it.
 - one disaster instance owns its own active and escalation state.
 
 Other components may request a change or observe the result. They should not
-keep unsynchronized copies. If UI, a disaster, and a manager all write their
-own Panic values, the project no longer has one answer to “what is current
-Panic?”
+keep unsynchronized copies. If UI, a disaster, and a manager all write their own
+Panic values, the project no longer has one answer to “what is current Panic?”
 
 ## Unity lifecycle methods are timing contracts
 
 Unity invokes lifecycle methods at specific points. Use each for the work its
 timing guarantees:
 
-| Method | Typical responsibility | Failure prevented |
-| --- | --- | --- |
-| `Awake` | Validate serialized references and cache same-object components. | First-frame null references and repeated lookup. |
-| `OnEnable` | Subscribe to events and enable reversible behavior. | Missing updates after an object is re-enabled. |
-| `Start` | Initialization that needs other enabled objects to have completed `Awake`. | Depending on unspecified component order during self-setup. |
-| `Update` | Frame-based input and non-physics behavior. | Input sampled only on physics ticks. |
-| `FixedUpdate` | Physics-step work for Rigidbody-based movement. | Frame-rate-dependent physics forces. |
-| `OnDisable` | Unsubscribe and stop reversible work. | Duplicate callbacks or calls into disabled objects. |
-| `OnDestroy` | Final cleanup that truly belongs to object destruction. | Treating temporary disable as permanent destruction. |
+| Method        | Typical responsibility                                                     | Failure prevented                                           |
+|---------------|----------------------------------------------------------------------------|-------------------------------------------------------------|
+| `Awake`       | Validate serialized references and cache same-object components.           | First-frame null references and repeated lookup.            |
+| `OnEnable`    | Subscribe to events and enable reversible behavior.                        | Missing updates after an object is re-enabled.              |
+| `Start`       | Initialization that needs other enabled objects to have completed `Awake`. | Depending on unspecified component order during self-setup. |
+| `Update`      | Frame-based input and non-physics behavior.                                | Input sampled only on physics ticks.                        |
+| `FixedUpdate` | Physics-step work for Rigidbody-based movement.                            | Frame-rate-dependent physics forces.                        |
+| `OnDisable`   | Unsubscribe and stop reversible work.                                      | Duplicate callbacks or calls into disabled objects.         |
+| `OnDestroy`   | Final cleanup that truly belongs to object destruction.                    | Treating temporary disable as permanent destruction.        |
 
 Potion Panic's accepted Milestone 1 movement uses a `CharacterController`, so
-its exact update path belongs to the approved implementation plan and tests,
-not a generic rule that all movement must use `FixedUpdate`.
+its exact update path belongs to the approved implementation plan and tests, not
+a generic rule that all movement must use `FixedUpdate`.
 
 ## Make dependencies visible
 
 Prefer the narrowest dependency that expresses the real relationship:
 
-| Relationship | Default | Example |
-| --- | --- | --- |
-| Same GameObject, required component | `GetComponent` once in `Awake`, optionally protected with `RequireComponent`. | Player movement obtains its `CharacterController`. |
-| Nearby child or explicitly composed object | Serialized reference. | Interaction logic references its prompt presenter. |
-| Object created by another system | Explicit initialization from the creator. | Disaster manager supplies data to a new disaster instance. |
-| One event observed by several independent views | C# event with matched subscribe and unsubscribe. | Panic changes update UI and warning audio. |
+| Relationship                                    | Default                                                                       | Example                                                    |
+|-------------------------------------------------|-------------------------------------------------------------------------------|------------------------------------------------------------|
+| Same GameObject, required component             | `GetComponent` once in `Awake`, optionally protected with `RequireComponent`. | Player movement obtains its `CharacterController`.         |
+| Nearby child or explicitly composed object      | Serialized reference.                                                         | Interaction logic references its prompt presenter.         |
+| Object created by another system                | Explicit initialization from the creator.                                     | Disaster manager supplies data to a new disaster instance. |
+| One event observed by several independent views | C# event with matched subscribe and unsubscribe.                              | Panic changes update UI and warning audio.                 |
 
 Avoid `GameObject.Find`, repeated scene-wide searches, and hidden scene-name
 contracts. They allow a component to appear configured while depending on
@@ -186,8 +185,8 @@ PanicSystem changes Panic
   -> screen feedback reacts near danger thresholds
 ```
 
-The listeners present the result. They do not recalculate or overwrite Panic.
-An event bus for every interaction would hide who owns the operation and make
+The listeners present the result. They do not recalculate or overwrite Panic. An
+event bus for every interaction would hide who owns the operation and make
 execution order harder to follow.
 
 ## Represent game flow explicitly
@@ -219,9 +218,9 @@ collider, audio source, and local VFX anchors. The disaster manager supplies
 spawn location and content data. The prefab should not depend on a manually
 wired reference to one particular scene's HUD.
 
-Prefab variants are useful when several objects share a stable base
-composition and differ in a controlled set of overrides. They are harmful when
-the base is so broad that every variant disables half of it.
+Prefab variants are useful when several objects share a stable base composition
+and differ in a controlled set of overrides. They are harmful when the base is
+so broad that every variant disables half of it.
 
 ## Apply the model to a new feature
 

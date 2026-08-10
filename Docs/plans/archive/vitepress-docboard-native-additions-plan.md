@@ -11,11 +11,11 @@ originalPath: 'Docs/archive/completed/vitepress-docboard-native-additions-plan.m
 ## Summary
 
 Add the cheap VitePress-native wins to the reusable `@gabrielwawerski/docboard`
-package where they are project-agnostic: local search by default and an
-explicit `lastUpdated` passthrough. Keep repo-specific options such as GitHub
-edit links and favicon/head metadata in host project config. Skip custom
-search, Algolia/Ask AI, PWA, analytics, i18n, and new plugins until the docs
-are large enough to prove the need.
+package where they are project-agnostic: local search by default and an explicit
+`lastUpdated` passthrough. Keep repo-specific options such as GitHub edit links
+and favicon/head metadata in host project config. Skip custom search,
+Algolia/Ask AI, PWA, analytics, i18n, and new plugins until the docs are large
+enough to prove the need.
 
 ## Key Changes
 
@@ -44,8 +44,8 @@ are large enough to prove the need.
 
 ## Test Plan
 
-- In `C:\Dev\Docboard`, extend config tests to verify default local search,
-  host search override, and `lastUpdated` passthrough.
+- In `C:\Dev\Docboard`, extend config tests to verify default local search, host
+  search override, and `lastUpdated` passthrough.
 - In `C:\Dev\Docboard`, run `npm test` and `npm run test:types`.
 - In `C:\Dev\PotionPanic`, run `npm run docs:build`.
 - Run `npm run docs:dev:local`, open `/PotionPanic/`, and verify Ctrl/Cmd+K

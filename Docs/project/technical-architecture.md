@@ -1,20 +1,18 @@
 # Potion Panic target runtime design
 
-Version: 1.0
-Target engine: Unity
-Target platform: PC
+Version: 1.0 Target engine: Unity Target platform: PC
 
 Use this document for Potion Panic runtime structure, data ownership, and
 implementation boundaries. Use [`game-design.md`](game-design.md) for
-player-facing intent and [`mvp-scope.md`](mvp-scope.md) for milestone order
-and locked MVP rules.
+player-facing intent and [`mvp-scope.md`](mvp-scope.md) for milestone order and
+locked MVP rules.
 
 ## Current state and target status
 
 The gameplay runtime is currently a scaffold: the gameplay assembly and marker
 exist, but the data assets, components, and systems described below are not yet
-implemented as a complete loop. This document is the accepted target design
-that future milestone work should implement incrementally.
+implemented as a complete loop. This document is the accepted target design that
+future milestone work should implement incrementally.
 
 Names, ownership boundaries, and binding MVP behavior are requirements where
 this page states them directly. Example fields and code labelled “possible,”
@@ -28,15 +26,15 @@ systems, dependencies, repository locations, and completion criteria that the
 MVP needs. It does not teach general Unity architecture patterns; use the
 [Unity Runtime Foundations](../guides/unity/runtime-architecture.md) for that.
 
-| Area | Contract |
-| --- | --- |
-| Data | Ingredient, potion, and disaster definitions are ScriptableObjects. |
-| Runtime | Components own movement, interaction, inventory, brewing, disaster behavior, Panic, score, and presentation updates. |
-| Coordination | Managers coordinate systems; they do not absorb individual gameplay rules. |
-| Delivery | Create only the systems needed for the current milestone and retain one reusable disaster loop. |
+| Area         | Contract                                                                                                             |
+|--------------|----------------------------------------------------------------------------------------------------------------------|
+| Data         | Ingredient, potion, and disaster definitions are ScriptableObjects.                                                  |
+| Runtime      | Components own movement, interaction, inventory, brewing, disaster behavior, Panic, score, and presentation updates. |
+| Coordination | Managers coordinate systems; they do not absorb individual gameplay rules.                                           |
+| Delivery     | Create only the systems needed for the current milestone and retain one reusable disaster loop.                      |
 
-It does not claim that every listed type should be created at once. It also
-does not teach Unity fundamentals; use
+It does not claim that every listed type should be created at once. It also does
+not teach Unity fundamentals; use
 [Unity Runtime Foundations](../guides/unity/runtime-architecture.md) for scenes,
 components, prefabs, ScriptableObjects, lifecycle, references, and events.
 
@@ -44,8 +42,8 @@ components, prefabs, ScriptableObjects, lifecycle, references, and events.
 
 Do not create every script in this document immediately.
 
-Only create the scripts needed for the current milestone. Build the game in
-this order:
+Only create the scripts needed for the current milestone. Build the game in this
+order:
 
 1. Player movement and camera
 2. Interaction system

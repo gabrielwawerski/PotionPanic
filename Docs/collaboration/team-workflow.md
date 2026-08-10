@@ -3,8 +3,8 @@
 Use this guide for recurring work after completing
 [Project Setup](../onboarding/getting-started.md). Human contributors normally
 use the Git interface in Rider, WebStorm, or VS Code. PowerShell commands are
-included as a fallback when the interface is unclear or a precise diagnostic
-is needed.
+included as a fallback when the interface is unclear or a precise diagnostic is
+needed.
 
 A normal task moves through one visible sequence:
 
@@ -13,26 +13,26 @@ inspect -> update master -> choose -> announce -> branch -> implement
 -> verify -> commit -> push -> hand off -> review -> merge
 ```
 
-Skipping an early step usually creates work later. A silent scene edit becomes
-a merge conflict; an unexplained local change becomes part of the wrong commit;
-an unverified handoff becomes another developer's debugging session.
+Skipping an early step usually creates work later. A silent scene edit becomes a
+merge conflict; an unexplained local change becomes part of the wrong commit; an
+unverified handoff becomes another developer's debugging session.
 
 ## Understand what the Git interface shows
 
 Rider, WebStorm, VS Code, and PowerShell operate on the same repository. Their
 labels differ, but the underlying Git state is shared.
 
-| Term | Meaning | Why it matters |
-| --- | --- | --- |
-| Working tree | The files currently on disk, including committed, modified, and untracked files. | Switching branches or discarding changes can replace these files. |
-| Changelist | A JetBrains grouping of local changes. It is not a branch or commit. | A changelist helps organize work, but only the selected files and hunks belong in a commit. |
-| Staging area | The exact snapshot VS Code prepares under `Staged Changes` for the next commit. | Unstaged changes stay on disk but are excluded from that commit. |
-| Commit | A local Git snapshot with an author and message. | A commit is not available to the other developer until it is pushed. |
-| Local branch | A named line of work in this checkout. | Branch switching changes which committed version is checked out. |
-| Remote branch | The last fetched view of a branch on `origin`, such as `origin/master`. | Fetch before trusting it; the other developer may have pushed since the last fetch. |
-| Fetch | Download remote branch information without changing working files. | Fetch is the safe first synchronization action. |
-| Pull or Update | Fetch and integrate remote work into the current branch. | Use it only after confirming the current branch and local state. |
-| Push | Upload local commits to the remote branch. | A push changes what the other developer can fetch and review. |
+| Term           | Meaning                                                                          | Why it matters                                                                              |
+|----------------|----------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------|
+| Working tree   | The files currently on disk, including committed, modified, and untracked files. | Switching branches or discarding changes can replace these files.                           |
+| Changelist     | A JetBrains grouping of local changes. It is not a branch or commit.             | A changelist helps organize work, but only the selected files and hunks belong in a commit. |
+| Staging area   | The exact snapshot VS Code prepares under `Staged Changes` for the next commit.  | Unstaged changes stay on disk but are excluded from that commit.                            |
+| Commit         | A local Git snapshot with an author and message.                                 | A commit is not available to the other developer until it is pushed.                        |
+| Local branch   | A named line of work in this checkout.                                           | Branch switching changes which committed version is checked out.                            |
+| Remote branch  | The last fetched view of a branch on `origin`, such as `origin/master`.          | Fetch before trusting it; the other developer may have pushed since the last fetch.         |
+| Fetch          | Download remote branch information without changing working files.               | Fetch is the safe first synchronization action.                                             |
+| Pull or Update | Fetch and integrate remote work into the current branch.                         | Use it only after confirming the current branch and local state.                            |
+| Push           | Upload local commits to the remote branch.                                       | A push changes what the other developer can fetch and review.                               |
 
 JetBrains changelists and VS Code staging use different mechanics. The required
 result is the same: review the exact files and hunks that will enter the commit,
@@ -104,11 +104,11 @@ anything.
 6. Confirm `master` and `origin/master` now identify the same commit.
 
 Do not use VS Code's **Sync Changes** for this step. It combines incoming and
-outgoing operations, while updating the shared base should never push
-something by accident.
+outgoing operations, while updating the shared base should never push something
+by accident.
 
-Stop if local `master` has an outgoing commit, the histories diverge, or the
-IDE proposes an unexpected merge or rebase. Inspect the graph with the other
+Stop if local `master` has an outgoing commit, the histories diverge, or the IDE
+proposes an unexpected merge or rebase. Inspect the graph with the other
 developer before changing history. Do not force-push `master`.
 
 <details>
@@ -133,13 +133,13 @@ major milestone should drive feature work at a time.
 
 Open the [board](../board.md) and choose one task from `To do`.
 
-| Column | Meaning |
-| --- | --- |
-| Backlog | Ideas and unapproved future work. |
-| To do | Clear enough to start, with a goal and acceptance criteria. |
-| Doing | Actively owned work. |
-| Test / Review | Implemented work awaiting verification or review. |
-| Done | Complete, tested, committed, and safe for another contributor to pull. |
+| Column        | Meaning                                                                |
+|---------------|------------------------------------------------------------------------|
+| Backlog       | Ideas and unapproved future work.                                      |
+| To do         | Clear enough to start, with a goal and acceptance criteria.            |
+| Doing         | Actively owned work.                                                   |
+| Test / Review | Implemented work awaiting verification or review.                      |
+| Done          | Complete, tested, committed, and safe for another contributor to pull. |
 
 Before moving a task to `Doing`, read its goal, acceptance criteria, affected
 files, dependencies, and blockers. Split a task when its parts cannot be built,
@@ -187,8 +187,8 @@ out the new branch. Confirm the branch control shows the new name.
 ### VS Code
 
 Select the branch indicator, choose **Create new branch**, enter the branch
-name, and confirm the status bar shows it. The equivalent Command Palette
-action is **Git: Create Branch**.
+name, and confirm the status bar shows it. The equivalent Command Palette action
+is **Git: Create Branch**.
 
 Use a type and subject that describe the work:
 
@@ -223,8 +223,8 @@ Always announce before editing:
 - `Packages/packages-lock.json`
 
 Scenes and prefabs are serialized object graphs. Project settings and package
-files change behavior across the whole checkout. All are difficult to
-reconcile when two people make overlapping changes without coordination.
+files change behavior across the whole checkout. All are difficult to reconcile
+when two people make overlapping changes without coordination.
 
 The current automated rule in `coordination.json` covers scene files below
 `Assets/Scenes/`. Before editing one, open
@@ -237,9 +237,9 @@ If the endpoint is missing, invalid, or unhealthy, follow the current
 uncoordinated-save policy in the Unity Coordination Guide. Preserve local work
 and use the agreed manual collaboration fallback for every protected-file edit.
 
-Prefer scripts, ScriptableObjects, focused prefabs, prefab variants, UI
-prefabs, and isolated test scenes when they let contributors work without
-sharing one large scene edit.
+Prefer scripts, ScriptableObjects, focused prefabs, prefab variants, UI prefabs,
+and isolated test scenes when they let contributors work without sharing one
+large scene edit.
 
 ## 7. Implement one playable or verifiable slice
 
@@ -258,20 +258,21 @@ During implementation:
 - stop feature work if compilation, the shared scene, or core gameplay becomes
   unstable.
 
-Use the [Coding and Implementation Guide](../guides/unity/coding-and-implementation.md)
+Use
+the [Coding and Implementation Guide](../guides/unity/coding-and-implementation.md)
 for responsibility, dependency, testing, and debug decisions.
 
 ## 8. Verify the actual change
 
 Choose proof from the files and behavior that changed:
 
-| Change | Minimum evidence |
-| --- | --- |
-| Markdown or docs configuration | `npm test`, `npm run docs:build`, rendered page and navigation review. |
-| Pure C# or editor logic | Relevant EditMode tests plus Unity compilation and Console review. |
-| Runtime or scene integration | Relevant PlayMode tests, affected scene in Play Mode, and Console review. |
+| Change                             | Minimum evidence                                                                                             |
+|------------------------------------|--------------------------------------------------------------------------------------------------------------|
+| Markdown or docs configuration     | `npm test`, `npm run docs:build`, rendered page and navigation review.                                       |
+| Pure C# or editor logic            | Relevant EditMode tests plus Unity compilation and Console review.                                           |
+| Runtime or scene integration       | Relevant PlayMode tests, affected scene in Play Mode, and Console review.                                    |
 | Scene, prefab, or inspector wiring | Open the asset, inspect references and overrides, run the affected behavior, and review the serialized diff. |
-| Project settings or packages | Reimport or restart when required, run affected behavior, and inspect every changed shared file. |
+| Project settings or packages       | Reimport or restart when required, run affected behavior, and inspect every changed shared file.             |
 
 For a normal Unity smoke test:
 
@@ -285,9 +286,9 @@ For a normal Unity smoke test:
    `Window > General > Test Runner`.
 7. Review the complete local change set in the IDE's diff view.
 
-Passing a different suite does not prove the changed behavior. Report a
-baseline failure separately instead of describing it as a regression or
-silently ignoring it.
+Passing a different suite does not prove the changed behavior. Report a baseline
+failure separately instead of describing it as a regression or silently ignoring
+it.
 
 ## 9. Select, commit, and push only the task
 
@@ -325,8 +326,8 @@ Do not use **Commit All** or stage the entire Changes group during normal task
 work. Those shortcuts can include unrelated or generated files.
 
 If push is rejected, stop. Fetch, inspect the graph, and coordinate before
-integrating remote work. Do not accept an automatic update whose merge or
-rebase result you have not reviewed. Never force-push a shared branch.
+integrating remote work. Do not accept an automatic update whose merge or rebase
+result you have not reviewed. Never force-push a shared branch.
 
 <details>
 <summary>PowerShell fallback</summary>
@@ -364,9 +365,8 @@ for another contributor to fetch.
 ## 10. Review and merge through the IDE
 
 The reviewer checks the acceptance criteria, risky shared files, test evidence,
-and remaining limitations. A successful local run by the author does not
-replace review of scene, prefab, package, project-setting, or Coordination
-changes.
+and remaining limitations. A successful local run by the author does not replace
+review of scene, prefab, package, project-setting, or Coordination changes.
 
 ### Review the feature branch
 
@@ -385,8 +385,8 @@ indicator, **Git: Checkout to**, and Source Control Graph.
 2. Fetch again, inspect `master` against `origin/master`, and update only when
    the histories have not diverged.
 3. Merge the verified feature branch into the current `master`:
-   - JetBrains: choose the feature branch and **Merge into Current**.
-   - VS Code: run **Git: Merge Branch** and select the feature branch.
+    - JetBrains: choose the feature branch and **Merge into Current**.
+    - VS Code: run **Git: Merge Branch** and select the feature branch.
 4. Review the resulting graph and changed files.
 5. Rerun verification affected by the merge.
 6. Push `master` with the IDE's separate **Push** action.
@@ -427,10 +427,10 @@ force the operation.
 
 The default split helps route decisions; it does not grant exclusive access:
 
-| Area | Primary owner | Typical work |
-| --- | --- | --- |
-| Gameplay and systems | Developer A | Controls, interactions, runtime state, scoring, disasters, technical debugging. |
-| World, UX, and presentation | Developer B | Scene blockout, environment, UI, menus, audio, VFX, placeholder art, playtest notes. |
+| Area                        | Primary owner | Typical work                                                                         |
+|-----------------------------|---------------|--------------------------------------------------------------------------------------|
+| Gameplay and systems        | Developer A   | Controls, interactions, runtime state, scoring, disasters, technical debugging.      |
+| World, UX, and presentation | Developer B   | Scene blockout, environment, UI, menus, audio, VFX, placeholder art, playtest notes. |
 
 Say so before working inside the other person's area. Adjust ownership when the
 active milestone needs a different split.
