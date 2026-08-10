@@ -393,8 +393,13 @@ namespace PotionPanic.Editor.Coordination
 
       if (pathSource.TryGetActiveStagePath(out var path))
       {
-        return TrySetPathFromSource(path, CoordinationTargetSource.ActiveStage,
+        var accepted = TrySetPathFromSource(path, CoordinationTargetSource.ActiveStage,
           "The active stage is not a saved asset under Assets/.");
+        if (!accepted)
+        {
+          ClearActionTarget();
+        }
+        return accepted;
       }
 
       ClearActionTarget();

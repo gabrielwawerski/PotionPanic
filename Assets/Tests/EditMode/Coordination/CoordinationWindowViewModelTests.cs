@@ -355,6 +355,22 @@ namespace PotionPanic.Tests.EditMode.Coordination
     }
 
     [Test]
+    public void InvalidActiveStagePathClearsTheOldTargetAndCannotReserveIt()
+    {
+      var fixture = new ViewModelFixture();
+      fixture.Service.SetState(CoordinationConnectionState.Connected);
+      fixture.State.ApplySnapshot(Snapshot(null, null, null));
+      fixture.ViewModel.SelectedPath = "Assets/Scenes/Queued.unity";
+      fixture.Paths.ActiveStagePath = "Packages/Example.asset";
+
+      Assert.That(fixture.ViewModel.FollowActiveStage(), Is.False);
+      Assert.That(fixture.ViewModel.SelectedPath, Is.Empty);
+      Assert.That(fixture.ViewModel.PrimaryAction, Is.EqualTo(CoordinationPrimaryAction.None));
+      Assert.That(fixture.ViewModel.Reserve(), Is.False);
+      Assert.That(fixture.Service.Requests, Is.Empty);
+    }
+
+    [Test]
     public void LocalReservationCanBeCancelledFromTheTargetOrItsRow()
     {
       var fixture = new ViewModelFixture();
