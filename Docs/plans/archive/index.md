@@ -36,3 +36,7 @@ implementation work in [`../index.md`](../index.md).
 - [Private Reusable VitePress Docs Package Plan](./vitepress-private-reusable-package-plan-2026-06-30.md)
 - [Whole-Column Drag Targets For Board Columns](./vitepress-whole-column-drag-targets.md)
 - [VitePress Native Additions In Docboard](./vitepress-docboard-native-additions-plan.md)
+
+## Archived Plans
+
+- [Evergreen Documentation V2 Rework](./evergreen-documentation-v2.md)

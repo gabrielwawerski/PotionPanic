@@ -13,10 +13,8 @@ superseded plans into [`archive/index.md`](archive/index.md).
 
 - [Coordinated File Leasing Release Acceptance](./coordinated-file-leasing-release-acceptance.md)
 - [Coordinated Save-Conflict Recovery](./coordinated-file-leasing-save-conflict-recovery.md)
-- [Evergreen Documentation V2 Rework](./evergreen-documentation-v2.md)
 - [Coordinated File Leasing Program](./coordinated-file-leasing-system.md)
 - [Coordination Save Safety and Manual Mode](./coordination-save-safety-and-manual-mode.md)
-
 ## Writing Rules
 
 - Docboard regenerates the Active Plans links from each plan's frontmatter title
