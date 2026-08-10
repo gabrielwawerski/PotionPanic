@@ -66,9 +66,9 @@ namespace PotionPanic.Editor.Coordination
     private CoordinationWindowViewModel viewModel;
     private Vector2 scrollPosition;
     private bool showAdvancedPath;
-    private bool showPresence;
-    private bool showEditingLeases;
-    private bool showReservations;
+    private bool showPresence = true;
+    private bool showEditingLeases = true;
+    private bool showReservations = true;
     private bool clearKeyboardFocus;
 
     [MenuItem("Window/Potion Panic/Coordination")]
