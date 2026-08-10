@@ -23,14 +23,7 @@ export default createDocsConfig(defineDocsProject({
   nav: [
     {text: "Home", link: "/"},
     {text: "Board", link: "/board"},
-    {
-      text: "Work",
-      items: [
-        {text: "Project Setup", link: "/onboarding/getting-started"},
-        {text: "Daily Workflow", link: "/collaboration/team-workflow"},
-        {text: "Active Plans", link: "/plans/"},
-      ],
-    },
+    {text: "Plans", link: "/plans/"},
     {
       text: "Project",
       items: [
@@ -49,10 +42,11 @@ export default createDocsConfig(defineDocsProject({
         {text: "Design Research", link: "/research/game-design-and-psychology"},
       ],
     },
-    {text: "Archive", link: "/archive/board"},
+    {text: "Archive", link: "/archive/"},
   ],
   sidebar: {
     autoDiscover: true,
+    excludedDirs: ["chronicles", "archive"],
     sections: [
       {
         text: "Start Here",
@@ -63,14 +57,10 @@ export default createDocsConfig(defineDocsProject({
         ],
       },
       {
-        text: "Project",
-        includeDirs: ["project"],
-        items: [{text: "Project Overview", link: "/project/"}],
-      },
-      {
-        text: "Guides",
-        includeDirs: ["guides"],
-        items: [{text: "Guide Index", link: "/guides/"}],
+        text: "Active Work",
+        includeDirs: ["plans"],
+        items: [{text: "Active Plans", link: "/plans/"}],
+        sort: "modified",
       },
       {
         text: "Research",
@@ -81,10 +71,14 @@ export default createDocsConfig(defineDocsProject({
         }],
       },
       {
-        text: "Active Work",
-        includeDirs: ["plans"],
-        items: [{text: "Active Plans", link: "/plans/"}],
-        sort: "modified",
+        text: "Guides",
+        includeDirs: ["guides"],
+        items: [{text: "Guide Index", link: "/guides/"}],
+      },
+      {
+        text: "Project",
+        includeDirs: ["project"],
+        items: [{text: "Project Overview", link: "/project/"}],
       },
     ],
   },
