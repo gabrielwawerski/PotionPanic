@@ -84,6 +84,7 @@ export default createDocsConfig(defineDocsProject({
         text: "Active Work",
         includeDirs: ["plans"],
         items: [{text: "Active Plans", link: "/plans/"}],
+        sort: "modified",
       },
     ],
   },
