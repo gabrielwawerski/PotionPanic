@@ -18,6 +18,7 @@ affectedFiles:
 tags: []
 order: 1
 assignee: Codex
+archivedAt: '2026-08-10T20:41:23.577Z'
 ---
 
 ## Description
@@ -29,13 +30,13 @@ session, in dependency order.
 
 ## Acceptance Criteria
 
-- [ ] The accepted behavior and verification criteria in
+- [x] The accepted behavior and verification criteria in
   [
   `../plans/coordinated-file-leasing-system.md`](../plans/coordinated-file-leasing-system.md)
   are met.
-- [ ] Two Windows Unity editors can coordinate from different networks without
+- [x] Two Windows Unity editors can coordinate from different networks without
   exposing developer or session tokens.
-- [ ] Offline mode preserves local work and manual collaboration remains the
+- [x] Offline mode preserves local work and manual collaboration remains the
   documented fallback.
 
 ## Implementation Plan
@@ -632,3 +633,4 @@ filtered Worker-tail evidence are still open.
 - [ ] Branch committed and ready for review or merge
 
 ## Notes
+

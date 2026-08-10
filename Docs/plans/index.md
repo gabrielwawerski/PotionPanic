@@ -11,10 +11,8 @@ superseded plans into [`archive/index.md`](archive/index.md).
 
 ## Active Plans
 
-- [Coordinated File Leasing Release Acceptance](./coordinated-file-leasing-release-acceptance.md)
-- [Coordinated Save-Conflict Recovery](./coordinated-file-leasing-save-conflict-recovery.md)
-- [Coordinated File Leasing Program](./coordinated-file-leasing-system.md)
 - [Coordination Save Safety and Manual Mode](./coordination-save-safety-and-manual-mode.md)
+- [Coordinated Save-Conflict Recovery](./coordinated-file-leasing-save-conflict-recovery.md)
 ## Writing Rules
 
 - Docboard regenerates the Active Plans links from each plan's frontmatter title

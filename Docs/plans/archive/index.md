@@ -40,3 +40,5 @@ implementation work in [`../index.md`](../index.md).
 ## Archived Plans
 
 - [Evergreen Documentation V2 Rework](./evergreen-documentation-v2.md)
+- [Coordinated File Leasing Program](./coordinated-file-leasing-system.md)
+- [Coordinated File Leasing Release Acceptance](./coordinated-file-leasing-release-acceptance.md)

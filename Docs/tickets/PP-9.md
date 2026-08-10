@@ -1,7 +1,7 @@
 ---
 id: 9
 title: Decide and align Coordination outage behavior
-status: backlog
+status: todo
 priority: high
 documentation:
   - guides/coordinated-leasing.md
@@ -16,7 +16,7 @@ affectedFiles:
   - Docs/collaboration/team-workflow.md
   - Tools/CoordinationServer/README.md
 tags: []
-order: 6
+order: 1
 ---
 
 ## Description
