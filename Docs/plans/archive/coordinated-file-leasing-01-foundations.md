@@ -4,20 +4,16 @@ title: 'Coordinated Leasing 01: Foundations, Configuration, and Protocol'
 
 # Coordinated Leasing 01: Foundations, Configuration, and Protocol
 
-**Session goal:** Establish the repository, backend, Unity editor test, and
-configuration foundations without connecting to a real service.
+**Session goal:** Establish the repository, backend, Unity editor test, and configuration foundations without connecting to a real service.
 
 **Depends on:** None. PP-8 is already resolved; do not recreate or modify it.
 
-**Produces:** A buildable strict-TypeScript Worker package, a Unity configuration
-loader and path matcher, the version-1 flat-envelope contract, and CI that runs
-backend checks without deployment credentials.
+**Produces:** A buildable strict-TypeScript Worker package, a Unity configuration loader and path matcher, the version-1 flat-envelope contract, and CI that runs backend checks without deployment credentials.
 
 ## Files
 
 - Create `coordination.json`.
-- Create or modify `.gitignore` with scoped ignores for `.dev.vars`, local
-  coordination settings, logs, caches, and generated lease state.
+- Create or modify `.gitignore` with scoped ignores for `.dev.vars`, local coordination settings, logs, caches, and generated lease state.
 - Modify `Assets/Tests/EditMode/PotionPanic.EditModeTests.asmdef` to reference
   `PotionPanic.Editor`.
 - Create `Assets/Scripts/Editor/Coordination/CoordinationConfig.cs`,
@@ -33,46 +29,23 @@ backend checks without deployment credentials.
 ## Implementation steps
 
 - Add the committed configuration with `schemaVersion: 1`, project ID
-  `potion-panic`, the placeholder Worker base URL, a 30-second heartbeat, and
-  the enabled exclusive scene rule from the program page.
-- Make the C# loader reject missing or malformed required fields, normalize
-  slash direction and Unicode paths, honor a local untracked endpoint override,
-  and match `**/` against zero or more directories. Implement the local settings
-  store at `UserSettings/PotionPanic/coordination.local.json` with the exact
-  shape in the program page. Disabled rules must never match; local settings
-  must never contain developer or session tokens.
+  `potion-panic`, the placeholder Worker base URL, a 30-second heartbeat, and the enabled exclusive scene rule from the program page.
+- Make the C# loader reject missing or malformed required fields, normalize slash direction and Unicode paths, honor a local untracked endpoint override, and match `**/` against zero or more directories. Implement the local settings store at `UserSettings/PotionPanic/coordination.local.json` with the exact shape in the program page. Disabled rules must never match; local settings must never contain developer or session tokens.
 - Define the exact flat protocol envelopes in the program page's `Protocol v1
-  contract`, including every listed message name and field. Enforce protocol
-  version `1`, UUID request IDs, field length limits, canonical path rules, and
-  the 16 KiB UTF-8 envelope limit. Reject invalid inbound state versions and
-  ignore server state older than the newest version already applied.
-- Scaffold a strict Worker package with the SQLite Durable Object migration
-  binding, an exported no-op `CoordinationObject` class, and Vitest Workers
-  integration. Implement `GET /health` with the program-contract response.
-  Other routes may return a deliberate not-yet-authenticated response in this
-  slice; do not implement auth or state.
-- Add CI steps for `npm ci`, type checking, Vitest, and Wrangler dry-run. CI
-  must not require `TOKEN_HMAC_KEY`, `ADMIN_TOKEN`, or a deployed endpoint.
+  contract`, including every listed message name and field. Enforce protocol version `1`, UUID request IDs, field length limits, canonical path rules, and the 16 KiB UTF-8 envelope limit. Reject invalid inbound state versions and ignore server state older than the newest version already applied.
+- Scaffold a strict Worker package with the SQLite Durable Object migration binding, an exported no-op `CoordinationObject` class, and Vitest Workers integration. Implement `GET /health` with the program-contract response. Other routes may return a deliberate not-yet-authenticated response in this slice; do not implement auth or state.
+- Add CI steps for `npm ci`, type checking, Vitest, and Wrangler dry-run. CI must not require `TOKEN_HMAC_KEY`, `ADMIN_TOKEN`, or a deployed endpoint.
 
 ## Verification
 
-- Unity Test Runner: run the Coordination EditMode tests and confirm rule
-  matching covers the root scene, nested scenes, disabled rules, invalid paths,
-  and local override precedence.
-- TypeScript and Unity protocol tests: verify every v1 message DTO, required
-  field, rejected client identity field, invalid path, oversize envelope, and
-  older server `stateVersion` handling.
-- Unity settings tests: verify the default settings, endpoint override, task
-  context, disabled switch, malformed-file rejection, and token-free persisted
-  shape.
-- Backend health test: verify the unauthenticated response shape and that it
-  contains neither project nor developer data.
+- Unity Test Runner: run the Coordination EditMode tests and confirm rule matching covers the root scene, nested scenes, disabled rules, invalid paths, and local override precedence.
+- TypeScript and Unity protocol tests: verify every v1 message DTO, required field, rejected client identity field, invalid path, oversize envelope, and older server `stateVersion` handling.
+- Unity settings tests: verify the default settings, endpoint override, task context, disabled switch, malformed-file rejection, and token-free persisted shape.
+- Backend health test: verify the unauthenticated response shape and that it contains neither project nor developer data.
 - Backend: from `Tools/CoordinationServer`, run `npm ci`, `npm run typecheck`,
   `npm test`, and `npx wrangler deploy --dry-run`.
 - Repository: run `npm test` and `npm run docs:build`; both must pass.
 
 **Commit:** `feat(coordination): scaffold backend and configuration`
 
-**Handoff:** Record the commit and all command output in `PP-7`. The next
-session may add authentication only if the protocol and configuration tests are
-green.
+**Handoff:** Record the commit and all command output in `PP-7`. The next session may add authentication only if the protocol and configuration tests are green.

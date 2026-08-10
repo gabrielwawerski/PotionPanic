@@ -1,51 +1,35 @@
 # Potion Panic target runtime design
 
-Version: 1.0
-Target engine: Unity
-Target platform: PC
+Version: 1.0 Target engine: Unity Target platform: PC
 
-Use this document for Potion Panic runtime structure, data ownership, and
-implementation boundaries. Use [`game-design.md`](game-design.md) for
-player-facing intent and [`mvp-scope.md`](mvp-scope.md) for milestone order
-and locked MVP rules.
+Use this document for Potion Panic runtime structure, data ownership, and implementation boundaries. Use [`game-design.md`](game-design.md) for player-facing intent and [`mvp-scope.md`](mvp-scope.md) for milestone order and locked MVP rules.
 
 ## Current state and target status
 
-The gameplay runtime is currently a scaffold: the gameplay assembly and marker
-exist, but the data assets, components, and systems described below are not yet
-implemented as a complete loop. This document is the accepted target design
-that future milestone work should implement incrementally.
+The gameplay runtime is currently a scaffold: the gameplay assembly and marker exist, but the data assets, components, and systems described below are not yet implemented as a complete loop. This document is the accepted target design that future milestone work should implement incrementally.
 
-Names, ownership boundaries, and binding MVP behavior are requirements where
-this page states them directly. Example fields and code labelled “possible,”
-“suggested,” or “example” illustrate the intended responsibility and may be
-adjusted by an approved implementation plan.
+Names, ownership boundaries, and binding MVP behavior are requirements where this page states them directly. Example fields and code labelled “possible,” “suggested,” or “example” illustrate the intended responsibility and may be adjusted by an approved implementation plan.
 
 ## What this contract owns
 
-This contract names the specific data assets, runtime components, coordinating
-systems, dependencies, repository locations, and completion criteria that the
-MVP needs. It does not teach general Unity architecture patterns; use the
+This contract names the specific data assets, runtime components, coordinating systems, dependencies, repository locations, and completion criteria that the MVP needs. It does not teach general Unity architecture patterns; use the
 [Unity Runtime Foundations](../guides/unity/runtime-architecture.md) for that.
 
-| Area | Contract |
-| --- | --- |
-| Data | Ingredient, potion, and disaster definitions are ScriptableObjects. |
-| Runtime | Components own movement, interaction, inventory, brewing, disaster behavior, Panic, score, and presentation updates. |
-| Coordination | Managers coordinate systems; they do not absorb individual gameplay rules. |
-| Delivery | Create only the systems needed for the current milestone and retain one reusable disaster loop. |
+| Area         | Contract                                                                                                             |
+|--------------|----------------------------------------------------------------------------------------------------------------------|
+| Data         | Ingredient, potion, and disaster definitions are ScriptableObjects.                                                  |
+| Runtime      | Components own movement, interaction, inventory, brewing, disaster behavior, Panic, score, and presentation updates. |
+| Coordination | Managers coordinate systems; they do not absorb individual gameplay rules.                                           |
+| Delivery     | Create only the systems needed for the current milestone and retain one reusable disaster loop.                      |
 
-It does not claim that every listed type should be created at once. It also
-does not teach Unity fundamentals; use
-[Unity Runtime Foundations](../guides/unity/runtime-architecture.md) for scenes,
-components, prefabs, ScriptableObjects, lifecycle, references, and events.
+It does not claim that every listed type should be created at once. It also does not teach Unity fundamentals; use
+[Unity Runtime Foundations](../guides/unity/runtime-architecture.md) for scenes, components, prefabs, ScriptableObjects, lifecycle, references, and events.
 
 ## Delivery rule
 
 Do not create every script in this document immediately.
 
-Only create the scripts needed for the current milestone. Build the game in
-this order:
+Only create the scripts needed for the current milestone. Build the game in this order:
 
 1. Player movement and camera
 2. Interaction system
@@ -53,8 +37,7 @@ this order:
 4. First disaster
 5. Panic, score, restart, and the remaining disasters
 
-A playable vertical slice is more valuable than a complete-looking architecture
-with no finished game loop.
+A playable vertical slice is more valuable than a complete-looking architecture with no finished game loop.
 
 ## End-to-end runtime flow
 
@@ -75,9 +58,7 @@ GameManager owns run state
   -> restart establishes a clean run
 ```
 
-The flow keeps rule ownership close to the state it changes. A station does not
-calculate global score, UI does not decide whether a potion is correct, and the
-disaster scheduler does not implement one disaster's internal escalation.
+The flow keeps rule ownership close to the state it changes. A station does not calculate global score, UI does not decide whether a potion is correct, and the disaster scheduler does not implement one disaster's internal escalation.
 
 ### Worked example: Cooling Potion
 
@@ -87,13 +68,10 @@ disaster scheduler does not implement one disaster's internal escalation.
    `resultingPotion` and replaces the carried item with that `PotionData`.
 4. Applying the potion invokes the active Overheated Cauldron's
    `DisasterInstance`.
-5. The instance compares the carried `PotionData` with its configured required
-   potion, resolves itself, and reports the result.
-6. `PanicSystem` reduces Panic, `ScoreSystem` awards the accepted points, and
-   presentation components react to those state changes.
+5. The instance compares the carried `PotionData` with its configured required potion, resolves itself, and reports the result.
+6. `PanicSystem` reduces Panic, `ScoreSystem` awards the accepted points, and presentation components react to those state changes.
 
-The same path supports the other MVP disasters by changing data and prefab
-content rather than creating another unrelated gameplay framework.
+The same path supports the other MVP disasters by changing data and prefab content rather than creating another unrelated gameplay framework.
 
 ## Data Assets
 
@@ -263,8 +241,7 @@ MVP behavior:
 - active disasters add Panic over time
 - escalation increases Panic pressure and feedback
 - the correct potion resolves the disaster and reduces Panic by `10`
-- the wrong potion is consumed, the disaster stays active, and `10 Panic` is
-  added
+- the wrong potion is consumed, the disaster stays active, and `10 Panic` is added
 
 ### `DisasterSpawnPoint`
 
@@ -415,8 +392,7 @@ The MVP architecture is sufficient when:
 - UI displays the required run information
 - the run can restart cleanly
 
-A system is not complete because every planned script exists. It is complete
-when it supports the playable game loop.
+A system is not complete because every planned script exists. It is complete when it supports the playable game loop.
 
 ## Related pages
 

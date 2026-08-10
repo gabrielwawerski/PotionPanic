@@ -2,38 +2,29 @@
 
 ## Summary
 
-Status on 2026-08-08: **Deployment complete; external release acceptance
-deferred.** Production secrets, the deployed endpoint, health, and Machine A
-authentication are verified in `PP-7`. Machine B and every two-machine
-acceptance row remain incomplete.
+Status on 2026-08-08: **Deployment complete; external release acceptance deferred.** Production secrets, the deployed endpoint, health, and Machine A authentication are verified in `PP-7`. Machine B and every two-machine acceptance row remain incomplete.
 
-The original pre-deployment review found the architecture appropriate for a
-small Unity team, with these automated gates passing at that checkpoint:
+The original pre-deployment review found the architecture appropriate for a small Unity team, with these automated gates passing at that checkpoint:
 
 - Worker typecheck, security audit, deployment dry run, and 77/77 tests.
 - Unity 6000.5.1f1 Coordination EditMode suite: 140/140.
 - Documentation tests: 11/11; VitePress build passes.
 - Clean `master` at `d9792d7`, matching `origin/master`.
 
-Slice 09 remains incomplete because no live two-machine evidence exists. The
-earlier placeholder endpoint and Wrangler-authentication blockers are resolved.
-The current editor UI also requires manual asset-path entry for lease actions,
-renders state rows without interactions, and cannot manually cancel a
-reservation. Those UX and protocol gaps require separate approval and do not
-count as completed acceptance behavior.
+Slice 09 remains incomplete because no live two-machine evidence exists. The earlier placeholder endpoint and Wrangler-authentication blockers are resolved. The current editor UI also requires manual asset-path entry for lease actions, renders state rows without interactions, and cannot manually cancel a reservation. Those UX and protocol gaps require separate approval and do not count as completed acceptance behavior.
 
 ## Required Hardening
 
 - Restrict the Worker to `projectId === "potion-panic"` before calling `idFromName`. Return 404 for every other project so unauthenticated callers cannot create unlimited Durable Objects by varying the URL.
 - Replace monolithic snapshots with bounded chunks:
-   - Each envelope remains at most 16 KiB.
-   - Snapshot chunks carry `snapshotId`, zero-based `chunkIndex`, `chunkCount`, one shared `stateVersion`, and partial presence/lease arrays.
-   - Unity buffers at most 256 KiB and applies the snapshot atomically after every chunk arrives.
-   - Reject state-growing mutations with correlated `state_capacity_exceeded` when the 256 KiB project limit would be exceeded.
+    - Each envelope remains at most 16 KiB.
+    - Snapshot chunks carry `snapshotId`, zero-based `chunkIndex`, `chunkCount`, one shared `stateVersion`, and partial presence/lease arrays.
+    - Unity buffers at most 256 KiB and applies the snapshot atomically after every chunk arrives.
+    - Reject state-growing mutations with correlated `state_capacity_exceeded` when the 256 KiB project limit would be exceeded.
 - Make authentication constant-time per request:
-   - Store an indexed SHA-256 token lookup value alongside the existing HMAC digest.
-   - Query one developer or session row, then verify the HMAC digest.
-   - Keep at most eight valid sessions per developer; evict the oldest unconnected session first and return HTTP 429 when all eight belong to active connections.
+    - Store an indexed SHA-256 token lookup value alongside the existing HMAC digest.
+    - Query one developer or session row, then verify the HMAC digest.
+    - Keep at most eight valid sessions per developer; evict the oldest unconnected session first and return HTTP 429 when all eight belong to active connections.
 - On developer revocation, delete that developer’s reservations as well as sessions, presence, editing leases, and connections. Broadcast the resulting reservation releases.
 - Define identical cross-runtime path canonicalization: NFC normalization, slash normalization, and ASCII `A-Z` folding only. Add shared Unicode vectors including `İ`, `Ä`, composed/decomposed characters, and mixed-case ASCII.
 - Drain all outstanding client request handles exactly once when a socket closes and raise `RequestSendFailed` for each. This prevents stale acquisition tracking and reconnect-time memory growth.
@@ -41,10 +32,10 @@ count as completed acceptance behavior.
 - Add a successful-credential callback so saving the token immediately reconnects the existing service.
 - Update `.dev.vars.example`, server documentation, and tests to list `TOKEN_HMAC_KEY` and `ADMIN_TOKEN`.
 - Modernize `wrangler.jsonc` before the first deployment:
-   - Use the current declarative `exports` entry for the SQLite-backed Durable Object.
-   - Declare both secrets as required.
-   - Set `workers_dev: true`, disable preview URLs, and enable full observability for the initial low-volume release.
-   - Keep the existing verification-only GitHub workflow; production deployment remains manual.
+    - Use the current declarative `exports` entry for the SQLite-backed Durable Object.
+    - Declare both secrets as required.
+    - Set `workers_dev: true`, disable preview URLs, and enable full observability for the initial low-volume release.
+    - Keep the existing verification-only GitHub workflow; production deployment remains manual.
 
 ## Cloudflare and Developer Setup
 

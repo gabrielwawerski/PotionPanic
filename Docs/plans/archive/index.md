@@ -1,7 +1,6 @@
 # Archived Plans
 
-Completed, superseded, or historical implementation plans live here. Keep
-active implementation work in [`../index.md`](../index.md).
+Completed, superseded, or historical implementation plans live here. Keep active implementation work in [`../index.md`](../index.md).
 
 ## Coordination
 

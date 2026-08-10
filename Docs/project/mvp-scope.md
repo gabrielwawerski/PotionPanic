@@ -1,11 +1,8 @@
 # MVP scope
 
-Use this document for locked MVP decisions, milestone sequencing, and hard
-scope boundaries.
+Use this document for locked MVP decisions, milestone sequencing, and hard scope boundaries.
 
-It owns binding MVP scope, tuning, and delivery order. It does not replace
-task acceptance criteria, implementation plans, or the player-experience
-intent in [Game Design](game-design.md).
+It owns binding MVP scope, tuning, and delivery order. It does not replace task acceptance criteria, implementation plans, or the player-experience intent in [Game Design](game-design.md).
 
 ## How to read this document
 
@@ -15,14 +12,11 @@ This page separates three kinds of truth:
 - **Accepted MVP target:** behavior and content the team has approved.
 - **Delivery sequence:** the dependency order for reaching that target.
 
-An accepted target is binding for implementation decisions, but it is not
-evidence that the feature already exists. Use the board and tickets for current
-status.
+An accepted target is binding for implementation decisions, but it is not evidence that the feature already exists. Use the board and tickets for current status.
 
 ## Current Repo Note
 
-The current Unity scaffold still uses `Assets/Scenes/SampleScene.unity` as the
-shared prototype scene.
+The current Unity scaffold still uses `Assets/Scenes/SampleScene.unity` as the shared prototype scene.
 
 Milestone 1 is expected to rename or replace that shared gameplay scene as
 `Laboratory.unity`. Until then:
@@ -72,12 +66,12 @@ Correct resolution immediately reduces Panic by `10`.
 
 ### Difficulty progression
 
-| Stage | Run time | Max active disasters | Spawn interval |
-| --- | --- | --- | --- |
-| Stage 1 | 0:00-0:59 | 1 | 12 seconds |
-| Stage 2 | 1:00-1:59 | 2 | 10 seconds |
-| Stage 3 | 2:00-2:59 | 3 | 8 seconds |
-| Stage 4 | 3:00+ | 3 | 6 seconds |
+| Stage   | Run time  | Max active disasters | Spawn interval |
+|---------|-----------|----------------------|----------------|
+| Stage 1 | 0:00-0:59 | 1                    | 12 seconds     |
+| Stage 2 | 1:00-1:59 | 2                    | 10 seconds     |
+| Stage 3 | 2:00-2:59 | 3                    | 8 seconds      |
+| Stage 4 | 3:00+     | 3                    | 6 seconds      |
 
 Additional rules:
 
@@ -122,21 +116,20 @@ Additional rules:
 
 ## Delivery map
 
-| Milestone | Outcome |
-| --- | --- |
-| 1 | Movement, camera, collision, and a laboratory blockout. |
-| 2 | One reusable interaction pattern. |
-| 3 | One ingredient-to-potion loop. |
-| 4 | One complete disaster. |
-| 5 | A repeatable vertical slice from start to failure. |
-| 6 | The remaining MVP content on the same systems. |
-| 7 | Difficulty pressure and scoring. |
-| 8 | Menus and complete run flow. |
-| 9 | Audio and visual feedback. |
-| 10 | Polish, balancing, and bug fixing. |
+| Milestone | Outcome                                                 |
+|-----------|---------------------------------------------------------|
+| 1         | Movement, camera, collision, and a laboratory blockout. |
+| 2         | One reusable interaction pattern.                       |
+| 3         | One ingredient-to-potion loop.                          |
+| 4         | One complete disaster.                                  |
+| 5         | A repeatable vertical slice from start to failure.      |
+| 6         | The remaining MVP content on the same systems.          |
+| 7         | Difficulty pressure and scoring.                        |
+| 8         | Menus and complete run flow.                            |
+| 9         | Audio and visual feedback.                              |
+| 10        | Polish, balancing, and bug fixing.                      |
 
-The detailed milestones below preserve the delivery commitments for each
-stage. Use the board for current task status.
+The detailed milestones below preserve the delivery commitments for each stage. Use the board for current task status.
 
 ### Why the order matters
 
@@ -155,10 +148,7 @@ movement and room
   -> final balance and stability
 ```
 
-Moving directly to full content would multiply unproven prefabs and data.
-Building menus before the run loop works would polish a flow that may still
-change. The sequence keeps each milestone playable and makes later work reuse a
-verified foundation.
+Moving directly to full content would multiply unproven prefabs and data. Building menus before the run loop works would polish a flow that may still change. The sequence keeps each milestone playable and makes later work reuse a verified foundation.
 
 ## Milestones
 
@@ -274,13 +264,9 @@ The following are out of scope until MVP is complete:
 - procedural generation
 - combat systems
 
-If a new idea does not help the current milestone become playable, add it to
-the [board](../board.md) instead of implementing it now.
+If a new idea does not help the current milestone become playable, add it to the [board](../board.md) instead of implementing it now.
 
-Hard boundaries protect completion capacity. They are not claims that the
-excluded ideas are bad; they prevent networking, authored content, progression,
-or world expansion from adding new production disciplines before the core game
-can ship.
+Hard boundaries protect completion capacity. They are not claims that the excluded ideas are bad; they prevent networking, authored content, progression, or world expansion from adding new production disciplines before the core game can ship.
 
 ## Post-MVP Candidates
 
@@ -309,8 +295,7 @@ Potion Panic is complete when a player can:
 
 without gameplay-breaking bugs.
 
-This is the game-level finish line. Individual milestones and tickets need
-their own narrower acceptance criteria and verification evidence.
+This is the game-level finish line. Individual milestones and tickets need their own narrower acceptance criteria and verification evidence.
 
 ## Related pages
 

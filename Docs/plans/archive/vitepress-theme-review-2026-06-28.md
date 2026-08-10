@@ -10,20 +10,16 @@ originalPath: 'Docs/archive/completed/vitepress-theme-review-2026-06-28.md'
 
 ## Summary
 
-Reviewed the recent VitePress and theme commits, with emphasis on the board
-sidebar restoration work and recent modal/layout changes.
+Reviewed the recent VitePress and theme commits, with emphasis on the board sidebar restoration work and recent modal/layout changes.
 
-Board sidebar restoration work should be deferred for now. There is still a
-board-only alignment mismatch, so that area should not be treated as complete.
+Board sidebar restoration work should be deferred for now. There is still a board-only alignment mismatch, so that area should not be treated as complete.
 
 ## Findings
 
 ### 1. Board sidebar is still slightly misaligned on the board page
 
-The board page does not fully match the normal VitePress left sidebar shell.
-On `/board` at large desktop width, the navbar title box and divider render at
-`272px` while the actual sidebar renders at `262px`. Normal docs pages do not
-show that mismatch.
+The board page does not fully match the normal VitePress left sidebar shell. On `/board` at large desktop width, the navbar title box and divider render at
+`272px` while the actual sidebar renders at `262px`. Normal docs pages do not show that mismatch.
 
 Likely source:
 
@@ -37,9 +33,7 @@ Decision:
 
 ### 2. Ticket modal regressed on narrow/mobile widths
 
-The recent modal sizing changes made the metadata sidebar too dominant on small
-viewports. The modal still fits within the viewport, but the left content pane
-shrinks to the point where the ticket body becomes hard to use.
+The recent modal sizing changes made the metadata sidebar too dominant on small viewports. The modal still fits within the viewport, but the left content pane shrinks to the point where the ticket body becomes hard to use.
 
 Observed examples:
 
@@ -52,14 +46,11 @@ Primary source areas:
 
 Follow-up task:
 
-- Mobile view for the modal should have its metadata sidebar collapsible and/or
-  collapsed by default so the main ticket content keeps usable width.
+- Mobile view for the modal should have its metadata sidebar collapsible and/or collapsed by default so the main ticket content keeps usable width.
 
 ### 3. "Likely Affected Files" suggestions omit `.vitepress` source files
 
-The affected-file suggestion catalog currently skips directories whose names
-start with `.`. That drops all `Docs/.vitepress/...` files from suggestions,
-including the main theme files that are actively being edited.
+The affected-file suggestion catalog currently skips directories whose names start with `.`. That drops all `Docs/.vitepress/...` files from suggestions, including the main theme files that are actively being edited.
 
 Examples missing from suggestions:
 

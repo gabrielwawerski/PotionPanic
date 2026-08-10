@@ -21,56 +21,42 @@ It does not define Potion Panic. For binding project decisions, use:
 
 - [`../project/game-design.md`](../project/game-design.md) for player-facing design
 - [`../project/mvp-scope.md`](../project/mvp-scope.md) for locked scope, tuning, and milestone order
-- [`../project/technical-architecture.md`](../project/technical-architecture.md) for implementation
-  boundaries and runtime ownership
+- [`../project/technical-architecture.md`](../project/technical-architecture.md) for implementation boundaries and runtime ownership
 
-Recommendations here remain hypotheses until evidence supports them in the
-project's audience, budget, implementation, and current market.
+Recommendations here remain hypotheses until evidence supports them in the project's audience, budget, implementation, and current market.
 
 ## Choose by question
 
-| If you need to evaluate... | Start here |
-| --- | --- |
-| Motivation, attention, and sustainable engagement | [Human psychology and game engagement](#human-psychology-and-game-engagement) |
-| Ethical boundaries and risky retention mechanics | [Healthy and compulsive engagement](#healthy-and-compulsive-engagement) |
-| Responsiveness, clarity, impact, and feedback | [Game feel and feedback](#game-feel-and-feedback) |
-| Genre positioning, market communication, and small-team risk | [Genre and market considerations](#genre-and-market-considerations) |
-| Playtests, prototype questions, and evidence quality | [Prototype validation](#prototype-validation) |
+| If you need to evaluate...                                   | Start here                                                                    |
+|--------------------------------------------------------------|-------------------------------------------------------------------------------|
+| Motivation, attention, and sustainable engagement            | [Human psychology and game engagement](#human-psychology-and-game-engagement) |
+| Ethical boundaries and risky retention mechanics             | [Healthy and compulsive engagement](#healthy-and-compulsive-engagement)       |
+| Responsiveness, clarity, impact, and feedback                | [Game feel and feedback](#game-feel-and-feedback)                             |
+| Genre positioning, market communication, and small-team risk | [Genre and market considerations](#genre-and-market-considerations)           |
+| Playtests, prototype questions, and evidence quality         | [Prototype validation](#prototype-validation)                                 |
 
 ## How to read the evidence
 
 The document uses several kinds of statements:
 
-| Label | Meaning | Authority |
-| --- | --- | --- |
-| **Research finding** | A claim tied to published research or an established external definition. | The cited source establishes what was studied or defined. It does not choose the project design. |
-| **Industry guidance** | Advice from a platform holder, developer, or industry organization. | Useful external practice, subject to platform changes and project fit. |
-| **Design heuristic** | A reusable judgment that may help many projects. | Advisory until Potion Panic adopts a concrete decision. |
-| **Project decision** | An accepted choice recorded in the canonical project docs. | Binding for current work until that owner changes it. |
+| Label                 | Meaning                                                                   | Authority                                                                                        |
+|-----------------------|---------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| **Research finding**  | A claim tied to published research or an established external definition. | The cited source establishes what was studied or defined. It does not choose the project design. |
+| **Industry guidance** | Advice from a platform holder, developer, or industry organization.       | Useful external practice, subject to platform changes and project fit.                           |
+| **Design heuristic**  | A reusable judgment that may help many projects.                          | Advisory until Potion Panic adopts a concrete decision.                                          |
+| **Project decision**  | An accepted choice recorded in the canonical project docs.                | Binding for current work until that owner changes it.                                            |
 
-Treat market observations as time-sensitive. Treat psychology research as a
-framework for asking better questions, not as a recipe for manipulating
-players.
+Treat market observations as time-sensitive. Treat psychology research as a framework for asking better questions, not as a recipe for manipulating players.
 
 ## How Potion Panic applies this research
 
-The project documents use this material to explain the reasoning behind
-accepted choices. For example, the game design applies readable threats,
-meaningful priorities, and strong feedback to a controlled-chaos loop. The MVP
-scope constrains content and milestones so those core decisions can be tested
-before the project expands. The technical architecture assigns runtime
-ownership that can deliver those behaviors without turning a research heuristic
-into an engine contract.
+The project documents use this material to explain the reasoning behind accepted choices. For example, the game design applies readable threats, meaningful priorities, and strong feedback to a controlled-chaos loop. The MVP scope constrains content and milestones so those core decisions can be tested before the project expands. The technical architecture assigns runtime ownership that can deliver those behaviors without turning a research heuristic into an engine contract.
 
-Those applications are summaries, not a second specification. If this guide
-and an accepted project document differ, follow the project document and review
-whether the research discussion needs an update. If new research suggests a
-design change, record and approve that change in the owning project document.
+Those applications are summaries, not a second specification. If this guide and an accepted project document differ, follow the project document and review whether the research discussion needs an update. If new research suggests a design change, record and approve that change in the owning project document.
 
 ## Executive Summary
 
-Strong games do not succeed because they simply "hack dopamine." That framing
-is too crude and encourages shallow or manipulative design.
+Strong games do not succeed because they simply "hack dopamine." That framing is too crude and encourages shallow or manipulative design.
 
 Games are more sustainably engaging when they repeatedly provide:
 
@@ -84,51 +70,34 @@ Games are more sustainably engaging when they repeatedly provide:
 - an understandable fantasy
 - enough variation for systems to produce new situations
 
-Self-determination theory is a useful starting framework. It proposes that
-motivation improves when experiences support **autonomy**, **competence**, and
-**relatedness** [1]. Flow research adds that focused engagement is more likely
-when challenge and skill are reasonably aligned, goals are clear, and feedback
-is immediate.
+Self-determination theory is a useful starting framework. It proposes that motivation improves when experiences support **autonomy**, **competence**, and **relatedness** [1]. Flow research adds that focused engagement is more likely when challenge and skill are reasonably aligned, goals are clear, and feedback is immediate.
 
-For a small indie team, a lower-risk direction is usually a gameplay-first or
-gameplay-led hybrid with a clear fantasy, a short core loop, strong feedback,
-and reusable systems that can be validated before large content production.
+For a small indie team, a lower-risk direction is usually a gameplay-first or gameplay-led hybrid with a clear fantasy, a short core loop, strong feedback, and reusable systems that can be validated before large content production.
 
-Story can strengthen identity, emotion, and repetition. It becomes risky when
-substantial authored content must exist before the core interaction is
-interesting.
+Story can strengthen identity, emotion, and repetition. It becomes risky when substantial authored content must exist before the core interaction is interesting.
 
-Ethical engagement should leave the player free to stop. High playtime alone is
-not evidence of addiction. Harm is associated with impaired control, play
-taking priority over other activities, and continuation despite negative
-consequences [2].
+Ethical engagement should leave the player free to stop. High playtime alone is not evidence of addiction. Harm is associated with impaired control, play taking priority over other activities, and continuation despite negative consequences [2].
 
 ## Key Findings
 
-| Area | Main finding | Practical implication |
-| --- | --- | --- |
-| Motivation | Players return for competence, autonomy, curiosity, expression, belonging, status, collection, or narrative pull. | Select motivations the game can support well. |
-| Retention | Durable retention comes from loops operating at different time scales. | Give reasons to continue now, finish the session, and return later. |
-| Game feel | Perceived fun depends heavily on responsiveness, clarity, impact, rhythm, and feedback. | Validate feel before producing large amounts of content. |
-| Mastery | Improvement is motivating when failure teaches something. | Make cause, effect, and recovery readable. |
-| Ethics | Replayability does not require anxiety, obligation, or paid randomness. | Prefer mastery, curiosity, expression, and fair variation. |
-| Marketability | Potential players must quickly understand the fantasy and activity. | Show actual play, readable stakes, and the core verb early. |
-| Small-team viability | Systemic replayability often scales better than content-heavy production. | Favor reusable interactions over large bespoke libraries. |
-| Story | Story is efficient when it reinforces the loop and fantasy. | Use narrative to add meaning, not to compensate for weak interaction. |
+| Area                 | Main finding                                                                                                      | Practical implication                                                 |
+|----------------------|-------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------|
+| Motivation           | Players return for competence, autonomy, curiosity, expression, belonging, status, collection, or narrative pull. | Select motivations the game can support well.                         |
+| Retention            | Durable retention comes from loops operating at different time scales.                                            | Give reasons to continue now, finish the session, and return later.   |
+| Game feel            | Perceived fun depends heavily on responsiveness, clarity, impact, rhythm, and feedback.                           | Validate feel before producing large amounts of content.              |
+| Mastery              | Improvement is motivating when failure teaches something.                                                         | Make cause, effect, and recovery readable.                            |
+| Ethics               | Replayability does not require anxiety, obligation, or paid randomness.                                           | Prefer mastery, curiosity, expression, and fair variation.            |
+| Marketability        | Potential players must quickly understand the fantasy and activity.                                               | Show actual play, readable stakes, and the core verb early.           |
+| Small-team viability | Systemic replayability often scales better than content-heavy production.                                         | Favor reusable interactions over large bespoke libraries.             |
+| Story                | Story is efficient when it reinforces the loop and fantasy.                                                       | Use narrative to add meaning, not to compensate for weak interaction. |
 
 ## Practical summary
 
-For a small team, validate the core interaction before producing large amounts
-of content. Give players clear goals, readable threats, immediate feedback,
-fair challenge, and room to improve. Prefer replayability based on mastery,
-curiosity, expression, and variation over pressure, obligation, or confusing
-rewards. Test whether people understand and enjoy the loop before making market
-or retention claims.
+For a small team, validate the core interaction before producing large amounts of content. Give players clear goals, readable threats, immediate feedback, fair challenge, and room to improve. Prefer replayability based on mastery, curiosity, expression, and variation over pressure, obligation, or confusing rewards. Test whether people understand and enjoy the loop before making market or retention claims.
 
 ## Human Psychology and Game Engagement
 
-**Practical implication:** give players clear goals, readable cause and effect,
-and frequent chances to correct mistakes.
+**Practical implication:** give players clear goals, readable cause and effect, and frequent chances to correct mistakes.
 
 ### Attention as an Active Loop
 
@@ -150,12 +119,12 @@ Attention is easier to sustain when the game provides:
 - short recovery after failure
 - low friction between intention and action
 
-| Curiosity-led attention | Anxiety-led attention |
-| --- | --- |
-| "I want to try a better strategy." | "I must log in or lose my streak." |
-| "I almost understood that pattern." | "This reward disappears tonight." |
-| "I can execute this more cleanly." | "I already paid, so I have to grind." |
-| "What happens if I combine these systems?" | "I will fall behind if I stop." |
+| Curiosity-led attention                    | Anxiety-led attention                 |
+|--------------------------------------------|---------------------------------------|
+| "I want to try a better strategy."         | "I must log in or lose my streak."    |
+| "I almost understood that pattern."        | "This reward disappears tonight."     |
+| "I can execute this more cleanly."         | "I already paid, so I have to grind." |
+| "What happens if I combine these systems?" | "I will fall behind if I stop."       |
 
 ### Motivation
 
@@ -171,10 +140,7 @@ Common continuation drivers include:
 - **Status:** "My skill or achievement is recognized."
 - **Narrative pull:** "I want to see how the situation develops."
 
-Self-determination theory is useful because autonomy, competence, and
-relatedness describe broad human needs rather than narrow game mechanics [1].
-A reward is meaningful when it expands choice, shows improvement, or reinforces
-connection—not merely because it increases a number.
+Self-determination theory is useful because autonomy, competence, and relatedness describe broad human needs rather than narrow game mechanics [1]. A reward is meaningful when it expands choice, shows improvement, or reinforces connection—not merely because it increases a number.
 
 ### Reward Systems
 
@@ -188,10 +154,7 @@ Rewards work best when they are:
 - rare enough to remain meaningful
 - presented clearly enough to be noticed
 
-A stronger reward communicates that a new option is available, a meaningful
-objective was completed, useful information was gained, or mastery was shown.
-Extrinsic rewards should reinforce interesting decisions rather than replace
-them.
+A stronger reward communicates that a new option is available, a meaningful objective was completed, useful information was gained, or mastery was shown. Extrinsic rewards should reinforce interesting decisions rather than replace them.
 
 ### Flow and Focused Engagement
 
@@ -204,34 +167,29 @@ Flow is commonly associated with:
 - demanding but understandable challenge
 - difficulty that broadly tracks growing skill
 
-Flow is disrupted by arbitrary difficulty spikes, unclear failure causes,
-inconsistent controls, disproportionate punishment, excessive downtime,
-distracting presentation, and vague goals.
+Flow is disrupted by arbitrary difficulty spikes, unclear failure causes, inconsistent controls, disproportionate punishment, excessive downtime, distracting presentation, and vague goals.
 
 > Pressure should increase the importance of decisions without making the
 > situation impossible to read.
 
-Difficulty alone does not produce flow. A difficult task can be boring when
-repetitive, frustrating when opaque, or exhausting when recovery is too slow.
+Difficulty alone does not produce flow. A difficult task can be boring when repetitive, frustrating when opaque, or exhausting when recovery is too slow.
 
 ### Emotion and Stress
 
-Stress is not automatically harmful inside play. Players often seek demanding
-experiences when the stress feels chosen, bounded, and meaningful.
+Stress is not automatically harmful inside play. Players often seek demanding experiences when the stress feels chosen, bounded, and meaningful.
 
-| Design pattern | Likely emotional effect |
-| --- | --- |
-| Safe routine with visible progress | Relaxation |
-| Fair challenge with readable improvement | Confidence and pride |
-| Limited information in horror | Tension and fear |
-| Social comparison or ranked stakes | Excitement or stress |
-| Expiring rewards and hard FOMO | Anxiety and obligation |
-| Unclear failure and harsh punishment | Frustration |
+| Design pattern                           | Likely emotional effect |
+|------------------------------------------|-------------------------|
+| Safe routine with visible progress       | Relaxation              |
+| Fair challenge with readable improvement | Confidence and pride    |
+| Limited information in horror            | Tension and fear        |
+| Social comparison or ranked stakes       | Excitement or stress    |
+| Expiring rewards and hard FOMO           | Anxiety and obligation  |
+| Unclear failure and harsh punishment     | Frustration             |
 
 ## Healthy and Compulsive Engagement
 
-**Practical implication:** evaluate replay systems for player value and freedom
-to stop, not only for time spent.
+**Practical implication:** evaluate replay systems for player value and freedom to stop, not only for time spent.
 
 ### The Core Difference
 
@@ -243,37 +201,29 @@ Healthy engagement generally means:
 - the game fits into normal life
 - play leaves the player capable, curious, satisfied, or meaningfully moved
 
-Compulsive or harmful engagement can involve impaired control, play taking
-priority over other activities, continuation despite negative consequences,
-and distress when absent.
+Compulsive or harmful engagement can involve impaired control, play taking priority over other activities, continuation despite negative consequences, and distress when absent.
 
-The World Health Organization's gaming disorder definition centers on impaired
-control, increasing priority given to gaming, and continuation or escalation
-despite negative consequences [2]. High playtime alone is not sufficient
-evidence of disorder.
+The World Health Organization's gaming disorder definition centers on impaired control, increasing priority given to gaming, and continuation or escalation despite negative consequences [2]. High playtime alone is not sufficient evidence of disorder.
 
 > Does the design respect player agency, informed choice, time, and money?
 
 ### Engagement Mechanics by Risk Level
 
-| Mechanic | Lower-risk use | Higher-risk failure mode |
-| --- | --- | --- |
-| Random rewards | Transparent, earned, non-monetized variation | Paid randomness, opaque odds, near-miss pressure |
-| Procedural variation | Rule-driven, fair, learnable situations | Random noise presented as depth |
-| Unlocks | Meaningful options at a reasonable pace | Artificially stretched content |
-| Collections | Finite, readable, optional sets | Monetized completion pressure |
-| Daily tasks | Optional, non-punitive goals | Chores, missed-value anxiety, streak pressure |
-| Streaks | Private tracking with no loss | Punishment for missing days |
-| Battle passes | Transparent cosmetic goals | Expiring paid grind |
-| Limited events | Re-runnable or low-stakes novelty | Fear of missing unique rewards |
-| Ranked ladders | Fair rules and transparent ranking | Status anxiety or manipulation |
-| Gacha | Difficult to justify with real-money spending | Gambling-like pressure and opaque value |
-| Social systems | Voluntary cooperation | Attendance pressure and social guilt |
+| Mechanic             | Lower-risk use                                | Higher-risk failure mode                         |
+|----------------------|-----------------------------------------------|--------------------------------------------------|
+| Random rewards       | Transparent, earned, non-monetized variation  | Paid randomness, opaque odds, near-miss pressure |
+| Procedural variation | Rule-driven, fair, learnable situations       | Random noise presented as depth                  |
+| Unlocks              | Meaningful options at a reasonable pace       | Artificially stretched content                   |
+| Collections          | Finite, readable, optional sets               | Monetized completion pressure                    |
+| Daily tasks          | Optional, non-punitive goals                  | Chores, missed-value anxiety, streak pressure    |
+| Streaks              | Private tracking with no loss                 | Punishment for missing days                      |
+| Battle passes        | Transparent cosmetic goals                    | Expiring paid grind                              |
+| Limited events       | Re-runnable or low-stakes novelty             | Fear of missing unique rewards                   |
+| Ranked ladders       | Fair rules and transparent ranking            | Status anxiety or manipulation                   |
+| Gacha                | Difficult to justify with real-money spending | Gambling-like pressure and opaque value          |
+| Social systems       | Voluntary cooperation                         | Attendance pressure and social guilt             |
 
-Research has repeatedly found associations between loot-box spending and
-problem-gambling measures [3]. Association does not establish that every
-randomized system causes harm, but real money, uncertain outcomes, and
-psychological pressure deserve a high standard of care.
+Research has repeatedly found associations between loot-box spending and problem-gambling measures [3]. Association does not establish that every randomized system causes harm, but real money, uncertain outcomes, and psychological pressure deserve a high standard of care.
 
 Risk increases when several pressures are combined:
 
@@ -310,20 +260,17 @@ Lower-risk retention can come from:
 
 ## Retention Loops
 
-**Practical implication:** use layered goals to create satisfying sessions,
-then test whether they feel motivating rather than coercive.
+**Practical implication:** use layered goals to create satisfying sessions, then test whether they feel motivating rather than coercive.
 
-| Time scale | Player question | Common design tools |
-| --- | --- | --- |
-| Moment-to-moment | "Does acting feel good and clear?" | controls, sound, impact, animation, readable state changes |
-| Minute-to-minute | "What should I do next?" | threats, tactical choices, resources, routes, short goals |
-| Session | "What am I trying to finish?" | mission, run, day, floor, boss, quota, chapter |
-| Multi-session | "What am I working toward?" | unlocks, collections, upgrades, relationships, mastery goals |
-| Long-term | "What kind of player or creator am I becoming?" | expertise, expression, community, challenge modes |
+| Time scale       | Player question                                 | Common design tools                                          |
+|------------------|-------------------------------------------------|--------------------------------------------------------------|
+| Moment-to-moment | "Does acting feel good and clear?"              | controls, sound, impact, animation, readable state changes   |
+| Minute-to-minute | "What should I do next?"                        | threats, tactical choices, resources, routes, short goals    |
+| Session          | "What am I trying to finish?"                   | mission, run, day, floor, boss, quota, chapter               |
+| Multi-session    | "What am I working toward?"                     | unlocks, collections, upgrades, relationships, mastery goals |
+| Long-term        | "What kind of player or creator am I becoming?" | expertise, expression, community, challenge modes            |
 
-Not every game needs every layer. A short arcade game may rely on immediate
-feel, run mastery, and score improvement. A narrative game may use story
-curiosity instead of long-term mechanical progression.
+Not every game needs every layer. A short arcade game may rely on immediate feel, run mastery, and score improvement. A narrative game may use story curiosity instead of long-term mechanical progression.
 
 ### Strong Pattern
 
@@ -338,51 +285,39 @@ Clear action → satisfying feedback → meaningful result → new decision
 Timer → obligation → grind → temporary relief → new timer
 ```
 
-Replayability can emerge from interacting systems, meaningful tradeoffs,
-understandable variation, skill growth, different routes, risk/reward choices,
-expressive solutions, and low retry friction.
+Replayability can emerge from interacting systems, meaningful tradeoffs, understandable variation, skill growth, different routes, risk/reward choices, expressive solutions, and low retry friction.
 
-Randomness helps only when players can interpret and respond to it. Variation
-that overrides skill or obscures outcomes can reduce replay value.
+Randomness helps only when players can interpret and respond to it. Variation that overrides skill or obscures outcomes can reduce replay value.
 
 ## Player Motivations
 
-Player categories are not fixed identities. Most people shift motivations
-between games and sessions. Segmentation is a design lens, not a complete
-description of a person.
+Player categories are not fixed identities. Most people shift motivations between games and sessions. Segmentation is a design lens, not a complete description of a person.
 
-| Motivation | Common enjoyment | Common frustration | Small-team viability |
-| --- | --- | --- | --- |
-| Achievement | goals, completion, visible progress | unclear or impossible requirements | High |
-| Mastery | fair challenge, execution, optimization | randomness overriding skill | High |
-| Exploration | secrets, spaces, discovery | empty content or excessive handholding | Medium |
-| Collection | sets, unlocks, cosmetics | missable FOMO and opaque drops | High when finite |
-| Competition | ranked tests and comparison | imbalance and unfair matchmaking | Low to medium |
-| Social connection | cooperation and shared stories | empty populations and toxic interaction | Medium when controlled |
-| Building and expression | layouts, bases, customization | restrictive systems | High |
-| Roleplay | identity, choices, world consistency | shallow or contradictory fiction | Medium |
-| Narrative | plot, character, mystery, emotion | pacing problems and weak writing | Medium to low unless writing is a strength |
-| Relaxation | routine, safety, gentle progress | excessive pressure or punishment | High |
-| Challenge | difficult tests and execution | unclear telegraphs and unfair consequences | Medium |
+| Motivation              | Common enjoyment                        | Common frustration                         | Small-team viability                       |
+|-------------------------|-----------------------------------------|--------------------------------------------|--------------------------------------------|
+| Achievement             | goals, completion, visible progress     | unclear or impossible requirements         | High                                       |
+| Mastery                 | fair challenge, execution, optimization | randomness overriding skill                | High                                       |
+| Exploration             | secrets, spaces, discovery              | empty content or excessive handholding     | Medium                                     |
+| Collection              | sets, unlocks, cosmetics                | missable FOMO and opaque drops             | High when finite                           |
+| Competition             | ranked tests and comparison             | imbalance and unfair matchmaking           | Low to medium                              |
+| Social connection       | cooperation and shared stories          | empty populations and toxic interaction    | Medium when controlled                     |
+| Building and expression | layouts, bases, customization           | restrictive systems                        | High                                       |
+| Roleplay                | identity, choices, world consistency    | shallow or contradictory fiction           | Medium                                     |
+| Narrative               | plot, character, mystery, emotion       | pacing problems and weak writing           | Medium to low unless writing is a strength |
+| Relaxation              | routine, safety, gentle progress        | excessive pressure or punishment           | High                                       |
+| Challenge               | difficult tests and execution           | unclear telegraphs and unfair consequences | Medium                                     |
 
-Small teams can often serve mastery, optimization, finite collection, tactical
-problem-solving, short-session replay, cozy completion, and expression through
-reusable systems.
+Small teams can often serve mastery, optimization, finite collection, tactical problem-solving, short-session replay, cozy completion, and expression through reusable systems.
 
-Risk rises when the intended motivation depends on huge content volume,
-constant updates, a large multiplayer population, cinematic production,
-extensive bespoke animation, deep competitive balance, large rosters, or
-expensive localization.
+Risk rises when the intended motivation depends on huge content volume, constant updates, a large multiplayer population, cinematic production, extensive bespoke animation, deep competitive balance, large rosters, or expensive localization.
 
 ## Game Feel and Feedback
 
-**Practical implication:** test responsiveness and feedback early because they
-shape the perceived quality of every gameplay system.
+**Practical implication:** test responsiveness and feedback early because they shape the perceived quality of every gameplay system.
 
 ### Why Game Feel Matters
 
-Game feel is part of how the player understands the simulation. Useful feedback
-communicates:
+Game feel is part of how the player understands the simulation. Useful feedback communicates:
 
 - what happened
 - why it happened
@@ -391,37 +326,30 @@ communicates:
 - what changed
 - what the player can do next
 
-A mechanically sound game can feel weak when cause, impact, timing, or
-consequence is unclear.
+A mechanically sound game can feel weak when cause, impact, timing, or consequence is unclear.
 
 ### High-Value Feedback Patterns
 
-| Pattern | What it communicates | Common failure mode |
-| --- | --- | --- |
-| Brief hit pause | impact and weight | excessive interruption |
-| Screen shake | force, danger, scale | discomfort and reduced readability |
-| Particles | contact, magic, rarity, destruction | effects hiding important state |
-| Numbers and meters | magnitude and progression | information overload |
-| Sound cues | impact, danger, success, rarity | repetition and fatigue |
-| Animation anticipation | what is about to happen | delayed controls |
-| Squash and stretch | physicality and character | tonal mismatch or excess motion |
-| Reward animation | achievement and progress | long interruption |
-| UI response | confirmed input and state change | decorative delay |
-| Escalating intensity | urgency and momentum | clutter without new decisions |
-| Physics response | surprise and agency | unstable or unfair outcomes |
-| Destruction | visible power and consequence | high production and performance cost |
+| Pattern                | What it communicates                | Common failure mode                  |
+|------------------------|-------------------------------------|--------------------------------------|
+| Brief hit pause        | impact and weight                   | excessive interruption               |
+| Screen shake           | force, danger, scale                | discomfort and reduced readability   |
+| Particles              | contact, magic, rarity, destruction | effects hiding important state       |
+| Numbers and meters     | magnitude and progression           | information overload                 |
+| Sound cues             | impact, danger, success, rarity     | repetition and fatigue               |
+| Animation anticipation | what is about to happen             | delayed controls                     |
+| Squash and stretch     | physicality and character           | tonal mismatch or excess motion      |
+| Reward animation       | achievement and progress            | long interruption                    |
+| UI response            | confirmed input and state change    | decorative delay                     |
+| Escalating intensity   | urgency and momentum                | clutter without new decisions        |
+| Physics response       | surprise and agency                 | unstable or unfair outcomes          |
+| Destruction            | visible power and consequence       | high production and performance cost |
 
-Accessibility matters. Shake, flashes, contrast, motion, sound reliance, and
-small text should be adjustable where they could reduce comfort or exclude
-players.
+Accessibility matters. Shake, flashes, contrast, motion, sound reliance, and small text should be adjustable where they could reduce comfort or exclude players.
 
-Commonly effective mechanics include responsive movement, precise timing,
-risk/reward decisions, synergies, visible escalation, meaningful upgrades,
-tactical positioning, readable telegraphs, short retries, near-miss survival,
-reactive environments, secrets, and optimization with visible results.
+Commonly effective mechanics include responsive movement, precise timing, risk/reward decisions, synergies, visible escalation, meaningful upgrades, tactical positioning, readable telegraphs, short retries, near-miss survival, reactive environments, secrets, and optimization with visible results.
 
-Their popularity does not mean every game should include them. A mechanic is
-valuable only when it strengthens the intended experience and fits the scope.
+Their popularity does not mean every game should include them. A mechanic is valuable only when it strengthens the intended experience and fits the scope.
 
 ### Feedback Hierarchy
 
@@ -429,8 +357,7 @@ valuable only when it strengthens the intended experience and fits the scope.
 - **Secondary:** resource gain, cooldown, status change, progress update
 - **Ambient:** atmosphere, world reactivity, decorative motion
 
-When everything flashes, shakes, and makes a loud sound, nothing feels
-important.
+When everything flashes, shakes, and makes a loud sound, nothing feels important.
 
 ## Gameplay and Story Models
 
@@ -439,57 +366,47 @@ Most games are hybrids. The useful question is:
 > Does narrative strengthen the core interaction, or must the player consume
 > large amounts of narrative before the interaction becomes compelling?
 
-| Model | Strengths | Weaknesses | Small-team risk |
-| --- | --- | --- | --- |
-| Gameplay-first | replayability, clear systems, lower marginal content cost | can feel emotionally thin | Often lower |
-| Story-first | emotional impact, character, authored pacing | content-heavy and difficult to validate early | Higher unless writing is a core strength |
-| Gameplay-led hybrid | reusable loop with narrative reinforcement | requires integration discipline | Strong general target |
-| Story-led hybrid | authored narrative with an interactive premise | must meet both quality bars | Viable with a sharp premise |
-| Sandbox or systemic | autonomy, emergence, expression | onboarding and UX complexity | Strong when scope is controlled |
+| Model               | Strengths                                                 | Weaknesses                                    | Small-team risk                          |
+|---------------------|-----------------------------------------------------------|-----------------------------------------------|------------------------------------------|
+| Gameplay-first      | replayability, clear systems, lower marginal content cost | can feel emotionally thin                     | Often lower                              |
+| Story-first         | emotional impact, character, authored pacing              | content-heavy and difficult to validate early | Higher unless writing is a core strength |
+| Gameplay-led hybrid | reusable loop with narrative reinforcement                | requires integration discipline               | Strong general target                    |
+| Story-led hybrid    | authored narrative with an interactive premise            | must meet both quality bars                   | Viable with a sharp premise              |
+| Sandbox or systemic | autonomy, emergence, expression                           | onboarding and UX complexity                  | Strong when scope is controlled          |
 
-Story helps when it clarifies the fantasy, makes repetition meaningful,
-differentiates a familiar mechanic, motivates progression, creates memorable
-characters, turns failure into continuation, or helps players retell events.
+Story helps when it clarifies the fantasy, makes repetition meaningful, differentiates a familiar mechanic, motivates progression, creates memorable characters, turns failure into continuation, or helps players retell events.
 
-Story hurts when it delays the first meaningful interaction, requires extensive
-reading before motivation exists, creates large production scope, conflicts
-with replay pacing, repeatedly interrupts rhythm, or becomes the only reason
-the pitch sounds interesting.
+Story hurts when it delays the first meaningful interaction, requires extensive reading before motivation exists, creates large production scope, conflicts with replay pacing, repeatedly interrupts rhythm, or becomes the only reason the pitch sounds interesting.
 
-Prioritize the playable loop and support it with a focused theme, world, mood,
-and limited authored story. Increase narrative investment when writing is a
-team strength and narrative strengthens decisions, repetition, or progression.
-Do not apply a universal percentage split.
+Prioritize the playable loop and support it with a focused theme, world, mood, and limited authored story. Increase narrative investment when writing is a team strength and narrative strengthens decisions, repetition, or progression. Do not apply a universal percentage split.
 
 ## Genre and Market Considerations
 
-**Practical implication:** communicate the player fantasy, main action, and
-stakes quickly enough that potential players can understand the game in motion.
+**Practical implication:** communicate the player fantasy, main action, and stakes quickly enough that potential players can understand the game in motion.
 
 > **Review date: July 2026.** This section is directional research, not a
 > permanent forecast. Revalidate genre demand, saturation, platform visibility,
 > tools, and audience expectations before major commercial decisions.
 
-Labels such as "crowded," "high production risk," or "visually clear" are
-qualitative synthesis, not measured market scores.
+Labels such as "crowded," "high production risk," or "visually clear" are qualitative synthesis, not measured market scores.
 
-| Direction | Competition | Typical production risk | Small-team observation |
-| --- | --- | --- | --- |
-| Roguelite | Crowded | Medium | Viable when the core variation or verb is distinct. |
-| Deckbuilder | Crowded | Medium | Efficient when depth comes from reusable rules. |
-| Survivors-like | Crowded | Low to medium | Accessible scope, but novelty and feel are critical. |
-| Horror | Moderate | Low to medium | Mood and streamer visibility can help modest projects. |
-| Cozy or farming | Crowded | Often high | Content, animation, and relationship expectations can be substantial. |
-| Automation or factory | Moderate | High systems and UX burden | Strong depth-to-content ratio when usability is excellent. |
-| Management simulation | Moderate | Medium | Reusable systems can create longevity. |
-| Survival crafting | Crowded | Very high | Dangerous unless the world and feature set are constrained. |
-| Soulslike action | Crowded | High | Combat, animation, level, and balance expectations are severe. |
-| Tactics | Moderate | Medium | Strong fit when rules and state are highly readable. |
-| Creature collection | Crowded | Very high | Roster, animation, content, and progression expectations are dangerous. |
-| Multiplayer co-op | Moderate | High | Networking, testing, matchmaking, and support multiply risk. |
-| Competitive PvP | Crowded | Very high | Balance, anti-cheat, population, and live support are major burdens. |
-| Mystery | Moderate | Medium | Best when the premise and interactive verb are easy to explain. |
-| Narrative drama | Moderate | Medium to high | Depends heavily on writing, pacing, reviews, and word of mouth. |
+| Direction             | Competition | Typical production risk    | Small-team observation                                                  |
+|-----------------------|-------------|----------------------------|-------------------------------------------------------------------------|
+| Roguelite             | Crowded     | Medium                     | Viable when the core variation or verb is distinct.                     |
+| Deckbuilder           | Crowded     | Medium                     | Efficient when depth comes from reusable rules.                         |
+| Survivors-like        | Crowded     | Low to medium              | Accessible scope, but novelty and feel are critical.                    |
+| Horror                | Moderate    | Low to medium              | Mood and streamer visibility can help modest projects.                  |
+| Cozy or farming       | Crowded     | Often high                 | Content, animation, and relationship expectations can be substantial.   |
+| Automation or factory | Moderate    | High systems and UX burden | Strong depth-to-content ratio when usability is excellent.              |
+| Management simulation | Moderate    | Medium                     | Reusable systems can create longevity.                                  |
+| Survival crafting     | Crowded     | Very high                  | Dangerous unless the world and feature set are constrained.             |
+| Soulslike action      | Crowded     | High                       | Combat, animation, level, and balance expectations are severe.          |
+| Tactics               | Moderate    | Medium                     | Strong fit when rules and state are highly readable.                    |
+| Creature collection   | Crowded     | Very high                  | Roster, animation, content, and progression expectations are dangerous. |
+| Multiplayer co-op     | Moderate    | High                       | Networking, testing, matchmaking, and support multiply risk.            |
+| Competitive PvP       | Crowded     | Very high                  | Balance, anti-cheat, population, and live support are major burdens.    |
+| Mystery               | Moderate    | Medium                     | Best when the premise and interactive verb are easy to explain.         |
+| Narrative drama       | Moderate    | Medium to high             | Depends heavily on writing, pacing, reviews, and word of mouth.         |
 
 Often easier to communicate visually:
 
@@ -513,16 +430,12 @@ Often harder to communicate:
 - experiences dependent on late twists
 - systems requiring long explanations
 
-A saturated genre is not automatically a poor choice. The practical question
-is:
+A saturated genre is not automatically a poor choice. The practical question is:
 
 > Why should this player choose this game instead of another game they already
 > understand?
 
-Differentiation can come from a new decision structure, strong visual identity,
-an unusual but understandable fantasy, a familiar verb in a new context,
-reinforcing systems, better usability, a distinct social dynamic, or mechanics
-that create memorable stories.
+Differentiation can come from a new decision structure, strong visual identity, an unusual but understandable fantasy, a familiar verb in a new context, reinforcing systems, better usability, a distinct social dynamic, or mechanics that create memorable stories.
 
 ## Commercial Presentation
 
@@ -535,29 +448,17 @@ A strong store presentation makes these clear:
 - what makes the game distinct
 - what tone to expect
 
-Useful elements include readable capsule art, a legible title and logo,
-screenshots showing actual play, a gameplay-first trailer, accurate tags, a
-concise fantasy, visible stakes, and consistent visual identity.
+Useful elements include readable capsule art, a legible title and logo, screenshots showing actual play, a gameplay-first trailer, accurate tags, a concise fantasy, visible stakes, and consistent visual identity.
 
-Steamworks guidance recommends that store trailers primarily show gameplay
-from the player's perspective and notes that players often want to see the HUD
-and actual interaction [4].
+Steamworks guidance recommends that store trailers primarily show gameplay from the player's perspective and notes that players often want to see the HUD and actual interaction [4].
 
-Common wishlist triggers include strong genre fit, an understandable fantasy,
-attractive screenshots, a clear loop, distinctive art direction, a promising
-demo, trusted recommendation, and social proof.
+Common wishlist triggers include strong genre fit, an understandable fantasy, attractive screenshots, a clear loop, distinctive art direction, a promising demo, trusted recommendation, and social proof.
 
-Common purchase factors include price relative to perceived value, reviews,
-current mood, coherent presentation, demonstrated gameplay quality, and
-technical confidence.
+Common purchase factors include price relative to perceived value, reviews, current mood, coherent presentation, demonstrated gameplay quality, and technical confidence.
 
-Common refund causes include the opening not matching the store promise, poor
-performance, weak controls, confusing onboarding, severe bugs, presentation
-that looks better than the interaction feels, and a loop that becomes
-repetitive too quickly.
+Common refund causes include the opening not matching the store promise, poor performance, weak controls, confusing onboarding, severe bugs, presentation that looks better than the interaction feels, and a loop that becomes repetitive too quickly.
 
-Steam's standard refund policy makes the early experience commercially
-important [5]. Verify current platform policy before relying on exact limits.
+Steam's standard refund policy makes the early experience commercially important [5]. Verify current platform policy before relying on exact limits.
 
 ### High-Risk Small-Team Projects
 
@@ -575,32 +476,27 @@ Use strong constraints or avoid projects requiring:
 - constant content updates
 - multiplayer populations large enough to sustain basic play
 
-Potentially efficient directions include compact roguelites, card games with a
-distinct decision structure, survivors-likes with a clear hook, compact horror,
-focused management or automation, readable tactics, constrained cozy-system
-hybrids, mechanically integrated mysteries, and controlled co-op chaos.
-Execution and differentiation matter more than category labels.
+Potentially efficient directions include compact roguelites, card games with a distinct decision structure, survivors-likes with a clear hook, compact horror, focused management or automation, readable tactics, constrained cozy-system hybrids, mechanically integrated mysteries, and controlled co-op chaos. Execution and differentiation matter more than category labels.
 
 ## Case Studies
 
-Case studies identify patterns; they do not prove that copying a feature will
-produce the same result.
+Case studies identify patterns; they do not prove that copying a feature will produce the same result.
 
-| Game | Core loop | Useful lesson |
-| --- | --- | --- |
-| *Vampire Survivors* | survive, collect, choose upgrades, combine, repeat | Compress the distance between action, reward, and visible growth. |
-| *Hades* | run, fight, fail, upgrade, continue relationships | Narrative can reward repetition instead of interrupting it. |
-| *Stardew Valley* | plan days, gather, farm, relate, improve | Relaxation still benefits from layered goals and autonomy. |
-| *Slay the Spire* | draft, route, fight, adapt | Decision density can matter more than raw content count. |
-| *Balatro* | play hands, modify rules, build combinations | Familiar foundations can reduce onboarding cost. |
-| *Dark Souls* / *Elden Ring* | explore, fight, fail, learn, recover | Difficulty works when causes and improvement remain readable. |
-| *Celeste* | attempt, fail, retry, improve | Frequent failure can work when retry friction is low. |
-| *Factorio* | build, automate, measure, optimize | Visible inefficiency creates self-directed mastery goals. |
-| *Lethal Company* | explore, gather, coordinate, panic, escape | Retellable systemic moments can market themselves socially. |
-| *RimWorld* | build, manage, respond, recover | Reusable systems can generate narrative. |
-| *Dredge* | fish, risk, sell, upgrade, investigate | Theme can multiply the identity of a modest core verb. |
-| *Papers, Please* | inspect, decide, earn, survive | Context can turn repetition into meaningful tension. |
-| *Inscryption* | play, learn rules, uncover layers | Mechanics and narrative can reinforce the same curiosity. |
+| Game                        | Core loop                                          | Useful lesson                                                     |
+|-----------------------------|----------------------------------------------------|-------------------------------------------------------------------|
+| *Vampire Survivors*         | survive, collect, choose upgrades, combine, repeat | Compress the distance between action, reward, and visible growth. |
+| *Hades*                     | run, fight, fail, upgrade, continue relationships  | Narrative can reward repetition instead of interrupting it.       |
+| *Stardew Valley*            | plan days, gather, farm, relate, improve           | Relaxation still benefits from layered goals and autonomy.        |
+| *Slay the Spire*            | draft, route, fight, adapt                         | Decision density can matter more than raw content count.          |
+| *Balatro*                   | play hands, modify rules, build combinations       | Familiar foundations can reduce onboarding cost.                  |
+| *Dark Souls* / *Elden Ring* | explore, fight, fail, learn, recover               | Difficulty works when causes and improvement remain readable.     |
+| *Celeste*                   | attempt, fail, retry, improve                      | Frequent failure can work when retry friction is low.             |
+| *Factorio*                  | build, automate, measure, optimize                 | Visible inefficiency creates self-directed mastery goals.         |
+| *Lethal Company*            | explore, gather, coordinate, panic, escape         | Retellable systemic moments can market themselves socially.       |
+| *RimWorld*                  | build, manage, respond, recover                    | Reusable systems can generate narrative.                          |
+| *Dredge*                    | fish, risk, sell, upgrade, investigate             | Theme can multiply the identity of a modest core verb.            |
+| *Papers, Please*            | inspect, decide, earn, survive                     | Context can turn repetition into meaningful tension.              |
+| *Inscryption*               | play, learn rules, uncover layers                  | Mechanics and narrative can reinforce the same curiosity.         |
 
 Broader lessons:
 
@@ -609,20 +505,15 @@ Broader lessons:
 - Decision density is often more valuable than content that changes nothing.
 - Visible inefficiency can create self-directed mastery goals.
 - Retellable systemic moments can create a marketing advantage.
-- Strong theme can sharpen a modest mechanic when it affects play and
-  presentation.
+- Strong theme can sharpen a modest mechanic when it affects play and presentation.
 
 ## Practical Recommendations
 
 ### Engagement Without Predation
 
-Prefer mastery, curiosity, fair challenge, visible improvement, meaningful
-choice, expression, optional completion, readable randomization, emergent
-interaction, and narrative reinforcement.
+Prefer mastery, curiosity, fair challenge, visible improvement, meaningful choice, expression, optional completion, readable randomization, emergent interaction, and narrative reinforcement.
 
-Avoid relying on hard FOMO, punitive streaks, paid randomness, artificial
-grind, expiring paid value, social guilt, opaque manipulation, or misleading
-odds.
+Avoid relying on hard FOMO, punitive streaks, paid randomness, artificial grind, expiring paid value, social guilt, opaque manipulation, or misleading odds.
 
 ### Prototype Priorities
 
@@ -631,8 +522,7 @@ odds.
 3. **Decision loop:** identify what meaningful choice appears every minute.
 4. **Session loop:** define what the player can complete in one sitting.
 5. **Replay loop:** establish why the player would voluntarily begin again.
-6. **Market hook:** test whether the game can be understood from one sentence,
-   a screenshot, and a short clip.
+6. **Market hook:** test whether the game can be understood from one sentence, a screenshot, and a short clip.
 
 Do not build large content libraries before these foundations are credible.
 
@@ -664,8 +554,7 @@ Before treating an idea as commercially promising, ask:
 
 ## Prototype Validation
 
-**Practical implication:** separate fun, usability, and market questions so a
-single playtest does not claim to prove more than it observed.
+**Practical implication:** separate fun, usability, and market questions so a single playtest does not claim to prove more than it observed.
 
 Praise is useful but weak evidence. Behavior is more reliable.
 
@@ -728,17 +617,11 @@ Warning signs:
 
 ### Evidence Quality
 
-Playtest conclusions are more trustworthy when the target audience is
-represented, the build is stable enough for the tested question, testers act
-without constant explanation, questions avoid leading language, behavior is
-recorded separately from interpretation, repeated patterns matter more than one
-comment, and negative evidence is not discarded because it conflicts with the
-pitch.
+Playtest conclusions are more trustworthy when the target audience is represented, the build is stable enough for the tested question, testers act without constant explanation, questions avoid leading language, behavior is recorded separately from interpretation, repeated patterns matter more than one comment, and negative evidence is not discarded because it conflicts with the pitch.
 
 ## Conclusion
 
-For a small indie team seeking engaging, ethical, and commercially legible
-design:
+For a small indie team seeking engaging, ethical, and commercially legible design:
 
 - start with a clear player fantasy
 - build a satisfying interaction before large content volume
@@ -751,8 +634,7 @@ design:
 - validate marketability separately from fun
 - recheck market assumptions as conditions change
 
-A strong ethical game should make players feel capable, curious, expressive,
-challenged, respected, free to stop, and interested enough to return.
+A strong ethical game should make players feel capable, curious, expressive, challenged, respected, free to stop, and interested enough to return.
 
 ## Related pages
 
@@ -763,8 +645,7 @@ challenged, respected, free to stop, and interested enough to return.
 
 ## Sources
 
-Claims tied to specific research or industry guidance use numbered references.
-Other statements are design heuristics or qualitative synthesis.
+Claims tied to specific research or industry guidance use numbered references. Other statements are design heuristics or qualitative synthesis.
 
 1. Ryan, Rigby, and Przybylski — Self-determination theory and video games: https://selfdeterminationtheory.org/SDT/documents/2006_RyanRigbyPrzybylski_MandE.pdf
 2. World Health Organization — Gaming disorder FAQ: https://www.who.int/standards/classifications/frequently-asked-questions/gaming-disorder
