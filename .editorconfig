@@ -13,7 +13,7 @@ ij_formatter_tags_enabled = true
 indent_style = space
 indent_size = 2
 tab_width = 2
-max_line_length = 90
+max_line_length = 80
 
 [*.{shader,compute,hlsl,cginc}]
 indent_style = space
@@ -31,5 +31,5 @@ indent_size = 2
 tab_width = 2
 
 [*.{md,markdown}]
-trim_trailing_whitespace = false
-max_line_length = off
+trim_trailing_whitespace = true
+max_line_length = 80
