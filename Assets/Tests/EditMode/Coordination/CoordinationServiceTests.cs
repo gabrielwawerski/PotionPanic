@@ -639,6 +639,22 @@ namespace PotionPanic.Tests.EditMode.Coordination
     }
 
     [Test]
+    public async Task DisablingAReadyServiceClosesTheSocketAndEntersDisabledState()
+    {
+      var socket = new FakeWebSocketClient();
+      var service = CreateService(Credentials(), new FakeHttpClient(), socket);
+
+      await service.ConnectAsync();
+      RaiseReady(socket, 5);
+      await service.SetDisabledAsync(true);
+
+      Assert.That(socket.CloseCalls, Is.EqualTo(1));
+      Assert.That(service.State, Is.EqualTo(CoordinationConnectionState.Disabled));
+      Assert.That(service.HasSession, Is.False);
+      await service.ShutdownAsync();
+    }
+
+    [Test]
     public async Task ShutdownDiscardsAPartialSnapshotBeforeQueuedMessagesApply()
     {
       var dispatcher = new QueuedMainThreadDispatcher();

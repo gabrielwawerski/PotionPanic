@@ -352,9 +352,16 @@ namespace PotionPanic.Editor.Coordination
 
     public bool Override()
     {
-      var lease = SelectedLease();
-      return CanOverride && TrySelectedPath(out var path)
-        && overrideConfirmation.Confirm(path, DisplayOwner(lease.displayName, lease.developerId))
+      if (!TrySelectedPath(out var path)
+        || !TryGetRemoteLeaseForOverride(path, out var lease)
+        || !overrideConfirmation.Confirm(path,
+          DisplayOwner(lease.displayName, lease.developerId)))
+      {
+        return false;
+      }
+
+      return TryGetRemoteLeaseForOverride(path, out var current)
+        && IsSameLease(lease, current)
         && service.TryOverrideLease(path, out _);
     }
 
@@ -384,10 +391,14 @@ namespace PotionPanic.Editor.Coordination
         return false;
       }
 
-      return pathSource.TryGetActiveStagePath(out var path)
-        ? TrySetPathFromSource(path, CoordinationTargetSource.ActiveStage,
-          "The active stage is not a saved asset under Assets/.")
-        : SetPathSourceFailure("The active stage is not a saved asset under Assets/.");
+      if (pathSource.TryGetActiveStagePath(out var path))
+      {
+        return TrySetPathFromSource(path, CoordinationTargetSource.ActiveStage,
+          "The active stage is not a saved asset under Assets/.");
+      }
+
+      ClearActionTarget();
+      return SetPathSourceFailure("The active stage is not a saved asset under Assets/.");
     }
 
     public void SelectRow(CoordinationWindowRow row)
@@ -455,10 +466,17 @@ namespace PotionPanic.Editor.Coordination
       {
         return false;
       }
-      return TryLeaseForRow(row, out var lease) && IsRemotelyOwned(lease)
-        && overrideConfirmation.Confirm(row.Path,
-          DisplayOwner(lease.displayName, lease.developerId))
-        && service.TryOverrideLease(row.Path, out _);
+      if (!CoordinationPathMatcher.TryNormalize(row.Path, out var path)
+        || !TryGetRemoteLeaseForOverride(path, out var lease)
+        || !overrideConfirmation.Confirm(path,
+          DisplayOwner(lease.displayName, lease.developerId)))
+      {
+        return false;
+      }
+
+      return TryGetRemoteLeaseForOverride(path, out var current)
+        && IsSameLease(lease, current)
+        && service.TryOverrideLease(path, out _);
     }
 
     public bool CopyPath(CoordinationWindowRow row)
@@ -618,10 +636,15 @@ namespace PotionPanic.Editor.Coordination
 
     private bool CanSendForSelectedPath()
     {
+      return TrySelectedPath(out var path) && CanSendForPath(path);
+    }
+
+    private bool CanSendForPath(string path)
+    {
       return service.State == CoordinationConnectionState.Connected
         && Mode == CoordinationMode.Coordinated
         && Freshness == CoordinationDataFreshness.Live
-        && TrySelectedCoordinatedPath(out _);
+        && rules.Any(rule => CoordinationPathMatcher.Matches(rule, path));
     }
 
     private bool TrySelectedCoordinatedPath(out string normalizedPath)
@@ -646,10 +669,8 @@ namespace PotionPanic.Editor.Coordination
       out CoordinationLeaseRecord lease)
     {
       lease = null;
-      return service.State == CoordinationConnectionState.Connected
-        && Mode == CoordinationMode.Coordinated
-        && Freshness == CoordinationDataFreshness.Live
-        && TryLeaseForRow(row, out lease);
+      return TryLeaseForRow(row, out lease)
+        && CanSendForPath(lease.displayPath ?? lease.path);
     }
 
     private bool TryLeaseForRow(
@@ -675,6 +696,17 @@ namespace PotionPanic.Editor.Coordination
 
       SetSelectedPath(normalized, source);
       return true;
+    }
+
+    private void ClearActionTarget()
+    {
+      if (string.IsNullOrEmpty(selectedPath))
+      {
+        return;
+      }
+
+      selectedPath = string.Empty;
+      Changed?.Invoke();
     }
 
     private void SetSelectedPath(string value, CoordinationTargetSource source)
@@ -771,6 +803,12 @@ namespace PotionPanic.Editor.Coordination
 
     private CoordinationDataFreshness GetFreshness()
     {
+      if (Mode == CoordinationMode.Manual)
+      {
+        return HasRetainedRows()
+          ? CoordinationDataFreshness.Stale
+          : CoordinationDataFreshness.Unavailable;
+      }
       if (service.State == CoordinationConnectionState.Connected)
       {
         return stateStore.HasAuthoritativeSnapshot
@@ -778,9 +816,36 @@ namespace PotionPanic.Editor.Coordination
           : CoordinationDataFreshness.WaitingForSnapshot;
       }
 
-      return stateStore.GetAllPresence().Count > 0 || stateStore.GetAllLeases().Count > 0
+      return HasRetainedRows()
         ? CoordinationDataFreshness.Stale
         : CoordinationDataFreshness.Unavailable;
+    }
+
+    private bool HasRetainedRows()
+    {
+      return stateStore.GetAllPresence().Count > 0 || stateStore.GetAllLeases().Count > 0;
+    }
+
+    private bool TryGetRemoteLeaseForOverride(
+      string path,
+      out CoordinationLeaseRecord lease)
+    {
+      lease = null;
+      return CanSendForPath(path)
+        && stateStore.TryGetLease(path, out lease)
+        && IsRemotelyOwned(lease);
+    }
+
+    private static bool IsSameLease(
+      CoordinationLeaseRecord expected,
+      CoordinationLeaseRecord current)
+    {
+      return expected != null && current != null
+        && expected.leaseId == current.leaseId
+        && expected.mode == current.mode
+        && expected.developerId == current.developerId
+        && expected.displayName == current.displayName
+        && expected.connectionId == current.connectionId;
     }
 
     private CoordinationPrimaryAction GetPrimaryAction()
