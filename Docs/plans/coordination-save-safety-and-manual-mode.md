@@ -34,25 +34,25 @@ status: active
 
 The approved user-facing modes are:
 
-| Mode            | Meaning                                                      | Network behavior                                                                                                     | Save behavior                                                                                    |
-|-----------------|--------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
-| **Coordinated** | The developer expects Coordination to protect shared assets. | Connect, maintain presence, and acquire editing leases.                                                              | Save silently only with the local editing lease. Use the guarded fallback for eligible failures. |
-| **Manual**      | The developer intentionally opts out of live Coordination.   | Close the connection and release connection-owned state. Existing reservations may remain until released or expired. | Every coordinated-asset save uses the guarded fallback and creates a durable warning.            |
+| Mode | Meaning | Network behavior | Save behavior |
+| --- | --- | --- | --- |
+| **Coordinated** | The developer expects Coordination to protect shared assets. | Connect, maintain presence, and acquire editing leases. | Save silently only with the local editing lease. Use the guarded fallback for eligible failures. |
+| **Manual** | The developer intentionally opts out of live Coordination. | Close the connection and release connection-owned state. Existing reservations may remain until released or expired. | Every coordinated-asset save uses the guarded fallback and creates a durable warning. |
 
 The save policy is:
 
-| State at save time                                                   | Required result                                                                                                                                   |
-|----------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
-| Connected with an authoritative local editing lease                  | Save immediately.                                                                                                                                 |
-| Connected without a lease and no remote owner                        | Defer the save, acquire the lease, then resume only the authorized paths.                                                                         |
-| Connected with a remote owner                                        | Offer override, cancel, or keep working. Do not offer a direct local-save bypass.                                                                 |
-| Offline                                                              | Offer the two-step fallback with `Offline` as the recorded reason. Cancel the fallback if reconnection occurs before the prompt is shown.         |
-| Reconnecting                                                         | Offer the two-step fallback with `Reconnecting` as the recorded reason. Cancel the fallback if reconnection completes before the prompt is shown. |
-| Authentication failed                                                | Offer the two-step fallback with `AuthenticationFailed` and show the authentication cause.                                                        |
-| Manual                                                               | Offer the two-step fallback with `Manual`. Do not attempt a network request.                                                                      |
-| Lease request timed out                                              | Offer the two-step fallback with `RequestTimeout`.                                                                                                |
-| Override request could not be sent or completed                      | Offer the two-step fallback with `OverrideTransportFailure`.                                                                                      |
-| Initial acquire send fails while the service still reports Connected | Keep the asset dirty and allow retry. Do not convert a transient send failure into an immediate bypass.                                           |
+| State at save time | Required result |
+| --- | --- |
+| Connected with an authoritative local editing lease | Save immediately. |
+| Connected without a lease and no remote owner | Defer the save, acquire the lease, then resume only the authorized paths. |
+| Connected with a remote owner | Offer override, cancel, or keep working. Do not offer a direct local-save bypass. |
+| Offline | Offer the two-step fallback with `Offline` as the recorded reason. Cancel the fallback if reconnection occurs before the prompt is shown. |
+| Reconnecting | Offer the two-step fallback with `Reconnecting` as the recorded reason. Cancel the fallback if reconnection completes before the prompt is shown. |
+| Authentication failed | Offer the two-step fallback with `AuthenticationFailed` and show the authentication cause. |
+| Manual | Offer the two-step fallback with `Manual`. Do not attempt a network request. |
+| Lease request timed out | Offer the two-step fallback with `RequestTimeout`. |
+| Override request could not be sent or completed | Offer the two-step fallback with `OverrideTransportFailure`. |
+| Initial acquire send fails while the service still reports Connected | Keep the asset dirty and allow retry. Do not convert a transient send failure into an immediate bypass. |
 
 The fallback remains two separate decisions:
 
@@ -64,41 +64,41 @@ The fallback remains two separate decisions:
 ### New files
 
 - `Assets/Scripts/Editor/Coordination/CoordinationUncoordinatedSaveStore.cs`
-    - Stable reason enum, persisted record model, storage interface, JSON file store, in-memory warning state, and per-path reconciliation.
+  - Stable reason enum, persisted record model, storage interface, JSON file store, in-memory warning state, and per-path reconciliation.
 - `Assets/Tests/EditMode/Coordination/CoordinationUncoordinatedSaveStoreTests.cs`
-    - Round-trip, path upsert, atomic replacement, malformed-file quarantine, failure retention, reconciliation, and secret-exclusion coverage.
+  - Round-trip, path upsert, atomic replacement, malformed-file quarantine, failure retention, reconciliation, and secret-exclusion coverage.
 
 ### Modified runtime and editor files
 
 - `Assets/Scripts/Editor/Coordination/CoordinationSaveResumeCoordinator.cs`
-    - Apply the state matrix, pass structured fallback reasons, and record only successful resumed fallback saves.
+  - Apply the state matrix, pass structured fallback reasons, and record only successful resumed fallback saves.
 - `Assets/Scripts/Editor/Coordination/SaveConflictDialog.cs`
-    - Show cause-specific first and second confirmations without exposing a one-click bypass for remote ownership conflicts.
+  - Show cause-specific first and second confirmations without exposing a one-click bypass for remote ownership conflicts.
 - `Assets/Scripts/Editor/Coordination/CoordinationBootstrap.cs`
-    - Construct the local store and warning state, inject branch and task metadata providers, and retain warning state across connection lifecycle changes.
+  - Construct the local store and warning state, inject branch and task metadata providers, and retain warning state across connection lifecycle changes.
 - `Assets/Scripts/Editor/Coordination/CoordinationWindowViewModel.cs`
-    - Add Coordinated and Manual mode commands, warning presentation, persistence errors, data freshness, active-stage-first target selection, contextual primary actions, row inspection, and explicit reconciliation.
+  - Add Coordinated and Manual mode commands, warning presentation, persistence errors, data freshness, active-stage-first target selection, contextual primary actions, row inspection, and explicit reconciliation.
 - `Assets/Scripts/Editor/Coordination/CoordinationWindow.cs`
-    - Implement the responsive Current Asset First layout, contextual recovery and claim actions, actionable warning records, and compact team-activity foldouts.
+  - Implement the responsive Current Asset First layout, contextual recovery and claim actions, actionable warning records, and compact team-activity foldouts.
 - `Assets/Scripts/Editor/Coordination/CoordinationAssetTracking.cs`
-    - Track whether a complete authoritative snapshot has been applied for the current session without discarding last-known rows when the connection later becomes unavailable.
+  - Track whether a complete authoritative snapshot has been applied for the current session without discarding last-known rows when the connection later becomes unavailable.
 - `Assets/Scripts/Editor/Coordination/CoordinationUncoordinatedWarningController.cs`
-    - Remove this lifecycle-cleared warning controller after all callers use the durable warning state.
+  - Remove this lifecycle-cleared warning controller after all callers use the durable warning state.
 
 ### Modified tests
 
 - `Assets/Tests/EditMode/Coordination/CoordinationSaveGuardTests.cs`
-    - State matrix, confirmation sequence, dirty-state preservation, reason metadata, and one-shot resume authorization.
+  - State matrix, confirmation sequence, dirty-state preservation, reason metadata, and one-shot resume authorization.
 - `Assets/Tests/EditMode/Coordination/CoordinationWindowViewModelTests.cs`
-    - Mode transitions, confirmation behavior, target-source behavior, freshness gating, contextual actions, row independence, record rendering, and reconciliation.
+  - Mode transitions, confirmation behavior, target-source behavior, freshness gating, contextual actions, row independence, record rendering, and reconciliation.
 - `Assets/Tests/EditMode/Coordination/CoordinationAssetTrackerTests.cs`
-    - Current-session authoritative-snapshot freshness transitions.
+  - Current-session authoritative-snapshot freshness transitions.
 - `Assets/Tests/EditMode/Coordination/CoordinationLifecycleTests.cs`
-    - Verify close, reconnect, and lease acquisition do not clear warnings.
+  - Verify close, reconnect, and lease acquisition do not clear warnings.
 - `Assets/Tests/EditMode/Coordination/CoordinationServiceTests.cs`
-    - Preserve internal disabled-state behavior and connection-owned cleanup expectations.
+  - Preserve internal disabled-state behavior and connection-owned cleanup expectations.
 - `Assets/Tests/EditMode/Coordination/CoordinationUserSettingsTests.cs`
-    - Verify the existing `disabled` field still round-trips without migration.
+  - Verify the existing `disabled` field still round-trips without migration.
 
 ### Modified documentation and work records
 

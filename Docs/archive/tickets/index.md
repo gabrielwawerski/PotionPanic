@@ -1,6 +1,7 @@
 # Archived Task Records
 
-Completed or superseded task records live here. Active tasks are browsed through [`../../board.md`](../../board.md).
+Completed or superseded task records live here. Active tasks are browsed
+through [`../../board.md`](../../board.md).
 
 ## Completed Backlog Migration Tasks
 

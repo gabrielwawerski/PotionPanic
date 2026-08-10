@@ -1,6 +1,8 @@
 # Implementation Chronicles
 
-Chronicles record what happened while an approved plan was implemented. They preserve decisions, verification evidence, and unresolved limits without replacing the evergreen documentation that owns current guidance.
+Chronicles record what happened while an approved plan was implemented. They
+preserve decisions, verification evidence, and unresolved limits without
+replacing the evergreen documentation that owns current guidance.
 
 ## Current chronicle
 
