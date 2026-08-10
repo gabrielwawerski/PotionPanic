@@ -11,10 +11,10 @@ superseded plans into [`archive/index.md`](archive/index.md).
 
 ## Active Plans
 
-- [Coordination Save Safety and Manual Mode](./coordination-save-safety-and-manual-mode.md)
 - [Design Risk Fix Proposals](./design-risk-fix-proposals.md)
-- [Coordinated Save-Conflict Recovery](./coordinated-file-leasing-save-conflict-recovery.md)
 - [Game Design Review](./game-design-review.md)
+- [Coordinated Save-Conflict Recovery](./coordinated-file-leasing-save-conflict-recovery.md)
+- [Coordination Save Safety and Manual Mode](./coordination-save-safety-and-manual-mode.md)
 ## Writing Rules
 
 - Docboard regenerates the Active Plans links from each plan's frontmatter title

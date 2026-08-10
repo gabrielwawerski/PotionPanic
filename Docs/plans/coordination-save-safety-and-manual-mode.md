@@ -161,11 +161,11 @@ durable warning state.
 
 ### Modified documentation and work records
 
-- `Docs/guides/coordinated-leasing.md`
-- `Docs/onboarding/getting-started.md`
-- `Docs/collaboration/team-workflow.md`
+- [Docs/guides/coordinated-leasing.md](../guides/coordinated-leasing.md)
+- [Docs/onboarding/getting-started.md](../onboarding/getting-started.md)
+- [Docs/collaboration/team-workflow.md](../collaboration/team-workflow.md)
 - `Tools/CoordinationServer/README.md`
-- `Docs/tickets/PP-9.md`
+- [Docs/tickets/PP-9.md](../tickets/PP-9.md)
 
 ## Task 1: Add the Durable Uncoordinated-Save Record
 
@@ -600,11 +600,11 @@ git commit -m "feat(coordination): add current asset workflow"
 
 **Files:**
 
-- Modify: `Docs/guides/coordinated-leasing.md`
-- Modify: `Docs/onboarding/getting-started.md`
-- Modify: `Docs/collaboration/team-workflow.md`
+- Modify: [Docs/guides/coordinated-leasing.md](../guides/coordinated-leasing.md)
+- Modify: [Docs/onboarding/getting-started.md](../onboarding/getting-started.md)
+- Modify: [Docs/collaboration/team-workflow.md](../collaboration/team-workflow.md)
 - Modify: `Tools/CoordinationServer/README.md`
-- Modify: `Docs/tickets/PP-9.md`
+- Modify: [Docs/tickets/PP-9.md](../tickets/PP-9.md)
 
 ### Step 1: Update the Unity Coordination Guide
 
@@ -682,7 +682,7 @@ git commit -m "docs(coordination): define manual save recovery"
 
 **Files:**
 
-- Modify only if evidence is recorded: `Docs/tickets/PP-9.md`
+- Modify only if evidence is recorded: [Docs/tickets/PP-9.md](../tickets/PP-9.md)
 - Create temporarily, then remove: a coordinated test scene and its `.meta` file
 
 ### Step 1: Protect the working tree

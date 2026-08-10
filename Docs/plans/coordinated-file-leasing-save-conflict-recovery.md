@@ -325,13 +325,13 @@ partial result.
 
 **Files:**
 
-- Modify: `Docs/guides/coordinated-leasing.md`
-- Modify: `Docs/tickets/PP-7.md`
+- Modify: [Docs/guides/coordinated-leasing.md](../guides/coordinated-leasing.md)
+- Modify: [Docs/tickets/PP-7.md](../archive/tickets/PP-7.md)
 - Modify: this plan after evidence is known
 
 - [ ] **Step 1: Update evergreen guidance after implementation**
 
-  Follow `Docs/evergreen-documentation.md`. Mark the four-action conflict window
+  Follow [Docs/evergreen-documentation.md](../evergreen-documentation.md). Mark the four-action conflict window
   as current only after code and tests pass. Explain the normal recovery flow,
   the fact that every working-tree change follows checkout, the absence of an
   automatic commit, partial branch-created/Save-As-failed recovery, and the need

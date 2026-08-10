@@ -26,7 +26,7 @@ history.
 
 ## Implementation sequence
 
-1. Create `Docs/evergreen-documentation.md` and link it from README, AGENTS, and
+1. Create [Docs/evergreen-documentation.md](../../evergreen-documentation.md) and link it from README, AGENTS, and
    the Documentation Atlas.
 2. Move `Docs/unity-guides/` to `Docs/guides/unity/`; update VitePress
    navigation, current references, active work metadata, and live archive links.
