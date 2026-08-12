@@ -83,8 +83,7 @@ disaster scheduler does not implement one disaster's internal escalation.
 2. `IngredientStation` asks `PlayerInventory` to carry its `IngredientData`.
 3. At the brewing station, `BrewingStation` reads the ingredient's configured
    `resultingPotion` and replaces the carried item with that `PotionData`.
-4. Applying the potion invokes the active Overheated Cauldron's
-   `DisasterInstance`.
+4. Applying the potion invokes the active Mana Hotspot's `DisasterInstance`.
 5. The instance compares the carried `PotionData` with its configured required
    potion, resolves itself, and reports the result.
 6. `PanicSystem` reduces Panic, `ScoreSystem` awards the accepted points, and
