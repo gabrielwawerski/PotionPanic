@@ -126,22 +126,21 @@ Repeat until Panic reaches 100%.
 ### Example run
 
 The run begins with the laboratory stable and the player able to see the whole
-room. An Overheated Cauldron appears and starts raising Panic. Its color,
-animation, icon, and sound identify heat as the problem.
+room. A Mana Hotspot appears and starts raising Panic. Its color, animation,
+icon, and sound identify unstable heat as the problem.
 
 The player crosses the room, collects a Blue Mushroom, and now carries that
 single ingredient. At the brewing station, one interaction replaces the
-ingredient with a Cooling Potion. Applying the potion resolves the cauldron,
+ingredient with a Cooling Potion. Applying the potion resolves the hotspot,
 reduces Panic, awards the normal resolution score, and produces clear success
 feedback.
 
-Later, an Overheated Cauldron and a Slime Leak are active together. The player
-can read both threats, but cannot solve both at once. Their age, location,
-escalation state, and current Panic pressure create the decision: handle the
-more urgent threat or take the shorter route. Choosing, moving, brewing, and
-recovering form the intended pressure. Confusing recipes, camera control, and a
-large inventory are deliberately absent because they would compete with that
-decision.
+Later, a Mana Hotspot and a Slime Leak are active together. The player can read
+both threats, but cannot solve both at once. Their age, location, escalation
+state, and current Panic pressure create the decision: handle the more urgent
+threat or take the shorter route. Choosing, moving, brewing, and recovering form
+the intended pressure. Confusing recipes, camera control, and a large inventory
+are deliberately absent because they would compete with that decision.
 
 If the player uses the wrong potion, the potion is consumed, the disaster
 remains, and Panic increases. The feedback must make that cause visible. The
@@ -173,7 +172,7 @@ Two active disasters create prioritization pressure.
 
 Example:
 
-- an Overheated Cauldron and a Slime Leak are both active
+- a Mana Hotspot and a Slime Leak are both active
 - escalation timers force the player to choose which problem matters most
 
 ### Late game
@@ -239,18 +238,18 @@ Main areas:
 
 - brewing station
 - ingredient stations
-- disaster zones
+- disaster spawn locations
 - UI/HUD
 
 The room should be readable from the fixed top-down camera at all times.
 
 ### Ingredient and potion set
 
-| Ingredient          | Potion              | Solves              |
-|---------------------|---------------------|---------------------|
-| Blue Mushroom       | Cooling Potion      | Overheated Cauldron |
-| Green Slime         | Slime Dissolver     | Slime Leak          |
-| Purple Crystal Dust | Purification Potion | Toxic Magic Cloud   |
+| Ingredient          | Potion              | Solves        |
+|---------------------|---------------------|---------------|
+| Blue Mushroom       | Cooling Potion      | Mana Hotspot  |
+| Green Slime         | Slime Dissolver     | Slime Leak    |
+| Purple Crystal Dust | Purification Potion | Hex Cloud     |
 
 ### Ingredient themes
 
@@ -292,23 +291,101 @@ Every disaster should follow three rules:
 2. Ignoring it increases pressure.
 3. One correct potion solves it.
 
-### Overheated Cauldron
+#### Spawning and visual identity
 
-- effect: generates heat and raises Panic steadily
+Disasters can appear at different valid locations throughout the laboratory.
+Their concepts and visuals should therefore make sense regardless of which spawn
+location is chosen.
+
+Avoid disasters that depend on fixed laboratory infrastructure such as
+cauldrons, furnaces, sinks, pipes, cabinets, or permanent machinery. A fixed
+object appearing at arbitrary locations makes the laboratory layout feel
+inconsistent and makes the disaster visibly feel like a spawned gameplay object.
+
+Prefer localized problems that can plausibly emerge at many locations, such as
+unstable magical areas, leaks, clouds, ruptures, spills, growths, or
+infestations. Predefined spawn points represent locations where instability can
+occur, not dedicated positions for specific pieces of equipment.
+
+Each disaster should also have a distinct physical form. Silhouette, movement,
+spatial behavior, and effects should let the player identify a threat quickly
+without relying on UI text.
+
+The MVP disasters deliberately use different spatial forms:
+
+- Mana Hotspot is concentrated around an unstable area.
+- Slime Leak spreads physically across surfaces.
+- Hex Cloud occupies and contaminates the air.
+
+They may share the broader fiction of an increasingly unstable magical
+laboratory, but they should not all emerge from the same visual device such as
+identical portals or rifts. A shared cause should provide cohesion without
+making the disasters look like variants of one mechanic.
+
+### Mana Hotspot
+
+A localized concentration of unstable magical energy produces dangerous heat.
+
+Visual identity:
+
+- concentrated glowing area or energy core
+- shimmering or distorted air
+- sparks and magical particles
+- illuminated floor or nearby surfaces
+- pulsing energy that communicates instability
+
+The hotspot should read as an affected area rather than a physical machine or
+piece of laboratory furniture.
+
+- effect: generates unstable heat and raises Panic steadily
 - solution: Cooling Potion
-- stretch escalation: bursts into magical fire
+- stretch escalation: expands in radius, brightness, particle activity, and
+  visual instability
 
 ### Slime Leak
 
+Alchemical slime leaks into the laboratory from a small rupture or gap.
+
+Visual identity:
+
+- bubbling green slime
+- irregular puddle-like shape
+- a generic source such as a crack, seam, or small rupture
+- slow spreading across the nearby surface
+- occasional bubbles or splashes
+
+The leak should not originate from a fixed pipe, tank, or other permanent piece
+of laboratory infrastructure. Its source must make sense at any valid spawn
+location.
+
 - effect: creates expanding slime pressure
 - solution: Slime Dissolver
-- stretch escalation: active spreading behavior
+- stretch escalation: increases its footprint and produces additional spreading
+  around the source
 
-### Toxic Magic Cloud
+### Hex Cloud
+
+A concentrated cloud of unstable hex magic forms inside the laboratory.
+
+Visual identity:
+
+- hovering purple vapor
+- drifting magical particles
+- turbulent internal movement
+- faint symbols, sparks, or distortion within the cloud
+- clearly airborne silhouette
 
 - effect: contaminates part of the laboratory
 - solution: Purification Potion
-- stretch escalation: active expansion behavior
+- stretch escalation: becomes larger, denser, and more visually aggressive
+
+The existing potion color relationships should stay immediately readable:
+
+| Disaster     | Visual theme                     | Solution            |
+|--------------|----------------------------------|---------------------|
+| Mana Hotspot | Blue / unstable magical energy   | Cooling Potion      |
+| Slime Leak   | Green / alchemical slime         | Slime Dissolver     |
+| Hex Cloud    | Purple / unstable hex magic      | Purification Potion |
 
 ### Panic meter
 
@@ -357,9 +434,9 @@ Every major system should have readable feedback.
 
 Examples:
 
-- fire: crackling
-- slime: bubbling
-- gas cloud: hissing
+- mana hotspot: energetic crackling and unstable pulses
+- slime leak: bubbling and wet spreading sounds
+- hex cloud: hissing and magical distortion
 - brewing: liquid mixing
 - panic meter: warning alarms at high Panic
 
