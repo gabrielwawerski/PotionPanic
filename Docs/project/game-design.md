@@ -322,6 +322,64 @@ laboratory, but they should not all emerge from the same visual device such as
 identical portals or rifts. A shared cause should provide cohesion without
 making the disasters look like variants of one mechanic.
 
+#### Disaster-specific wrong-potion reactions
+
+This is a post-MVP, low-priority candidate. The MVP keeps one generic
+wrong-potion rule: the potion is consumed, the disaster stays active, and the
+player immediately takes `+10 Panic`.
+
+After the core loop is proven, selected potion-disaster mismatches may replace or
+extend that generic penalty with a bespoke negative reaction. The interaction
+should make thematic and visual sense rather than act as an arbitrary punishment.
+The generic MVP behavior remains the fallback for every combination without a
+specific reaction.
+
+Do not build a complete interaction matrix. Add bespoke reactions only where the
+combination is clear, memorable, and worth its implementation and presentation
+cost. Confidence levels below describe confidence in each design concept, not
+implementation priority. The feature remains low priority even when an example
+is high confidence.
+
+**High confidence**
+
+- **Slime Leak + a future heat/fire-related potion -> combustion:** the slime
+  combusts or explodes, causing an immediate negative consequence while the leak
+  remains active. This is intentionally a hypothetical future-potion example.
+- **Mana Hotspot + Slime Dissolver -> volatile burst:** the dissolver reacts with
+  the concentrated heat and magical residue, producing a short burst or splash
+  while the hotspot remains active.
+- **Hex Cloud + Cooling Potion -> condensation:** the cloud rapidly condenses and
+  becomes temporarily denser or larger while remaining unresolved.
+
+**Medium confidence**
+
+- **Mana Hotspot + Purification Potion -> magical flare:** purification magic
+  destabilizes the concentrated energy, producing a brief flare and increased
+  pressure.
+- **Hex Cloud + Slime Dissolver -> corrosive vapor:** the dissolver mixes with
+  the hex contamination and temporarily makes the cloud more aggressive.
+
+**Low confidence**
+
+- **Slime Leak + Purification Potion -> overgrowth:** purification magic could
+  stimulate the alchemical slime, causing it to swell or spread. The causal
+  relationship is less self-explanatory, so this remains illustrative rather
+  than planned content unless presentation or playtesting makes it intuitive.
+
+A bespoke reaction does not need to deal extra Panic immediately. It may instead
+accelerate escalation, temporarily increase Panic generation, temporarily expand
+the disaster, or modify another existing disaster parameter. This variation is
+a low-priority refinement within the already low-priority feature. An initial
+implementation can stay with immediate Panic penalties if richer consequences do
+not provide enough additional value.
+
+Avoid turning wrong-potion reactions into:
+
+- a hidden elemental-combination system
+- a general status-effect framework
+- rules the player must memorize without readable feedback
+- a requirement for every potion and disaster pair to behave uniquely
+
 ### Mana Hotspot
 
 A localized concentration of unstable magical energy produces dangerous heat.
