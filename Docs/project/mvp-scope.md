@@ -210,7 +210,7 @@ Goal:
 
 Deliverables:
 
-- Overheated Cauldron
+- Mana Hotspot
 - Panic increase while active
 - Cooling Potion resolution
 - wrong-potion penalty
