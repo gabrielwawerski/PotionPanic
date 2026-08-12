@@ -289,6 +289,7 @@ Possible expansion ideas after the MVP ships:
 - additional laboratories
 - new ingredient types
 - new disaster families
+- disaster-specific wrong-potion reactions
 - endless mode
 - daily challenge mode
 - laboratory upgrades
