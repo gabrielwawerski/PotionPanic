@@ -437,6 +437,30 @@ Visual identity:
 - solution: Purification Potion
 - stretch escalation: becomes larger, denser, and more visually aggressive
 
+#### Post-MVP: escalation affects route value
+
+After the static laboratory topology and spatial disaster identities prove fun,
+escalation can gain one small spatial consequence per disaster. The goal is to
+change the value of nearby routes so that ignoring a disaster can change where
+the player wants to move, rather than only increasing a number.
+
+Keep these effects local, clearly telegraphed, and traversable. They should alter
+route preference without creating hard blockers, softlocks, dynamic walls, or a
+separate environmental-hazard system.
+
+Initial examples:
+
+- **Mana Hotspot:** intermittently makes a small adjacent patch hazardous,
+  temporarily discouraging the shortest nearby route.
+- **Slime Leak:** spreads onto a nearby walking path and mildly slows movement in
+  the affected patch.
+- **Hex Cloud:** expands into a nearby route; crossing the affected area causes a
+  small Panic burst or similarly lightweight penalty.
+
+Start with at most one spatial escalation effect per disaster. This is a
+post-MVP extension and should only be prototyped after the room's base route
+network is already interesting without it.
+
 The existing potion color relationships should stay immediately readable:
 
 | Disaster     | Visual theme                     | Solution            |
