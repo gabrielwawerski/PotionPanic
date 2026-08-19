@@ -6,7 +6,8 @@ Target Engine: Unity Target Platform: PC
 Use this doc for player-facing design, feel, readability, and content intent.
 Use [`mvp-scope.md`](mvp-scope.md) for locked milestone and tuning decisions.
 Use [`technical-architecture.md`](technical-architecture.md) for runtime
-structure.
+structure. Use [`mvp-deliverables.md`](mvp-deliverables.md) for concrete
+milestone artifacts and verification expectations.
 
 ## Status and authority
 
@@ -21,6 +22,8 @@ When documents differ:
 - [MVP Scope](mvp-scope.md) owns locked behavior, tuning, and delivery order;
 - [Runtime Design](technical-architecture.md) owns target technical
   responsibilities;
+- [MVP Deliverables](mvp-deliverables.md) owns concrete milestone artifacts and
+  integration evidence;
 - tickets and the board own current task status.
 
 ## Game at a glance
@@ -545,6 +548,7 @@ to be built around it. A feature can be appealing and still be a post-MVP idea.
 ## Related pages
 
 - [MVP Scope](mvp-scope.md)
+- [MVP Deliverables](mvp-deliverables.md)
 - [Potion Panic Runtime Contract](technical-architecture.md)
 - [Presentation Workflows](../guides/unity/presentation-workflows.md)
 - [Design Research](../research/game-design-and-psychology.md)
