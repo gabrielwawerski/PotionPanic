@@ -626,11 +626,10 @@ filtered Worker-tail evidence are still open.
 
 ## Definition of Done
 
-- [ ] Acceptance criteria met
-- [ ] Backend and Unity verification completed
-- [ ] Two-machine acceptance evidence recorded
-- [ ] Required evergreen documentation updated after release acceptance
-- [ ] Branch committed and ready for review or merge
+- Acceptance criteria met
+- Backend and Unity verification completed
+- Two-machine acceptance evidence recorded
+- Required evergreen documentation updated after release acceptance
+- Branch committed and ready for review or merge
 
 ## Notes
-
