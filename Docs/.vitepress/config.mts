@@ -31,6 +31,7 @@ export default createDocsConfig(defineDocsProject({
         {text: "Game Design", link: "/project/game-design"},
         {text: "MVP Scope", link: "/project/mvp-scope"},
         {text: "Target Runtime Design", link: "/project/technical-architecture"},
+        {text: "MVP Deliverables", link: "/project/mvp-deliverables"},
       ],
     },
     {
