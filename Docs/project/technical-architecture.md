@@ -4,8 +4,9 @@ Version: 1.0 Target engine: Unity Target platform: PC
 
 Use this document for Potion Panic runtime structure, data ownership, and
 implementation boundaries. Use [`game-design.md`](game-design.md) for
-player-facing intent and [`mvp-scope.md`](mvp-scope.md) for milestone order and
-locked MVP rules.
+player-facing intent, [`mvp-scope.md`](mvp-scope.md) for milestone order and
+locked MVP rules, and [`mvp-deliverables.md`](mvp-deliverables.md) for the
+concrete artifacts and milestone evidence required from this target design.
 
 ## Current state and target status
 
@@ -53,6 +54,21 @@ order:
 
 A playable vertical slice is more valuable than a complete-looking architecture
 with no finished game loop.
+
+### Milestone introduction map
+
+This map answers when the target runtime responsibilities first become necessary.
+It does not replace the artifact and verification detail in
+[MVP Deliverables](mvp-deliverables.md).
+
+| Milestone | Runtime responsibilities first needed |
+|---|---|
+| 1 | `PlayerController` and the accepted `CharacterController` player setup. |
+| 2 | `IInteractable` and `InteractionController`. |
+| 3 | `IngredientData`, `PotionData`, `PlayerInventory`, `IngredientStation`, and `BrewingStation`. |
+| 4 | `DisasterData`, `DisasterInstance`, and the initial `PanicSystem`. |
+| 5 | `GameManager`, `DisasterManager`, `DisasterSpawnPoint`, and the initial `ScoreSystem`. |
+| 6+ | Extend and integrate the proven systems rather than replacing them with parallel frameworks. |
 
 ## End-to-end runtime flow
 
@@ -420,4 +436,5 @@ when it supports the playable game loop.
 - [Project Overview](index.md)
 - [Game Design](game-design.md)
 - [MVP Scope](mvp-scope.md)
+- [MVP Deliverables](mvp-deliverables.md)
 - [Unity Runtime Foundations](../guides/unity/runtime-architecture.md)
