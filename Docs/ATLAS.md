@@ -37,8 +37,8 @@ For the required content and authority of each evergreen page, use the
 - [`project/technical-architecture.md`](project/technical-architecture.md):
   accepted target runtime data, responsibilities, ownership, and flow.
 - [`project/mvp-deliverables.md`](project/mvp-deliverables.md): concrete
-  milestone artifacts, responsibility routing, asset maturity, ticket
-  decomposition guidance, integration outcomes, and verification evidence.
+  milestone artifacts, responsibility routing, asset maturity, expanded ticket
+  seeds, integration outcomes, and verification evidence.
 
 ## Working guides
 
