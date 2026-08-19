@@ -26,6 +26,7 @@ affectedFiles:
   - GEMINI.md
 tags: []
 order: 3
+archivedAt: '2026-08-19T20:53:19.570Z'
 ---
 
 ## Description

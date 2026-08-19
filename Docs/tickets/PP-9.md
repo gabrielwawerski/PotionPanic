@@ -1,7 +1,7 @@
 ---
 id: 9
 title: Decide and align Coordination outage behavior
-status: todo
+status: backlog
 priority: high
 documentation:
   - guides/coordinated-leasing.md
