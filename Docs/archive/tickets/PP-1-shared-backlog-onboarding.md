@@ -90,7 +90,7 @@ confirmed the new text files are UTF-8 without BOM, and confirmed
 
 ## Definition of Done
 
-- [x] #1 Tests pass
-- [x] #2 Documentation updated
-- [x] #3 No regressions introduced
+- #1 Tests pass
+- #2 Documentation updated
+- #3 No regressions introduced
 

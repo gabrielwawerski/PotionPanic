@@ -97,11 +97,11 @@ Done includes a committed branch, and no commit was created in this session.
 
 ## Definition of Done
 
-- [x] #1 Acceptance criteria met
-- [x] #2 Relevant Unity verification completed
-- [x] #3 No new relevant Console errors
-- [x] #4 Documentation or task notes updated when needed
-- [x] #5 Branch committed and ready for review or merge
+- #1 Acceptance criteria met
+- #2 Relevant Unity verification completed
+- #3 No new relevant Console errors
+- #4 Documentation or task notes updated when needed
+- #5 Branch committed and ready for review or merge
 
 ## Notes
 
