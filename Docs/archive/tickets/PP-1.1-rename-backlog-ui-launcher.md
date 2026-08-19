@@ -78,7 +78,7 @@ parse successfully, both launcher names invoke `backlog board` under a fake
 
 ## Definition of Done
 
-- [x] #1 Tests pass
-- [x] #2 Documentation updated
-- [x] #3 No regressions introduced
+- #1 Tests pass
+- #2 Documentation updated
+- #3 No regressions introduced
 
