@@ -168,14 +168,14 @@ GameObject disasterPrefab;
 
 ### `DisasterType`
 
-Keep the MVP enum small:
+Keep the MVP enum small and aligned with the accepted disaster identities:
 
 ```csharp
 public enum DisasterType
 {
-  Fire,
-  Slime,
-  ToxicCloud
+  ManaHotspot,
+  SlimeLeak,
+  HexCloud
 }
 ```
 
