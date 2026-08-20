@@ -31,6 +31,7 @@ export default createDocsConfig(defineDocsProject({
         {text: "Game Design", link: "/project/game-design"},
         {text: "MVP Scope", link: "/project/mvp-scope"},
         {text: "Target Runtime Design", link: "/project/technical-architecture"},
+        {text: "MVP Deliverables", link: "/project/mvp-deliverables"},
       ],
     },
     {
@@ -42,7 +43,13 @@ export default createDocsConfig(defineDocsProject({
         {text: "Design Research", link: "/research/game-design-and-psychology"},
       ],
     },
-    {text: "Archive", link: "/archive/"},
+    {
+      text: "Archive",
+      items: [
+        {text: "Board", link: "/archive/board"},
+        {text: "Plans", link: "/plans/archive"},
+      ],
+    },
   ],
   sidebar: {
     autoDiscover: true,

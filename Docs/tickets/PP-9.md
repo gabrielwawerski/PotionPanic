@@ -1,7 +1,7 @@
 ---
 id: 9
 title: Decide and align Coordination outage behavior
-status: todo
+status: backlog
 priority: high
 documentation:
   - guides/coordinated-leasing.md
@@ -85,10 +85,10 @@ acceptance procedure.
 
 ## Definition of Done
 
-- [x] Policy decision approved and recorded
-- [ ] Runtime behavior and documentation agree
-- [ ] Automated verification passes
-- [ ] Manual Disabled and enabled-outage observations recorded
-- [ ] Branch committed and ready for review or merge
+- Policy decision approved and recorded
+- Runtime behavior and documentation agree
+- Automated verification passes
+- Manual Disabled and enabled-outage observations recorded
+- Branch committed and ready for review or merge
 
 ## Notes

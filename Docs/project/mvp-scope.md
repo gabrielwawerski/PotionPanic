@@ -5,7 +5,9 @@ boundaries.
 
 It owns binding MVP scope, tuning, and delivery order. It does not replace task
 acceptance criteria, implementation plans, or the player-experience intent
-in [Game Design](game-design.md).
+in [Game Design](game-design.md). Use [MVP Deliverables](mvp-deliverables.md)
+for the concrete code, data, content, UI, integration, and verification artifacts
+required to complete each milestone.
 
 ## How to read this document
 
@@ -137,7 +139,9 @@ Additional rules:
 | 10        | Polish, balancing, and bug fixing.                      |
 
 The detailed milestones below preserve the delivery commitments for each stage.
-Use the board for current task status.
+Use [MVP Deliverables](mvp-deliverables.md) to identify the concrete artifacts
+and milestone evidence needed to turn those commitments into tickets. Use the
+board for current task status.
 
 ### Why the order matters
 
@@ -317,6 +321,7 @@ own narrower acceptance criteria and verification evidence.
 ## Related pages
 
 - [Game Design](game-design.md)
+- [MVP Deliverables](mvp-deliverables.md)
 - [Potion Panic Runtime Contract](technical-architecture.md)
 - [Daily Workflow](../collaboration/team-workflow.md)
 - [Active Plans](../plans/)

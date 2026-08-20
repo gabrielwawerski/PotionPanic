@@ -1,7 +1,16 @@
-# Archived Task Records
+# Archived and Parked Task Records
 
-Completed or superseded task records live here. Active tasks are browsed
-through [`../../board.md`](../../board.md).
+This directory contains completed or superseded task records and deliberately
+parked future MVP tickets. Active tasks are browsed through
+[`../../board.md`](../../board.md).
+
+Future MVP tickets stay `backlog` items on the archive board until their
+milestone becomes active. They are identified by their milestone tag, such as
+`m-2` or `m-3`, and can be restored to `Docs/tickets/` from the archive board.
+
+Do not treat an archived `backlog` ticket with an `m-N` tag as completed work.
+Its archive location means the work is intentionally parked for a later
+milestone.
 
 ## Completed Backlog Migration Tasks
 

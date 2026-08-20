@@ -127,7 +127,11 @@ have diverged.
 </details>
 
 Confirm the active milestone in [MVP Scope](../project/mvp-scope.md). Only one
-major milestone should drive feature work at a time.
+major milestone should drive feature work at a time. For milestone work, use
+[MVP Deliverables](../project/mvp-deliverables.md) to identify the required
+artifacts, responsibility areas, and integration gate before creating or
+selecting tickets. The ticket still owns its assignee, exact affected files,
+dependencies, acceptance criteria, implementation notes, and status.
 
 ## 3. Choose a task that is ready
 
@@ -465,6 +469,7 @@ reliable and transfers risk to every later task.
 
 - [Project Setup](../onboarding/getting-started.md)
 - [Project Overview](../project/)
+- [MVP Deliverables](../project/mvp-deliverables.md)
 - [Unity Guides](../guides/unity/)
 - [Unity Coordination](../guides/coordinated-leasing.md)
 - [Active Plans](../plans/)
