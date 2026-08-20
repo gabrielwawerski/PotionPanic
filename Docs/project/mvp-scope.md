@@ -97,9 +97,10 @@ Additional rules:
 ### Core gameplay
 
 - player movement
-- interaction system
-- brewing station
 - ingredient collection
+- simple potion creation system
+- device interactions to solve disasters
+- basic inventory management (picking up and removing items or potions)
 
 ### Content
 
